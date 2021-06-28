@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"1920;1080",
+      "src":"pic/2/background.png",
+      "visible":"true",
+      "click_id":"1"
+    },
+    {
+      "id":"return_background",
+      "type":"image",
+      "position": "1245;720",
+      "size":"543;112",
+      "src":"pic/return_background.png",
+      "visible":"false",
+      "click_id":"2"
+    },
+    {
+      "id":"post_number",
+      "type": "digits",
+      "position": "1880;10",
+      "font": "round_number",
+      "symbol_size":"14;22",
+      "padding": "1",
+      "length": "2",
+      "visible":"true"
+    }
+  ]
+}
