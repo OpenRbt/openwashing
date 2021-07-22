@@ -16,7 +16,7 @@ setup = function()
     balance_seconds = 0
     cash_balance = 0.0
     electronical_balance = 0.0
-    post_position = 1      
+    post_position = 1     
 
     -- constants
     welcome_mode_seconds = 3
@@ -52,38 +52,41 @@ setup = function()
     -- end of modes which MUST follow each other
     
     mode_thanks = 120
+    real_ms_per_loop = 100
     
     currentMode = mode_welcome
 
-    version = "2.2.1"
+    version = "2.2.2"
 
     printMessage("dia generic wash firmware v." .. version)
+    -- external constants
+    init_constants();
+    update_post();
+    welcome:Set("post_number.value", post_position)
+    forget_pressed_key();
     return 0
 end
 
 -- loop is being executed
 loop = function()
+    update_post()
     currentMode = run_mode(currentMode)
-    smart_delay(100)
+    real_ms_per_loop = smart_delay(100)
     return 0
 end
 
+update_post = function() 
+    post_position = registry:GetPostID();
+end
+
 init_prices = function()
-    price_p[1] = 80
-    
-    price_p[2] = 95
-    
-    price_p[3] = 70
-    
-    price_p[4] = 95
-    
-    price_p[5] = 70
-    
-    price_p[6] = 50
-    price_p[7] = 130
-    
-    --price_p[7] = get_price("price7")
-    --if price_p[7] == 0 then price_p[7] = 18 end
+    price_p[1] = get_price(1)
+    price_p[2] = get_price(2)
+    price_p[3] = get_price(3)
+    price_p[4] = get_price(4)
+    price_p[5] = get_price(5)
+    price_p[6] = get_price(6)
+    price_p[7] = get_price(7)
 end
 
 
@@ -105,13 +108,12 @@ welcome_mode = function()
     show_welcome()
     run_stop()
     turn_light(0, animation.idle)
-    rubbish = get_key()
-    pressed_key = -1
+    init_prices()
     smart_delay(1000 * welcome_mode_seconds)
     forget_pressed_key()
     if hascardreader() then
         return mode_choose_method
-    end    
+    end
     return mode_ask_for_money
 end
 
@@ -121,6 +123,8 @@ choose_method_mode = function()
 
     -- check animation
     turn_light(0, animation.idle)
+
+    init_prices()
 
     pressed_key = get_key()
     if pressed_key == 4 or pressed_key == 5 or pressed_key == 6 then
@@ -205,7 +209,7 @@ wait_for_card_mode = function()
     end
 
     if waiting_loops <= 0 then
-    is_transaction_started = false
+        is_transaction_started = false
 	if status ~= 0 then
 	    abort_transaction()
 	end
@@ -247,19 +251,22 @@ end
 
 program_mode = function(working_mode)
   sub_mode = working_mode - mode_work
-  show_working(sub_mode, balance)
+  cur_price = price_p[sub_mode]
+  show_working(sub_mode, balance, cur_price)
   
   if sub_mode == 0 then
     run_program(default_paid_program)
     balance_seconds = free_pause_seconds
     turn_light(0, animation.intense)
   else
-    run_program(sub_mode)
+    run_sub_program(sub_mode)
     turn_light(sub_mode, animation.one_button)
   end
   
-  charge_balance(price_p[sub_mode])
-  set_current_state(balance,sub_mode)
+  if get_is_preflight() == 0 then
+    charge_balance(price_p[sub_mode])
+  end
+  set_current_state(balance)
   if balance <= 0.01 then 
     return mode_thanks 
   end
@@ -269,19 +276,24 @@ program_mode = function(working_mode)
   return working_mode
 end
 
+run_sub_program = function(program_index)
+    run_program(program_index)
+end
+
 pause_mode = function()
-    show_pause(balance, balance_seconds)
     run_pause()
     turn_light(6, animation.one_button)
     update_balance()
+    cur_price = 0
     if balance_seconds > 0 then
         balance_seconds = balance_seconds - 0.1
     else
         balance_seconds = 0
         charge_balance(price_p[6])
+        cur_price = price_p[6]
     end
-    
-    set_current_state(balance,6)  
+    set_current_state(balance,6)
+    show_pause(balance, balance_seconds, cur_price)
     
     if balance <= 0.01 then return mode_thanks end
     
@@ -291,7 +303,7 @@ pause_mode = function()
 end
 
 thanks_mode = function()
-    set_current_state(0,0)
+    set_current_state(0)
     if is_waiting_receipt == false then
         balance = 0
         show_thanks(thanks_mode_seconds)
@@ -309,11 +321,7 @@ thanks_mode = function()
         end
         update_balance()
         if balance > 0.99 then
-            send_receipt(post_position, cash_balance, electronical_balance)
-            cash_balance = 0
-            electronical_balance = 0
             is_waiting_receipt = false
-            increment_cars() 
             return mode_work 
         end
         waiting_loops = waiting_loops - 1
@@ -337,6 +345,7 @@ show_welcome = function()
 end
 
 show_ask_for_money = function()
+    ask_for_money:Set("post_number.value", post_position)
     if hascardreader() then
         ask_for_money:Set("return_background.visible", "true")
     end
@@ -344,6 +353,7 @@ show_ask_for_money = function()
 end
 
 show_choose_method = function()
+    choose_method:Set("post_number.value", post_position)
     choose_method:Display()
 end
 
@@ -363,21 +373,23 @@ show_start = function(balance_rur)
     start:Display()
 end
 
-show_working = function(sub_mode, balance_rur)
+show_working = function(sub_mode, balance_rur, price_rur)
     balance_int = math.ceil(balance_rur)
     working:Set("pause_digits.visible", "false")
     working:Set("balance.value", balance_int)
+    working:Set("price.value", price_rur)
     
     switch_submodes(sub_mode)
     working:Display()
 end
 
-show_pause = function(balance_rur, balance_sec)
+show_pause = function(balance_rur, balance_sec, price_rur)
     balance_int = math.ceil(balance_rur)
     sec_int = math.ceil(balance_sec)
     working:Set("pause_digits.visible", "true")
     working:Set("pause_digits.value", sec_int)
     working:Set("balance.value", balance_int)
+    working:Set("price.value", price_rur)
     switch_submodes(6)
     working:Display()
 end
@@ -409,7 +421,11 @@ smart_delay = function(ms)
 end
 
 get_price = function(key)
-    return registry:ValueInt(key)
+    return registry:GetPrice(key)
+end
+
+set_value_if_not_exists = function(key, value)
+    return registry:SetValueByKeyIfNotExists(key, value)
 end
 
 turn_light = function(rel_num, animation_code)
@@ -425,11 +441,11 @@ increment_cars = function()
 end
 
 run_pause = function()
-    run_program(program.p6relay)
+    run_program(6)
 end
 
 run_stop = function()
-    run_program(program.stop)
+    run_program(-1)
 end
 
 run_program = function(program_num)
@@ -448,8 +464,12 @@ abort_transaction = function()
     return hardware:AbortTransaction()
 end
 
-set_current_state = function(current_balance, current_program)
-    return hardware:SetCurrentState(math.floor(current_balance), current_program)
+set_current_state = function(current_balance)
+    return hardware:SetCurrentState(math.floor(current_balance))
+end
+
+get_is_preflight = function()
+    return hardware:GetIsPreflight()
 end
 
 update_balance = function()
@@ -468,7 +488,7 @@ update_balance = function()
 end
 
 charge_balance = function(price)
-    balance = balance - price * 0.001666666667
+    balance = balance - price * real_ms_per_loop / 60000
     if balance<0 then balance = 0 end
 end
 
@@ -482,6 +502,5 @@ forget_pressed_key = function()
 end
 
 hascardreader = function()
-    return hardware:HasCardReader()
-  end
-  
+  return hardware:HasCardReader()
+end

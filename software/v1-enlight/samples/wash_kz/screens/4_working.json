@@ -11,9 +11,9 @@
       {
         "id":"balance_background",
         "type":"image",
-        "position": "633;81",
-        "size":"1155;524",
-        "src":"pic/balance.png",
+        "position": "833;81",
+        "size":"955;524",
+        "src":"pic/balance_tmp_fix.png",
         "visible":"true"
       },
       {
@@ -82,17 +82,27 @@
       {
         "id":"balance",
         "type": "digits",
-        "position": "655;166",
-        "font": "standard_number",
-        "symbol_size":"240;405",
-        "padding": "1",
-        "length": "4",
+        "position": "867;166",
+        "font": "round_number",
+        "symbol_size":"251;405",
+        "padding": "3",
+        "length": "3",
+        "visible":"true"
+      },
+      {
+        "id":"price",
+        "type": "digits",
+        "position": "1694;156",
+        "font": "round_number",
+        "symbol_size":"25;40",
+        "padding": "0",
+        "length": "3",
         "visible":"true"
       },
       {
         "id":"cur_p",
         "type":"image_array",
-        "position": "28;137",
+        "position": "158;137",
         "size":"494;468",
         "visible":"true",
         "index":"0",
@@ -124,9 +134,9 @@
       {
         "id":"pause_digits",
         "type": "digits",
-        "position": "141;247",
-        "font": "standard_number",
-        "symbol_size":"86;157",
+        "position": "269;247",
+        "font": "round_number",
+        "symbol_size":"87;157",
         "padding": "5",
         "length": "3",
         "visible":"true"
