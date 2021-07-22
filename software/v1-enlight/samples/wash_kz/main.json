@@ -11,10 +11,6 @@
       "src": "screens/2_ask_for_money.json"
     },
     {
-      "id": "start",
-      "src": "screens/3_start.json"
-    },
-    {
       "id": "working",
       "src": "screens/4_working.json"
     },
@@ -36,8 +32,10 @@
     }
   ],
   "buttons": 7,
-  "relays": 6,
+  "last_button_pulse": true,
+  "relays": 7,
   "endpoint": "http://app.diae.ru/v0/gql/",
   "programs": 7,
-  "script": "script.lua"
+  "script": "script.lua",
+  "include": "constants.lua"
 }
