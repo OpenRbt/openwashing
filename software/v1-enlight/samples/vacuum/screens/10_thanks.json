@@ -1,0 +1,31 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1024;600",
+        "src":"pic/thanks.png",
+        "visible":"true",
+        "click_id":"1"
+      },
+      {
+        "id":"logo",
+        "type":"image",
+        "position":"60;18",
+        "size":"174;75",
+        "src":"pic/logo.png",
+        "visible":"true"
+      },
+      {
+        "id":"delay_seconds",
+        "type": "digits",
+        "position": "336;261",
+        "font": "standard_number",
+        "symbol_size":"40;60",
+        "padding": "2",
+        "length": "3",
+        "visible":"true"
+      }
+    ]
+  }

@@ -1,0 +1,72 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1024;600",
+        "src":"pic/background.png",
+        "visible":"true"
+      },
+      {
+        "id":"logo",
+        "type":"image",
+        "position":"60;6",
+        "size":"174;75",
+        "src":"pic/logo.png",
+        "visible":"true"
+      },
+      {
+        "id":"balance_background",
+        "type":"image",
+        "position": "445;45",
+        "size":"495;291",
+        "src":"pic/balance.png",
+        "visible":"true"
+      },
+      {
+        "id":"p1_ico",
+        "type":"image",
+        "position": "40;396",
+        "size":"135;135",
+        "src":"programs/p1/ico.png",
+        "visible":"true",
+        "click_id":"1"
+      },
+      {
+        "id":"p6_ico",
+        "type":"image",
+        "position": "204;396",
+        "size":"135;135",
+        "src":"programs/p6/ico.png",
+        "visible":"true",
+        "click_id":"6"
+      },
+      {
+        "id":"p1_img",
+        "type":"image",
+        "position": "85;76",
+        "size":"264;264",
+        "src":"programs/p1/ico.png",
+        "visible":"false"
+      },
+      {
+        "id":"p6_img",
+        "type":"image",
+        "position": "85;76",
+        "size":"264;264",
+        "src":"programs/p6/ico.png",
+        "visible":"false"
+      },
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "461;93",
+        "font": "standard_number",
+        "symbol_size":"133;225",
+        "padding": "5",
+        "length": "3",
+        "visible":"true"
+      }
+    ]
+  }
