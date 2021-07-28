@@ -53,13 +53,13 @@ enum nv_pollCodes // all codes that require action
 
 int DiaNv::InitStage = 0;
 
-void DiaNv_InsertCrc16(uint8_t *source, int len)
+void DiaNv_InsertCrc16(uint8_t *source, int len, int startByte)
 {
     uint16_t seed = 0xFFFF;
     uint16_t poly = 0x8005;
     uint16_t crc = seed;
 
-    for (int i = 1; i < len - 2; i++) {
+    for (int i = startByte; i < len - 2; i++) {
         crc ^= (source[i] << 8);
         for (int j = 0; j < 8; j++) {
             if (crc & 0x8000) {
@@ -747,7 +747,7 @@ int DiaNv_EncryptCommand(DiaNv * driver, uint8_t* command, int size, uint8_t *re
     EncrypteddataSize += packageSize;
 
     EncrypteddataSize += 2;
-    DiaNv_InsertCrc16(EncryptedData - 1, EncrypteddataSize + 1); //insert crc
+    DiaNv_InsertCrc16(EncryptedData, EncrypteddataSize, 0); //insert crc
     AES aes = AES();    
 
     unsigned int encryptedSize = 0; // encrypt data
@@ -760,7 +760,7 @@ int DiaNv_EncryptCommand(DiaNv * driver, uint8_t* command, int size, uint8_t *re
         result[4 + i] = enc[i];
     }
     int resultSize = 4 + encryptedSize + 2;
-    DiaNv_InsertCrc16(result, resultSize);
+    DiaNv_InsertCrc16(result, resultSize, 1);
     delete[]enc;
     return resultSize;
 }
@@ -781,7 +781,7 @@ int DiaNv::SendCommand(DiaNv * driver, uint8_t *command, int size)
         result[1] = 128;
         SequenceBit = false;
     }
-    DiaNv_InsertCrc16(result, size);
+    DiaNv_InsertCrc16(result, size, 1);
     if (driver -> EncryptPackets)
     {
         uint8_t encResult[255];
