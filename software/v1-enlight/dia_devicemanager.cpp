@@ -5,7 +5,7 @@
 #include <string>
 #include <dirent.h>
 #include <stdio.h>
-#include "dia_nv9usb.h"
+#include "dia_nv.h"
 #include "dia_microcoinsp.h"
 #include "dia_cardreader.h"
 #include "dia_vendotek.h"
@@ -152,15 +152,22 @@ void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortNam
                 manager->_Devices.push_back(dev);
 
             } else if (DiaDeviceManager_CheckNV9(PortName)) {
-                printf("\nFound NV9 on port %s\n\n", PortName);
                 DiaDevice * dev = new DiaDevice(PortName);
-
                 dev->Manager = manager;
                 dev->_CheckStatus = DIAE_DEVICE_STATUS_JUST_ADDED;
                 dev->Open();
-                DiaNv9Usb * newNv9 = new DiaNv9Usb(dev, DiaDeviceManager_ReportMoney);
-                DiaNv9Usb_StartDriver(newNv9);
-                manager->_Devices.push_back(dev);
+                DiaNv * newNv = new DiaNv(dev, DiaDeviceManager_ReportMoney);
+                int status = DiaNv_InitDriver(newNv);
+                if (status != DIA_NV_NO_ERROR) 
+                {
+                    delete dev; delete newNv;
+                    usleep(100000);  
+                }
+                else
+                {
+                    manager->_Devices.push_back(dev);
+                    printf("\nFound NV device on port %s\n\n", PortName);
+                }
             }
         }
         if (!isACM) { 
@@ -186,7 +193,6 @@ void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortNam
                     manager->_Devices.push_back(dev);
                 } else {
                     printf("\nNo devices found on port %s\n", PortName);
-                    DiaDevice_CloseDevice(dev);
                 }
             }
         }
