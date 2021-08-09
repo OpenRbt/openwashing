@@ -486,7 +486,7 @@ update_balance = function()
 end
 
 charge_balance = function(price)
-    balance = balance - price * real_ms_per_loop / 60000
+    balance = balance - price * 100 / 60000
     if balance<0 then balance = 0 end
 end
 

@@ -26,7 +26,12 @@ int DiaFont::Init(std::string folder, std::string newValue) {
         printf("%s error\n", full_name.c_str());
         return 1;
 	}
-    FontImage = SDL_DisplayFormatAlpha(tmpImg);
+    if (tmpImg->format->Amask==0) {
+        FontImage = SDL_DisplayFormat(tmpImg);
+    } else {
+        FontImage = SDL_DisplayFormatAlpha(tmpImg);
+    }
+
     SDL_FreeSurface(tmpImg);
 
     name = newValue;

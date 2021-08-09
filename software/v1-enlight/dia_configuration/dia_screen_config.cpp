@@ -48,7 +48,7 @@ int DiaScreenConfig::Display(DiaScreen * screen) {
     screen->FlipFrame();
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-    printf("create screen time '%ld' microseconds\n", duration);
+    printf("create screen time '%.3f' ms\n", duration/1000.0);
 
     return 0;
 }
