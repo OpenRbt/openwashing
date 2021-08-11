@@ -307,6 +307,10 @@ inline int64_t micro_seconds_since(struct timespec * stored_time) {
 inline void set_current_time(struct timespec * stored_time) {
     clock_gettime(CLOCK_MONOTONIC_RAW, stored_time);
 }
+
+int smart_count =0;
+int64_t micro_secs_passed_avg =0;
+
 int smart_delay_function(void * arg, int ms) {
     struct timespec *stored_time = (struct timespec *) arg;
 
@@ -315,11 +319,18 @@ int smart_delay_function(void * arg, int ms) {
     // tv_sec (second) is one million microseconds
     // tv_nsec (nanosecond) contains 1000 microseconds or 10^9 seconds
     int64_t micro_secs_passed = micro_seconds_since(stored_time);
-
-    if (micro_secs_passed<delay_wanted) {
+   if  (micro_secs_passed<MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC && delay_wanted<MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
+       if (micro_secs_passed<delay_wanted) {
+            while ((delay_wanted>micro_seconds_since(stored_time)) && (_DebugKey==0)) {
+                usleep(1000);
+            }
+        }
+   } else {
         delay_wanted -= micro_secs_passed;
-        usleep(delay_wanted);
-    }
+        if (delay_wanted>0) {
+            usleep(delay_wanted);
+        }
+   }
     
     micro_secs_passed = micro_seconds_since(stored_time);
     if (micro_secs_passed < MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
@@ -329,6 +340,14 @@ int smart_delay_function(void * arg, int ms) {
             stored_time->tv_nsec = stored_time->tv_nsec - BILLION;
             stored_time->tv_sec +=1;
         }
+        smart_count +=1;
+        micro_secs_passed_avg +=micro_secs_passed;
+        if (smart_count >= 10){
+            smart_count = 0;
+            printf("smart avg micro_secs_passed: '%d' \n", (int)micro_secs_passed_avg/10000);
+            micro_secs_passed_avg =0;
+        }
+
         return (int)(micro_secs_passed / 1000);
     }
 
