@@ -308,9 +308,6 @@ inline void set_current_time(struct timespec * stored_time) {
     clock_gettime(CLOCK_MONOTONIC_RAW, stored_time);
 }
 
-int smart_count =0;
-int64_t micro_secs_passed_avg =0;
-
 int smart_delay_function(void * arg, int ms) {
     struct timespec *stored_time = (struct timespec *) arg;
 
@@ -340,14 +337,6 @@ int smart_delay_function(void * arg, int ms) {
             stored_time->tv_nsec = stored_time->tv_nsec - BILLION;
             stored_time->tv_sec +=1;
         }
-        smart_count +=1;
-        micro_secs_passed_avg +=micro_secs_passed;
-        if (smart_count >= 10){
-            smart_count = 0;
-            printf("smart avg micro_secs_passed: '%d' \n", (int)micro_secs_passed_avg/10000);
-            micro_secs_passed_avg =0;
-        }
-
         return (int)(micro_secs_passed / 1000);
     }
 
