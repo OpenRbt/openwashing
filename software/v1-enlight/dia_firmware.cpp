@@ -316,7 +316,7 @@ int smart_delay_function(void * arg, int ms) {
     // tv_sec (second) is one million microseconds
     // tv_nsec (nanosecond) contains 1000 microseconds or 10^9 seconds
     int64_t micro_secs_passed = micro_seconds_since(stored_time);
-   if  (micro_secs_passed<MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC && delay_wanted<MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
+   if  (delay_wanted<MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
        if (micro_secs_passed<delay_wanted) {
             while ((delay_wanted>micro_seconds_since(stored_time)) && (_DebugKey==0)) {
                 usleep(1000);
