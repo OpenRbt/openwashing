@@ -307,6 +307,7 @@ inline int64_t micro_seconds_since(struct timespec * stored_time) {
 inline void set_current_time(struct timespec * stored_time) {
     clock_gettime(CLOCK_MONOTONIC_RAW, stored_time);
 }
+
 int smart_delay_function(void * arg, int ms) {
     struct timespec *stored_time = (struct timespec *) arg;
 
@@ -315,11 +316,18 @@ int smart_delay_function(void * arg, int ms) {
     // tv_sec (second) is one million microseconds
     // tv_nsec (nanosecond) contains 1000 microseconds or 10^9 seconds
     int64_t micro_secs_passed = micro_seconds_since(stored_time);
-
-    if (micro_secs_passed<delay_wanted) {
+   if  (delay_wanted<MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
+       if (micro_secs_passed<delay_wanted) {
+            while ((delay_wanted>micro_seconds_since(stored_time)) && (_DebugKey==0)) {
+                usleep(1000);
+            }
+        }
+   } else {
         delay_wanted -= micro_secs_passed;
-        usleep(delay_wanted);
-    }
+        if (delay_wanted>0) {
+            usleep(delay_wanted);
+        }
+   }
     
     micro_secs_passed = micro_seconds_since(stored_time);
     if (micro_secs_passed < MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {

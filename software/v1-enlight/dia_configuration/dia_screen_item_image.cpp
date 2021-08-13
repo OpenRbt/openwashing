@@ -140,12 +140,20 @@ int dia_screen_item_image_notify(DiaScreenItem * base_item, void * image_ptr, st
         std::string full_name = base_item->Parent->Folder;
         full_name+="/";
         full_name+=obj->src.value;
-        SDL_Surface *newImg = IMG_Load(full_name.c_str());
-        if(!newImg) {
+        SDL_Surface *tmpImg = IMG_Load(full_name.c_str());
+
+        if(!tmpImg) {
             printf("error: IMG_Load: %s\n", IMG_GetError());
             printf("%s error\n", full_name.c_str());
             return 1;
         }
+        SDL_Surface *newImg;
+        if (tmpImg->format->Amask==0) {
+            newImg = SDL_DisplayFormat(tmpImg);
+        } else {
+            newImg = SDL_DisplayFormatAlpha(tmpImg);
+        }
+        SDL_FreeSurface(tmpImg);
         obj->SetPicture(newImg);
         obj->Rescale();
 	} else {

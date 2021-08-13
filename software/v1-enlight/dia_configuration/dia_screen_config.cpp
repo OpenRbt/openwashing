@@ -7,8 +7,7 @@ int DiaScreenConfig::Display(DiaScreen * screen) {
     Changed = 0;
     printf("Displaying screen '%s' ..........,,, \n", this->id.c_str());
     clickAreas.clear();
-
-
+    auto t1 = std::chrono::high_resolution_clock::now();
     for (auto it = items_list.begin(); it != items_list.end(); ++it) {
         DiaScreenItem * currentItem = *it;
         if (currentItem->display_ptr == 0) {
@@ -45,8 +44,12 @@ int DiaScreenConfig::Display(DiaScreen * screen) {
             printf("not visible!\n");
         }
     }
-    
+
     screen->FlipFrame();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+    printf("create screen time '%.3f' ms\n", duration/1000.0);
+
     return 0;
 }
 int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {

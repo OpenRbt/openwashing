@@ -20,12 +20,20 @@ int DiaFont::Init(std::string folder, std::string newValue) {
     full_name += "/pic/fonts/" + newValue + ".png";
 
     printf("Dia Font Init - loading font from file: %s\n", full_name.c_str());
-    FontImage = IMG_Load(full_name.c_str());
-    if (!FontImage) {
+    SDL_Surface * tmpImg = IMG_Load(full_name.c_str());
+    if (!tmpImg) {
         printf("error: IMG_Load: %s\n", IMG_GetError());
         printf("%s error\n", full_name.c_str());
         return 1;
 	}
+    if (tmpImg->format->Amask==0) {
+        FontImage = SDL_DisplayFormat(tmpImg);
+    } else {
+        FontImage = SDL_DisplayFormatAlpha(tmpImg);
+    }
+
+    SDL_FreeSurface(tmpImg);
+
     name = newValue;
 
     return 0;
