@@ -182,6 +182,13 @@ int get_price(int button) {
     return 0;
 }
 
+int get_is_finishing_program(int button){
+    if (config){
+        return config->GetIsFinishingProgram(button);
+    }
+    return 0;
+}
+
 int get_coins(void *object) {
   DiaDeviceManager * manager = (DiaDeviceManager *)object;
   int curMoney = manager->CoinMoney;
@@ -957,6 +964,7 @@ int main(int argc, char ** argv) {
     config->GetRuntime()->AddSvcWeather(config->GetSvcWeather());
     config->GetRuntime()->Registry->SetPostID(stationID);
     config->GetRuntime()->Registry->get_price_function = get_price;
+    config->GetRuntime()->Registry->get_is_finishing_program_function = get_is_finishing_program;
     
     //InitSensorButtons();
 

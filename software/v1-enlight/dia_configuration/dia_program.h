@@ -16,6 +16,7 @@ class DiaProgram {
     int MotorSpeedPercent;
     DiaRelayConfig Relays;
     bool PreflightEnabled;
+    bool IsFinishingProgram;
     int PreflightMotorSpeedPercent;
     DiaRelayConfig PreflightRelays;
     
@@ -66,6 +67,13 @@ class DiaProgram {
             PreflightEnabled = json_boolean_value(preflight_enabled_json);
         } else {
             PreflightEnabled = false;
+        }
+
+        json_t *is_finishing_program_json = json_object_get(program_node, "isFinishingProgram");
+        if (json_is_boolean(is_finishing_program_json)){
+            IsFinishingProgram = json_boolean_value(is_finishing_program_json);
+        } else {
+            IsFinishingProgram = false;
         }
 
         json_t *name_json = json_object_get(program_node, "name");
