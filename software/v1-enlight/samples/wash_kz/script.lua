@@ -344,7 +344,6 @@ thanks_mode = function()
         cash_balance = 0
         electronical_balance = 0
         is_waiting_receipt = false
-        --increment_cars()
 	if hascardreader() then
         	return mode_choose_method
     	end
@@ -463,7 +462,9 @@ run_stop = function()
 end
 
 run_program = function(program_num)
-    lastProgramID = program_num
+    if program_num ~= 6 then
+        lastProgramID = program_num
+    end
     hardware:TurnProgram(program_num)
 end
 
