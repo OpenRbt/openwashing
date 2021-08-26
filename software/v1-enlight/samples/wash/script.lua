@@ -74,10 +74,10 @@ end
 loop = function()
     update_post()
 
-    if balance < 0.1 then
+    if balance < 0.1 and money_wait_seconds > 0 then
         money_wait_seconds = money_wait_seconds - 1
     end
-    if is_money_added and money_wait_seconds < 0 and get_is_finishing_programm(last_program_id) then
+    if is_money_added and money_wait_seconds <= 0 and get_is_finishing_programm(last_program_id) then
         increment_cars()
         is_money_added = false
         last_program_id = 0
@@ -460,8 +460,8 @@ run_stop = function()
 end
 
 run_program = function(program_num)
-    if program_num ~= 6 then
-        lastProgramID = program_num
+    if program_num ~= 6 and program_num >0 then
+        last_program_id = program_num
     end
     hardware:TurnProgram(program_num)
 end
@@ -487,7 +487,10 @@ get_is_preflight = function()
 end
 
 get_is_finishing_programm = function(program_id)
-    return registry:GetIsFinishingProgram(program_id)
+    if registry:GetIsFinishingProgram(program_id) == 1 then
+        return true
+    end
+    return false
 end
 
 update_balance = function()
