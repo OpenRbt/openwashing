@@ -83,6 +83,15 @@ public:
         return 0;
     }
 
+    int (*get_is_finishing_program_function)(int button);
+    int GetIsFinishingProgram(int button){
+        if (get_is_finishing_program_function){
+            return get_is_finishing_program_function(button);
+        }else {
+            printf("error: NIL object or function GetIsFinishingProgram\n");
+        }
+        return 0;
+    }
 private:
     std::map<std::string, std::string> values;
 };

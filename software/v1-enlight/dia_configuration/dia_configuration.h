@@ -96,7 +96,16 @@ public:
         }
         return 0;
     }
-    
+
+    int GetIsFinishingProgram(int button){
+        if (_Programs[button]){
+            if (_Programs[button]->IsFinishingProgram){
+                return 1;
+            }
+        }
+        return 0;
+    }
+
     int GetRelaysNumber() {
         return _RelaysNumber;
     }
