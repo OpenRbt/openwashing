@@ -43,7 +43,6 @@
 DiaConfiguration * config;
 
 int _IntervalsCount;
-int _IntervalsCountRelay;
 
 // Public key for signing every request to Central Server.
 const int centralKeySize = 6;
@@ -440,12 +439,6 @@ int CentralServerDialog() {
         _IntervalsCount = 0;
     }
 
-    _IntervalsCountRelay++;
-    if(_IntervalsCountRelay < 0) {
-        printf("Memory corruption on _IntervalsCountRelay\n");
-        _IntervalsCountRelay = 0;
-    }
-
     printf("Sending another PING request to server...\n");
 
     int serviceMoney = 0;
@@ -485,24 +478,6 @@ int CentralServerDialog() {
         _DebugKey = buttonID;
     #endif
 
-    // Every 5 min (300 sec) we go inside this
-    if (_IntervalsCountRelay > 300) {
-        _IntervalsCountRelay = 0;
-        if (config) {
-            if (config->GetGpio()) {
-                printf("Sending relay report to server...\n");
-        
-                RelayStat *relays = new RelayStat[MAX_RELAY_NUM];
-                DiaGpio * gpio = config->GetGpio();
-                for (int i = 0; i < MAX_RELAY_NUM; i++) {
-                    relays[i].switched_count = gpio->Stat.relay_switch[i+1];
-                    relays[i].total_time_on = gpio->Stat.relay_time[i+1];
-                }
-                network->SendRelayReport(relays);
-                delete[] relays;
-            }
-        }
-    }
     if (config) {
         // Every 30 min (1800 sec) we go inside this
         static const int maxIntervalsCountWeather = 1800;
