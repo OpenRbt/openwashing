@@ -433,7 +433,7 @@ public:
     // PING request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate) {
+    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate, int& lastDiscountUpdate) {
         std::string answer;
 	    std::string url = _Host + _Port + "/ping";
         
@@ -480,12 +480,28 @@ public:
             
             json_t *obj_last_update;
             obj_last_update = json_object_get(object, "lastUpdate");
-            lastUpdate = (int)json_integer_value(obj_last_update);            
+            lastUpdate = (int)json_integer_value(obj_last_update);
+            
+            json_t *obj_last_discount_update;
+            obj_last_discount_update = json_object_get(object, "lastDiscountUpdate");
+            lastDiscountUpdate = (int)json_integer_value(obj_last_discount_update);            
         } while (0);
         json_decref(object);
         return err;
     }
 
+    // GetStationDiscounts request to specified URL with method POST.
+    // Returns 0, if request was OK, other value - in case of failure.
+    int GetDiscounts(std::string &answer) {
+        std::string url = _Host + _Port + "/get-station-discounts";
+        int result;
+        std::string json_get_station_discounts_request = json_get_station_discounts();
+        result = SendRequest(&json_get_station_discounts_request, &answer, url);
+        if (result) {
+            return 1;
+        }
+        return 0;
+    }
 
     // Adds a receipt to a queue.
     int ReceiptRequest(int postPosition, int cash, int electronical) {
@@ -1136,6 +1152,18 @@ private:
         return res;
     }
 
+    std::string json_get_station_discounts() {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
+
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
     static size_t _Writefunc(void *ptr, size_t size, size_t nmemb, curl_answer_t *answer) {
         assert(answer);
          size_t new_len = answer->length + size*nmemb;
