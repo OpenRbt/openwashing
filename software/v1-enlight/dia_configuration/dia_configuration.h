@@ -80,7 +80,7 @@ public:
     int GetPrice(int button) {
         if (_Programs[button]) {
             if (_Discounts.count(button)) {
-                return _Programs[button]->Price - _Programs[button]->Price * _Discounts[button] / 100;
+                return (int)(_Programs[button]->Price * (100 - _Discounts[button]) / 100.0);
             }
             return _Programs[button]->Price;
         }

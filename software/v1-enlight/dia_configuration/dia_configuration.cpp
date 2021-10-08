@@ -358,7 +358,7 @@ int DiaConfiguration::LoadDiscounts() {
             }
             json_t *button_discount_value_json = json_object_get(button_discount_json, "discount");
             if json_is_integer (button_discount_value_json) {
-                dicount = json_integer_value(button_id_json);
+                dicount = json_integer_value(button_discount_value_json);
                 if (dicount > 0) {
                     this->_Discounts[button] = dicount;
                 }
