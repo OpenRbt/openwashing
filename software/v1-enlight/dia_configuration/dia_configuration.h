@@ -133,6 +133,9 @@ public:
     int GetDiscountLastUpdate(){
         return _DiscountLastUpdate;
     }
+    void SetDiscountLastUpdate(int value){
+        _DiscountLastUpdate = value;
+    }
 
     private:
     std::string _Name;

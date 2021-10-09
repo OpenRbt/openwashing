@@ -458,8 +458,9 @@ int CentralServerDialog() {
         if (lastUpdate != config->GetLastUpdate() &&  config->GetLastUpdate() != -1){
             config->LoadConfig();
         }
-        if (discountLastUpdate != config->GetDiscountLastUpdate() && config->GetDiscountLastUpdate() != -1){
+        if (discountLastUpdate != config->GetDiscountLastUpdate()){
             config->LoadDiscounts();
+            config->SetDiscountLastUpdate(discountLastUpdate);
         }
     }
     if (serviceMoney > 0) {

@@ -348,7 +348,6 @@ int DiaConfiguration::LoadDiscounts() {
     for (unsigned int i = 0; i < json_array_size(station_discounts_json); i++) {
         json_t *button_discount_json = json_array_get(station_discounts_json, i);
         if (json_is_object(button_discount_json)) {
-            fprintf(stderr, "error: program %d is not an object\n", i + 1);
             int button, dicount;
             json_t *button_id_json = json_object_get(button_discount_json, "buttonID");
             if json_is_integer (button_id_json) {
