@@ -83,6 +83,16 @@ public:
         return 0;
     }
 
+    int (*get_discount_function)(int button);
+    int GetDiscount(int button) {
+        if(get_discount_function) {
+            return get_discount_function(button);
+        } else {
+            printf("error: NIL object or function GetDiscount\n");
+        }
+        return 0;
+    }
+
     int (*get_is_finishing_program_function)(int button);
     int GetIsFinishingProgram(int button){
         if (get_is_finishing_program_function){

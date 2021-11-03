@@ -86,6 +86,14 @@ public:
         }
         return 0;
     }
+
+    int GetDiscount(int button){
+        if (_Discounts.count(button)){
+            return _Discounts[button];
+        }
+        return 0;
+    }
+
     int GetPreflightSec(int button) {
         if ((_Programs[button]) && (_PreflightSec>0)) {
             if (_Programs[button]->PreflightEnabled) {

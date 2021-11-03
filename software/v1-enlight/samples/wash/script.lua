@@ -40,9 +40,20 @@ setup = function()
     price_p[4] = 0
     price_p[5] = 0
     price_p[6] = 0
+    
+    discount_p = {}
+    
+    discount_p[0] = 0
+    discount_p[1] = 0
+    discount_p[2] = 0
+    discount_p[3] = 0
+    discount_p[4] = 0
+    discount_p[5] = 0
+    discount_p[6] = 0
 
     init_prices()
-    
+    init_discounts()
+
     mode_welcome = 0
     mode_choose_method = 10
     mode_select_price = 20
@@ -101,6 +112,14 @@ init_prices = function()
     price_p[6] = get_price(6)
 end
 
+init_discounts = function()
+    discount_p[1] = get_discount(1)
+    discount_p[2] = get_discount(2)
+    discount_p[3] = get_discount(3)
+    discount_p[4] = get_discount(4)
+    discount_p[5] = get_discount(5)
+    discount_p[6] = get_discount(6)
+end
 
 
 run_mode = function(new_mode)   
@@ -121,6 +140,7 @@ welcome_mode = function()
     run_stop()
     turn_light(0, animation.idle)
     init_prices()
+    init_discounts()
     smart_delay(1000 * welcome_mode_seconds)
     forget_pressed_key()
     if hascardreader() then
@@ -137,6 +157,7 @@ choose_method_mode = function()
     turn_light(0, animation.idle)
 
     init_prices()
+    init_discounts()
     
     pressed_key = get_key()
     if pressed_key == 4 or pressed_key == 5 or pressed_key == 6 then
@@ -433,6 +454,10 @@ end
 
 get_price = function(key)
     return registry:GetPrice(key)
+end
+
+get_discount = function(key)
+    return registry:GetDiscount(key)
 end
 
 set_value_if_not_exists = function(key, value)
