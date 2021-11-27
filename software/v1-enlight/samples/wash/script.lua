@@ -17,15 +17,19 @@ setup = function()
     cash_balance = 0.0
     electronical_balance = 0.0
     post_position = 1
+    money_wait_seconds = 0
+    last_program_id = 0
 
     -- constants
     welcome_mode_seconds = 3
     thanks_mode_seconds = 120
     free_pause_seconds = 120
     wait_card_mode_seconds = 40
+    max_money_wait_seconds = 90
     
     is_transaction_started = false
     is_waiting_receipt = false
+    is_money_added = false
 
     price_p = {}
     
@@ -69,6 +73,16 @@ end
 -- loop is being executed
 loop = function()
     update_post()
+
+    if balance < 0.1 and money_wait_seconds > 0 then
+        money_wait_seconds = money_wait_seconds - 1
+    end
+    if is_money_added and money_wait_seconds <= 0 and get_is_finishing_programm(last_program_id) then
+        increment_cars()
+        is_money_added = false
+        last_program_id = 0
+    end
+
     currentMode = run_mode(currentMode)
     real_ms_per_loop = smart_delay(100)
     return 0
@@ -329,7 +343,6 @@ thanks_mode = function()
         cash_balance = 0
         electronical_balance = 0
         is_waiting_receipt = false
-        increment_cars()
 	if hascardreader() then
         	return mode_choose_method
     	end
@@ -447,6 +460,9 @@ run_stop = function()
 end
 
 run_program = function(program_num)
+    if program_num ~= 6 and program_num >0 then
+        last_program_id = program_num
+    end
     hardware:TurnProgram(program_num)
 end
 
@@ -470,11 +486,23 @@ get_is_preflight = function()
     return hardware:GetIsPreflight()
 end
 
+get_is_finishing_programm = function(program_id)
+    if registry:GetIsFinishingProgram(program_id) == 1 then
+        return true
+    end
+    return false
+end
+
 update_balance = function()
     new_coins = hardware:GetCoins()
     new_banknotes = hardware:GetBanknotes()
     new_electronical = hardware:GetElectronical()
     new_service = hardware:GetService()
+
+    if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 then
+        is_money_added = true
+        money_wait_seconds = max_money_wait_seconds * 10
+    end
 
     cash_balance = cash_balance + new_coins
     cash_balance = cash_balance + new_banknotes

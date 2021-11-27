@@ -184,8 +184,10 @@ public:
 	    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 10000);
 
         res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            printf("CURL code is wrong %d\n", res);
+        int http_code = 0;
+        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+        if ((res != CURLE_OK) || ((http_code != 200) && (http_code != 201) && (http_code != 204))) {
+            printf("CURL code is wrong %d, http code %d\n", res, http_code);
             DestructCurlAnswer(&raw_answer);
             curl_easy_cleanup(curl);
             return 1;
@@ -545,23 +547,6 @@ public:
 	    printf("JSON:\n%s\n", json_money_report_request.c_str());
         // Send a request
         CreateAndPushEntry(json_money_report_request, "/save-money");
-        return 0;
-    }
-
-    // Encodes relay report data and sends it to Central Server via SAVE request.
-    int SendRelayReport(struct RelayStat RelayStats[MAX_RELAY_NUM]) {
-        relay_report_t relay_report_data={{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}}};
-
-        for(int i = 0; i < MAX_RELAY_NUM; i++) {
-            relay_report_data.RelayStats[i].switched_count = RelayStats[i].switched_count;
-            relay_report_data.RelayStats[i].total_time_on = RelayStats[i].total_time_on;
-        }
-	printf("Sending relay report...\n");
-        // Encode data to JSON
-        std::string json_relay_report_request = json_create_relay_report(&relay_report_data);
-	printf("JSON:\n%s\n", json_relay_report_request.c_str());
-        // Send a request
-        CreateAndPushEntry(json_relay_report_request, "/save-relay");
         return 0;
     }
 
@@ -927,7 +912,7 @@ private:
 
         entry->stime = time(NULL);
         entry->json_request = json_string;
-	entry->route = route;
+	    entry->route = route;
 
         if (channel.Push(entry) == CHANNEL_BUFFER_OVERFLOW) {
             printf("CHANNEL BUFFER OVERFLOW\n");
