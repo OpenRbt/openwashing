@@ -29,6 +29,7 @@ public:
     int Loop();
     int RunCommand(std::string command);
     int LoadConfig();
+    int LoadDiscounts();
 
     // DELETE methods above
     DiaScreen * GetScreen() {
@@ -78,10 +79,21 @@ public:
 
     int GetPrice(int button) {
         if (_Programs[button]) {
+            if (_Discounts.count(button)) {
+                return (int)(_Programs[button]->Price * (100 - _Discounts[button]) / 100.0);
+            }
             return _Programs[button]->Price;
         }
         return 0;
     }
+
+    int GetDiscount(int button){
+        if (_Discounts.count(button)){
+            return _Discounts[button];
+        }
+        return 0;
+    }
+
     int GetPreflightSec(int button) {
         if ((_Programs[button]) && (_PreflightSec>0)) {
             if (_Programs[button]->PreflightEnabled) {
@@ -125,10 +137,19 @@ public:
     int GetLastUpdate(){
         return _LastUpdate;
     }
+
+    int GetDiscountLastUpdate(){
+        return _DiscountLastUpdate;
+    }
+    void SetDiscountLastUpdate(int value){
+        _DiscountLastUpdate = value;
+    }
+
     private:
     std::string _Name;
     std::string _Folder;
     std::map<int, DiaProgram*> _Programs;
+    std::map<int, int> _Discounts;
     int _PreflightSec;
     int _ServerRelayBoard;
     DiaScreen * _Screen;
@@ -149,6 +170,7 @@ public:
     int _LastButtonPulse;
 
     int _LastUpdate = -1;
+    int _DiscountLastUpdate = -1;
     int InitFromFile();
     int InitFromString(const char * configuration_json);// never ever is going to be virtual
     int InitFromJson(json_t * configuration_json); //never ever virtual

@@ -116,6 +116,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
     .addFunction("SetValueByKey", &DiaRuntimeRegistry::SetValueByKey)
     .addFunction("GetPostID", &DiaRuntimeRegistry::GetPostID)
     .addFunction("GetPrice", &DiaRuntimeRegistry::GetPrice)
+    .addFunction("GetDiscount", &DiaRuntimeRegistry::GetDiscount)
     .addFunction("GetIsFinishingProgram", &DiaRuntimeRegistry::GetIsFinishingProgram)
     .endClass();
 

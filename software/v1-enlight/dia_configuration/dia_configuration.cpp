@@ -322,6 +322,51 @@ int DiaConfiguration::LoadConfig() {
     return 0;
 }
 
+int DiaConfiguration::LoadDiscounts() {
+    std::string answer;
+    int err = _Net->GetDiscounts(answer);
+    if (err != 0) {
+        fprintf(stderr, "error: load advertisting campagins\n");
+        return 1;
+    }
+
+    json_error_t error;
+    json_t *station_discounts_json;
+
+    station_discounts_json = json_loads(answer.c_str(), 0, &error);
+    if (!station_discounts_json) {
+        return 1;
+    }
+
+    if (!json_is_array(station_discounts_json)) {
+        printf("LoadConfig not a JSON\n");
+        return 1;
+    }
+
+    this->_Discounts.clear();
+
+    for (unsigned int i = 0; i < json_array_size(station_discounts_json); i++) {
+        json_t *button_discount_json = json_array_get(station_discounts_json, i);
+        if (json_is_object(button_discount_json)) {
+            int button, dicount;
+            json_t *button_id_json = json_object_get(button_discount_json, "buttonID");
+            if json_is_integer (button_id_json) {
+                button = json_integer_value(button_id_json);
+            } else {
+                continue;
+            }
+            json_t *button_discount_value_json = json_object_get(button_discount_json, "discount");
+            if json_is_integer (button_discount_value_json) {
+                dicount = json_integer_value(button_discount_value_json);
+                if (dicount > 0) {
+                    this->_Discounts[button] = dicount;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 DiaConfiguration::~DiaConfiguration() {
     printf("Destroying configuration ... \n");
 

@@ -180,6 +180,12 @@ int get_price(int button) {
     }
     return 0;
 }
+int get_discount(int button){
+    if (config){
+        return config->GetDiscount(button);
+    }
+    return 0;
+}
 
 int get_is_finishing_program(int button){
     if (config){
@@ -445,10 +451,15 @@ int CentralServerDialog() {
     bool openStation = false;
     int buttonID = 0;
     int lastUpdate = 0;
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate);
+    int discountLastUpdate = 0;
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() &&  config->GetLastUpdate() != -1){
             config->LoadConfig();
+        }
+        if (discountLastUpdate != config->GetDiscountLastUpdate()){
+            config->LoadDiscounts();
+            config->SetDiscountLastUpdate(discountLastUpdate);
         }
     }
     if (serviceMoney > 0) {
@@ -578,11 +589,12 @@ int RecoverRegistry() {
     int buttonID = 0;
     
     int lastUpdate = 0;
+    int discountLastUpdate = 0;
 
     std::string default_price = "15";
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -860,6 +872,16 @@ int main(int argc, char ** argv) {
             sleep(1);
         }
     }
+    err = 1;
+    StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Loading discounts campagins from server");
+    while (err != 0) {
+        err = config->LoadDiscounts();
+        if (err) {
+            fprintf(stderr, "Error loading discounts from server\n");
+            StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Error loading discounts from server");
+            sleep(1);
+        }
+    }
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Settings from server loaded");
     _IsServerRelayBoard = config->GetServerRelayBoard();
     if (config->GetServerRelayBoard()) {
@@ -939,6 +961,7 @@ int main(int argc, char ** argv) {
     config->GetRuntime()->AddSvcWeather(config->GetSvcWeather());
     config->GetRuntime()->Registry->SetPostID(stationID);
     config->GetRuntime()->Registry->get_price_function = get_price;
+    config->GetRuntime()->Registry->get_discount_function = get_discount;
     config->GetRuntime()->Registry->get_is_finishing_program_function = get_is_finishing_program;
     
     //InitSensorButtons();
