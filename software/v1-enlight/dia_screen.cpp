@@ -14,6 +14,7 @@
 DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
     //printf("SDLInitStart\n"); fflush(stdout);
     //printf("SDLInit finished properly, SDLShowCursor started\n"); fflush(stdout);
+    
     if (hideCursor) {
         SDL_Cursor* cursor;
         int32_t cursorData[2] = {0,0};

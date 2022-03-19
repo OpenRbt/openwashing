@@ -1,0 +1,5 @@
+DRC Rules Export File for PCB: C:\Oleg\owncloud\Oleg\Роман\RP_INTERFACE_BOARD_V4.1\RP_INTERFACE_BOARD_V4.1.PcbDoc
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion|Scope=Board|Minimum=8.00
+RuleKind=Width|RuleName=Width|Scope=Board|Minimum=7.87
+RuleKind=Clearance|RuleName=Clearance|Scope=Board|Minimum=11.81
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0

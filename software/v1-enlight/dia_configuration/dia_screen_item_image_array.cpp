@@ -155,13 +155,20 @@ int dia_screen_item_image_array_notify(DiaScreenItem * base_item, void * image_a
         full_name += "/";
         full_name += value;
 
-        SDL_Surface *newImg = IMG_Load(full_name.c_str());
+        SDL_Surface *tmpImg = IMG_Load(full_name.c_str());
 
-        if (!newImg) {
+        if (!tmpImg) {
             printf("error: IMG_Load: %s\n", IMG_GetError());
             printf("%s error\n", full_name.c_str());
             return 1;
         }
+        SDL_Surface *newImg;
+        if (tmpImg->format->Amask==0) {
+            newImg = SDL_DisplayFormat(tmpImg);
+        } else {
+            newImg = SDL_DisplayFormatAlpha(tmpImg);
+        }
+        SDL_FreeSurface(tmpImg);
         obj->AppendPicture(newImg);
 	} else {
         printf("unknown key for image object: '%s' \n", key.c_str());

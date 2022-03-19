@@ -1,0 +1,66 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1024;600",
+        "src":"pic/2/background_select_price.png",
+        "visible":"true"
+      },
+      {
+        "id":"logo",
+        "type":"image",
+        "position":"60;6",
+        "size":"174;75",
+        "src":"pic/logo.png",
+        "visible":"true"
+      },
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "462;91",
+        "font": "standard_number",
+        "symbol_size":"133;225",
+        "padding": "3",
+        "length": "3",
+        "visible":"true"
+      },
+      {
+        "id":"plus",
+        "type":"image",
+        "position": "0;366",
+        "size":"188;234",
+        "src":"pic/arrow.png",
+        "visible":"false",
+        "click_id":"1"
+      },
+      {
+        "id":"minus",
+        "type":"image",
+        "position": "189;366",
+        "size":"164;234",
+        "src":"pic/arrow.png",
+        "visible":"false",
+        "click_id":"2"
+      },
+      {
+        "id":"return",
+        "type":"image",
+        "position": "352;366",
+        "size":"188;234",
+        "src":"pic/arrow.png",
+        "visible":"false",
+        "click_id":"3"
+      },
+      {
+        "id":"accept",
+        "type":"image",
+        "position": "746;366",
+        "size":"278;234",
+        "src":"pic/arrow.png",
+        "visible":"false",
+        "click_id":"6"
+      }
+    ]
+  }

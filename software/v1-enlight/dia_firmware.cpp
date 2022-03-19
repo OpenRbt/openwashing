@@ -43,7 +43,6 @@
 DiaConfiguration * config;
 
 int _IntervalsCount;
-int _IntervalsCountRelay;
 
 // Public key for signing every request to Central Server.
 const int centralKeySize = 6;
@@ -182,6 +181,13 @@ int get_price(int button) {
     return 0;
 }
 
+int get_is_finishing_program(int button){
+    if (config){
+        return config->GetIsFinishingProgram(button);
+    }
+    return 0;
+}
+
 int get_coins(void *object) {
   DiaDeviceManager * manager = (DiaDeviceManager *)object;
   int curMoney = manager->CoinMoney;
@@ -307,6 +313,7 @@ inline int64_t micro_seconds_since(struct timespec * stored_time) {
 inline void set_current_time(struct timespec * stored_time) {
     clock_gettime(CLOCK_MONOTONIC_RAW, stored_time);
 }
+
 int smart_delay_function(void * arg, int ms) {
     struct timespec *stored_time = (struct timespec *) arg;
 
@@ -315,11 +322,18 @@ int smart_delay_function(void * arg, int ms) {
     // tv_sec (second) is one million microseconds
     // tv_nsec (nanosecond) contains 1000 microseconds or 10^9 seconds
     int64_t micro_secs_passed = micro_seconds_since(stored_time);
-
-    if (micro_secs_passed<delay_wanted) {
+   if  (delay_wanted<MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
+       if (micro_secs_passed<delay_wanted) {
+            while ((delay_wanted>micro_seconds_since(stored_time)) && (_DebugKey==0)) {
+                usleep(1000);
+            }
+        }
+   } else {
         delay_wanted -= micro_secs_passed;
-        usleep(delay_wanted);
-    }
+        if (delay_wanted>0) {
+            usleep(delay_wanted);
+        }
+   }
     
     micro_secs_passed = micro_seconds_since(stored_time);
     if (micro_secs_passed < MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
@@ -425,12 +439,6 @@ int CentralServerDialog() {
         _IntervalsCount = 0;
     }
 
-    _IntervalsCountRelay++;
-    if(_IntervalsCountRelay < 0) {
-        printf("Memory corruption on _IntervalsCountRelay\n");
-        _IntervalsCountRelay = 0;
-    }
-
     printf("Sending another PING request to server...\n");
 
     int serviceMoney = 0;
@@ -470,24 +478,6 @@ int CentralServerDialog() {
         _DebugKey = buttonID;
     #endif
 
-    // Every 5 min (300 sec) we go inside this
-    if (_IntervalsCountRelay > 300) {
-        _IntervalsCountRelay = 0;
-        if (config) {
-            if (config->GetGpio()) {
-                printf("Sending relay report to server...\n");
-        
-                RelayStat *relays = new RelayStat[MAX_RELAY_NUM];
-                DiaGpio * gpio = config->GetGpio();
-                for (int i = 0; i < MAX_RELAY_NUM; i++) {
-                    relays[i].switched_count = gpio->Stat.relay_switch[i+1];
-                    relays[i].total_time_on = gpio->Stat.relay_time[i+1];
-                }
-                network->SendRelayReport(relays);
-                delete[] relays;
-            }
-        }
-    }
     if (config) {
         // Every 30 min (1800 sec) we go inside this
         static const int maxIntervalsCountWeather = 1800;
@@ -949,6 +939,7 @@ int main(int argc, char ** argv) {
     config->GetRuntime()->AddSvcWeather(config->GetSvcWeather());
     config->GetRuntime()->Registry->SetPostID(stationID);
     config->GetRuntime()->Registry->get_price_function = get_price;
+    config->GetRuntime()->Registry->get_is_finishing_program_function = get_is_finishing_program;
     
     //InitSensorButtons();
 
