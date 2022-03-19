@@ -92,6 +92,7 @@ int DiaDeviceManager_CheckNV9(char* PortName) {
     return 0;
 }
 
+
 int DiaDeviceManager_CheckUIC(char* PortName) {
     printf("\nChecking port %s for UIC device...\n", PortName);
 
