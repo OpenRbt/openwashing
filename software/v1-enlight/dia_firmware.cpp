@@ -135,16 +135,16 @@ int increment_cars() {
     return 0;
 }
 
-int turn_program(void *object, int program) {
-    if (program != _CurrentProgram) {
+int turn_program(void *object, int program1, int program2) {
+    if (program1 != _CurrentProgram) {
         printf("TURN PROGRAM %d intervals count preflight %d\n", _CurrentProgramID, _IntervalsCountPreflight);
         _IntervalsCountProgram = 0;
-        _CurrentProgram = program;
+        _CurrentProgram = program1;
         _CurrentProgramID = 0;
         _IntervalsCountPreflight = 0;
-        if ((config) && (program>0)){
-            _CurrentProgramID = config->GetProgramID(program);
-            _IntervalsCountPreflight = config->GetPreflightSec(program)*10;
+        if ((config) && (program1>0)){
+            _CurrentProgramID = config->GetProgramID(program1);
+            _IntervalsCountPreflight = config->GetPreflightSec(program1)*10;
             printf("TURN PROGRAM %d intervals count preflight %d\n", _CurrentProgramID, _IntervalsCountPreflight);
         }
     }

@@ -35,10 +35,10 @@ public:
     }
 
     void * program_object;
-    int (*turn_program_function)(void * object, int program);
-    int TurnProgram(int ProgramNum) {
+    int (*turn_program_function)(void * object, int program1, int program2);
+    int TurnProgram(int ProgramNum1, int ProgramNum2) {
         if(/*program_object && */turn_program_function) {
-            turn_program_function(program_object, ProgramNum);
+            turn_program_function(program_object, ProgramNum1, ProgramNum2);
         } else {
             //printf("error: NIL object or function TurnActivator\n");
         }
