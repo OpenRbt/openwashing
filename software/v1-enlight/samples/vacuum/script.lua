@@ -35,6 +35,7 @@ setup = function()
     price_p[6] = 0
 
     init_prices()
+    printMessage("Prices: " .. price_p[0] .. " " .. price_p[1] .. " " .. price_p[2] .. " " .. price_p[3] .. " " .. price_p[4] .. " " .. price_p[5] .. " " .. price_p[6])
     
     mode_welcome = 0
     mode_choose_method = 10
@@ -61,6 +62,7 @@ end
 
 -- loop is being executed
 loop = function()
+    printMessage("BALANCE: " .. balance)
     currentMode = run_mode(currentMode)
     real_ms_per_loop = smart_delay(100)
     return 0
@@ -192,10 +194,10 @@ wait_for_card_mode = function()
     end
 
     if waiting_loops <= 0 then
-    is_transaction_started = false
-	if status ~= 0 then
-	    abort_transaction()
-	end
+        is_transaction_started = false
+	    if status ~= 0 then
+	        abort_transaction()
+	    end
         return mode_choose_method
     end
 
@@ -424,7 +426,7 @@ abort_transaction = function()
 end
 
 set_current_state = function(current_balance, current_program)
-    return hardware:SetCurrentState(math.floor(current_balance), current_program)
+    return hardware:SetCurrentState(math.floor(current_balance + 100), current_program + 2)
 end
 
 update_balance = function()
