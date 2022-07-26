@@ -1,0 +1,59 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"540;960",
+      "src":"pic/background.png",
+      "visible":"true"
+    },
+    {
+      "id":"balance",
+      "type": "digits",
+      "position": "200;160",
+      "font": "standard_number",
+      "symbol_size":"40;60",
+      "padding": "2",
+      "length": "3",
+      "visible":"true",
+      "value": "0"
+    },
+    {
+      "id":"content",
+      "type":"image",
+      "position": "28;340",
+      "size":"484;340",
+      "src":"pic/choose.png",
+      "visible":"true"
+    },
+    {
+      "id":"price",
+      "type": "digits",
+      "position": "410;408",
+      "font": "standard_number",
+      "symbol_size":"10;15",
+      "padding": "2",
+      "length": "3",
+      "visible":"true"
+    },
+    {
+      "id":"button_cash",
+      "type":"image",
+      "position": "10;680",
+      "size":"520;89",
+      "src":"pic/buttons/cash.png",
+      "visible":"true",
+      "click_id":"100"
+    },
+    {
+      "id":"button_cashless",
+      "type":"image",
+      "position": "10;760",
+      "size":"520;89",
+      "src":"pic/buttons/cashless.png",
+      "visible":"true",
+      "click_id":"101"
+    }
+  ]
+}

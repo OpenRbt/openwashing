@@ -1,0 +1,59 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"540;960",
+        "src":"pic/background.png",
+        "visible":"true"
+      },
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "200;160",
+        "font": "standard_number",
+        "symbol_size":"40;60",
+        "padding": "2",
+        "length": "3",
+        "visible":"true"
+      },
+      {
+        "id":"content",
+        "type":"image",
+        "position": "214;340",
+        "size":"112;45",
+        "src":"pic/start_filling.png",
+        "visible":"true"
+      },
+      {
+        "id":"volume_1",
+        "type": "digits",
+        "position": "240;350",
+        "font": "standard_number",
+        "symbol_size":"10;15",
+        "padding": "2",
+        "length": "2",
+        "visible":"true"
+      },
+      {
+        "id":"volume_2",
+        "type": "digits",
+        "position": "270;350",
+        "font": "standard_number",
+        "symbol_size":"10;15",
+        "padding": "2",
+        "length": "2",
+        "visible":"true"
+      },
+      {
+        "id":"button_begin",
+        "type":"image",
+        "position": "10;680",
+        "size":"520;102",
+        "src":"pic/buttons/begin.png",
+        "visible":"true",
+        "click_id":"102"
+      }
+    ]
+  }

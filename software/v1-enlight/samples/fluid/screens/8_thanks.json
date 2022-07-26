@@ -1,0 +1,31 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"540;960",
+        "src":"pic/background.png",
+        "visible":"true",
+        "click_id":"103"
+      },
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "200;160",
+        "font": "standard_number",
+        "symbol_size":"40;60",
+        "padding": "2",
+        "length": "3",
+        "visible":"true"
+      },
+      {
+        "id":"content",
+        "type":"image",
+        "position": "90;340",
+        "size":"361;328",
+        "src":"pic/thanks.png",
+        "visible":"true"
+      }
+    ]
+  }

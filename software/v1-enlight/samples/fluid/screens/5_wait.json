@@ -1,0 +1,39 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"540;960",
+        "src":"pic/background.png",
+        "visible":"true"
+      },
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "200;160",
+        "font": "standard_number",
+        "symbol_size":"40;60",
+        "padding": "2",
+        "length": "3",
+        "visible":"true"
+      },
+      {
+        "id":"content",
+        "type":"image",
+        "position": "84;340",
+        "size":"373;290",
+        "src":"pic/wait.png",
+        "visible":"true"
+      },
+      {
+        "id":"button_cancel",
+        "type":"image",
+        "position": "10;760",
+        "size":"520;105",
+        "src":"pic/buttons/cancel.png",
+        "visible":"true",
+        "click_id":"103"
+      }
+    ]
+  }
