@@ -1,0 +1,504 @@
+{
+    "items":[
+        {
+            "id":"background",
+            "type":"image",
+            "position": "0;0",
+            "size":"1920;1080",
+            "src":"pic/background.png",
+            "visible":"true",
+            "click_id":"0"
+        },
+
+
+
+
+        {
+            "id":"balance_left",
+            "type": "digits",
+            "position": "530;750",
+            "font": "standard_number",
+            "symbol_size":"60;44",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"balance_right",
+            "type": "digits",
+            "position": "530;210",
+            "font": "standard_number",
+            "symbol_size":"60;44",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+
+
+
+
+
+        {
+            "id":"programs_left",
+            "type":"image",
+            "position": "200;1500",
+            "size":"250;528",
+            "src":"pic/programs.png",
+            "visible":"true"
+        },
+        {
+            "id":"payment_method_left",
+            "type":"image",
+            "position": "200;800",
+            "size":"51;388",
+            "src":"pic/payment_methods.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_cash_left",
+            "type":"image",
+            "position": "1360;77",
+            "size":"107;424",
+            "src":"pic/buttons/button_cash.png",
+            "visible":"true",
+            "click_id":"100"
+        },
+        {
+            "id":"button_cashless_left",
+            "type":"image",
+            "position": "1500;77",
+            "size":"107;424",
+            "src":"pic/buttons/button_cashless.png",
+            "visible":"true",
+            "click_id":"101"
+        },
+
+
+
+
+
+        {
+            "id":"programs_right",
+            "type":"image",
+            "position": "700;800",
+            "size":"250;528",
+            "src":"pic/programs.png",
+            "visible":"true"
+        },
+        {
+            "id":"payment_method_right",
+            "type":"image",
+            "position": "700;1500",
+            "size":"51;388",
+            "src":"pic/payment_methods.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_cash_right",
+            "type":"image",
+            "position": "1360;587",
+            "size":"107;424",
+            "src":"pic/buttons/button_cash.png",
+            "visible":"true",
+            "click_id":"200"
+        },
+        {
+            "id":"button_cashless_right",
+            "type":"image",
+            "position": "1500;587",
+            "size":"107;424",
+            "src":"pic/buttons/button_cashless.png",
+            "visible":"true",
+            "click_id":"201"
+        },
+
+
+
+        
+        {
+            "id":"fundraising_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"545;422",
+            "src":"pic/fundraising.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_begin_left",
+            "type":"image",
+            "position": "200;1600",
+            "size":"107;424",
+            "src":"pic/buttons/button_begin.png",
+            "visible":"true",
+            "click_id":"102"
+        },
+        {
+            "id":"button_cancel_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_cancel.png",
+            "visible":"true",
+            "click_id":"103"
+        },
+
+
+
+
+
+        {
+            "id":"fundraising_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"545;422",
+            "src":"pic/fundraising.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_begin_right",
+            "type":"image",
+            "position": "200;1600",
+            "size":"107;424",
+            "src":"pic/buttons/button_begin.png",
+            "visible":"true",
+            "click_id":"202"
+        },
+        {
+            "id":"button_cancel_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_cancel.png",
+            "visible":"true",
+            "click_id":"203"
+        },
+
+
+
+
+
+        {
+            "id":"enter_amount_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"76;246",
+            "src":"pic/enter_amount.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_0_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_0.png",
+            "visible":"true",
+            "click_id":"1"
+        },
+        {
+            "id":"button_1_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_1.png",
+            "visible":"true",
+            "click_id":"2"
+        },
+        {
+            "id":"button_2_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_2.png",
+            "visible":"true",
+            "click_id":"3"
+        },
+        {
+            "id":"button_3_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_3.png",
+            "visible":"true",
+            "click_id":"4"
+        },
+        {
+            "id":"button_4_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_4.png",
+            "visible":"true",
+            "click_id":"5"
+        },
+        {
+            "id":"button_5_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_5.png",
+            "visible":"true",
+            "click_id":"6"
+        },
+        {
+            "id":"button_6_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_6.png",
+            "visible":"true",
+            "click_id":"7"
+        },
+        {
+            "id":"button_7_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_7.png",
+            "visible":"true",
+            "click_id":"8"
+        },
+        {
+            "id":"button_8_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_8.png",
+            "visible":"true",
+            "click_id":"9"
+        },
+        {
+            "id":"button_9_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_9.png",
+            "visible":"true",
+            "click_id":"10"
+        },
+
+
+
+
+
+        {
+            "id":"enter_amount_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"76;246",
+            "src":"pic/enter_amount.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_0_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_0.png",
+            "visible":"true",
+            "click_id":"11"
+        },
+        {
+            "id":"button_1_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_1.png",
+            "visible":"true",
+            "click_id":"12"
+        },
+        {
+            "id":"button_2_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_2.png",
+            "visible":"true",
+            "click_id":"13"
+        },
+        {
+            "id":"button_3_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_3.png",
+            "visible":"true",
+            "click_id":"14"
+        },
+        {
+            "id":"button_4_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_4.png",
+            "visible":"true",
+            "click_id":"15"
+        },
+        {
+            "id":"button_5_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_5.png",
+            "visible":"true",
+            "click_id":"16"
+        },
+        {
+            "id":"button_6_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_6.png",
+            "visible":"true",
+            "click_id":"17"
+        },
+        {
+            "id":"button_7_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_7.png",
+            "visible":"true",
+            "click_id":"18"
+        },
+        {
+            "id":"button_8_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_8.png",
+            "visible":"true",
+            "click_id":"19"
+        },
+        {
+            "id":"button_9_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_9.png",
+            "visible":"true",
+            "click_id":"20"
+        },
+
+
+
+
+
+        {
+            "id":"wait_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"373;483",
+            "src":"pic/wait.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"wait_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"373;483",
+            "src":"pic/wait.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"console_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"337;349",
+            "src":"pic/left_console.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_pause_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_pause.png",
+            "visible":"true",
+            "click_id":"104"
+        },
+
+
+
+
+
+        {
+            "id":"console_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"343;336",
+            "src":"pic/right_console.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_pause_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_pause.png",
+            "visible":"true",
+            "click_id":"204"
+        },
+
+
+
+
+
+        {
+            "id":"thanks_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"455;422",
+            "src":"pic/thanks.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"thanks_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"422;455",
+            "src":"pic/thanks.png",
+            "visible":"true"
+        },
+
+
+
+
+        {
+            "id":"apology_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"402;485",
+            "src":"pic/apology.png",
+            "visible":"true"
+        },
+
+
+
+
+        {
+            "id":"apology_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"402;485",
+            "src":"pic/apology.png",
+            "visible":"true"
+        }
+    ]
+}
