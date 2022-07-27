@@ -4,25 +4,26 @@
         "id":"background",
         "type":"image",
         "position": "0;0",
-        "size":"540;960",
+        "size":"1920;1080",
         "src":"pic/background.png",
         "visible":"true"
       },
       {
         "id":"balance",
         "type": "digits",
-        "position": "200;160",
+        "position": "340;460",
         "font": "standard_number",
-        "symbol_size":"40;60",
+        "symbol_size":"100;67",
         "padding": "2",
         "length": "3",
-        "visible":"true"
+        "visible":"true",
+        "is_vertical": "true"
       },
       {
         "id":"content",
         "type":"image",
-        "position": "90;340",
-        "size":"361;331",
+        "position": "680;179",
+        "size":"662;722",
         "src":"pic/filling.png",
         "visible":"true"
       }

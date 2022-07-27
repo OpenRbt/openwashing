@@ -4,25 +4,26 @@
         "id":"background",
         "type":"image",
         "position": "0;0",
-        "size":"540;960",
+        "size":"1920;1080",
         "src":"pic/background.png",
         "visible":"true"
       },
       {
         "id":"balance",
         "type": "digits",
-        "position": "200;160",
+        "position": "340;460",
         "font": "standard_number",
-        "symbol_size":"40;60",
+        "symbol_size":"100;67",
         "padding": "2",
         "length": "3",
-        "visible":"true"
+        "visible":"true",
+        "is_vertical": "true"
       },
       {
         "id":"content",
         "type":"image",
-        "position": "164;340",
-        "size":"213;64",
+        "position": "680;328",
+        "size":"128;425",
         "src":"pic/enter_amount.png",
         "visible":"true"
       },
@@ -31,8 +32,8 @@
       {
         "id":"button_0",
         "type":"image",
-        "position": "283;550",
-        "size":"50;50",
+        "position": "1100;400",
+        "size":"120;120",
         "src":"pic/keyboard/button_0.png",
         "visible":"true",
         "click_id":"1"
@@ -40,8 +41,8 @@
       {
         "id":"button_1",
         "type":"image",
-        "position": "133;400",
-        "size":"50;50",
+        "position": "780;720",
+        "size":"120;120",
         "src":"pic/keyboard/button_1.png",
         "visible":"true",
         "click_id":"2"
@@ -49,8 +50,8 @@
       {
         "id":"button_2",
         "type":"image",
-        "position": "208;400",
-        "size":"50;50",
+        "position": "780;560",
+        "size":"120;120",
         "src":"pic/keyboard/button_2.png",
         "visible":"true",
         "click_id":"3"
@@ -58,8 +59,8 @@
       {
         "id":"button_3",
         "type":"image",
-        "position": "283;400",
-        "size":"50;50",
+        "position": "780;400",
+        "size":"120;120",
         "src":"pic/keyboard/button_3.png",
         "visible":"true",
         "click_id":"4"
@@ -67,8 +68,8 @@
       {
         "id":"button_4",
         "type":"image",
-        "position": "358;400",
-        "size":"50;50",
+        "position": "780;240",
+        "size":"120;120",
         "src":"pic/keyboard/button_4.png",
         "visible":"true",
         "click_id":"5"
@@ -76,8 +77,8 @@
       {
         "id":"button_5",
         "type":"image",
-        "position": "133;475",
-        "size":"50;50",
+        "position": "940;720",
+        "size":"120;120",
         "src":"pic/keyboard/button_5.png",
         "visible":"true",
         "click_id":"6"
@@ -85,8 +86,8 @@
       {
         "id":"button_6",
         "type":"image",
-        "position": "208;475",
-        "size":"50;50",
+        "position": "940;560",
+        "size":"120;120",
         "src":"pic/keyboard/button_6.png",
         "visible":"true",
         "click_id":"7"
@@ -94,8 +95,8 @@
       {
         "id":"button_7",
         "type":"image",
-        "position": "283;475",
-        "size":"50;50",
+        "position": "940;400",
+        "size":"120;120",
         "src":"pic/keyboard/button_7.png",
         "visible":"true",
         "click_id":"8"
@@ -103,8 +104,8 @@
       {
         "id":"button_8",
         "type":"image",
-        "position": "358;475",
-        "size":"50;50",
+        "position": "940;240",
+        "size":"120;120",
         "src":"pic/keyboard/button_8.png",
         "visible":"true",
         "click_id":"9"
@@ -112,8 +113,8 @@
       {
         "id":"button_9",
         "type":"image",
-        "position": "208;550",
-        "size":"50;50",
+        "position": "1100;560",
+        "size":"120;120",
         "src":"pic/keyboard/button_9.png",
         "visible":"true",
         "click_id":"10"
@@ -123,8 +124,8 @@
       {
         "id":"button_begin",
         "type":"image",
-        "position": "10;680",
-        "size":"520;102",
+        "position": "1360;57",
+        "size":"120;966",
         "src":"pic/buttons/begin.png",
         "visible":"true",
         "click_id":"102"
@@ -132,8 +133,8 @@
       {
         "id":"button_cancel",
         "type":"image",
-        "position": "10;760",
-        "size":"520;105",
+        "position": "1500;57",
+        "size":"120;966",
         "src":"pic/buttons/cancel.png",
         "visible":"true",
         "click_id":"103"

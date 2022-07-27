@@ -4,7 +4,7 @@
       "id":"background",
       "type":"image",
       "position": "0;0",
-      "size":"540;960",
+      "size":"1920;1080",
       "src":"pic/background.png",
       "visible":"true"
     }
