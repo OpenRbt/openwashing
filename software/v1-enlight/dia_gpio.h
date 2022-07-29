@@ -112,7 +112,8 @@ public:
     PulseHandler * BanknotesHandler;
     PulseHandler * AdditionalHandler;
 
-    int CurrentProgram;
+    int CurrentProgram1;
+    int CurrentProgram2;
     int CurrentProgramIsPreflight;
     int AllTurnedOff;
 

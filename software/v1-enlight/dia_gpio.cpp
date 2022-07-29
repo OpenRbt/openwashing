@@ -78,7 +78,8 @@ DiaGpio::DiaGpio(int maxButtons, int maxRelays, storage_interface_t * storage) {
     InitializedOk = 0;
     MaxButtons = maxButtons;
     MaxRelays = maxRelays;
-    CurrentProgram = -1;
+    CurrentProgram1 = -1;
+    CurrentProgram2 = -1;
     CurrentProgramIsPreflight = 0;
     AllTurnedOff = 0;
     if(maxButtons>=PIN_COUNT) {
@@ -200,12 +201,13 @@ void DiaGpio_SetProgram(DiaGpio * gpio, int programNumber, int relayNumber,  int
 
 void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
     assert(gpio);
-    if(gpio->CurrentProgram>(int)sizeof(gpio->Programs)) {
-        printf("Disabling programs as current program is out of range %d...\n", gpio->CurrentProgram);
-        gpio->CurrentProgram = -1;
+    if(gpio->CurrentProgram1 > (int)sizeof(gpio->Programs) || gpio->CurrentProgram2 > (int)sizeof(gpio->Programs)) {
+        printf("Disabling programs as current program is out of range %d, %d...\n", gpio->CurrentProgram1, gpio->CurrentProgram2);
+        gpio->CurrentProgram1 = -1;
+        gpio->CurrentProgram2 = -1;
     }
 
-    if(gpio->CurrentProgram<0) {
+    if(gpio->CurrentProgram1<0 || gpio->CurrentProgram2<0) {
         if(!gpio->AllTurnedOff) {
             gpio->AllTurnedOff = 1;
             printf("turning all off\n");
@@ -215,9 +217,9 @@ void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
         gpio->AllTurnedOff = 0;
         DiaRelayConfig * config;
         if (gpio->CurrentProgramIsPreflight) {
-            config = &gpio->PreflightPrograms[gpio->CurrentProgram];
+            config = &gpio->PreflightPrograms[gpio->CurrentProgram1];
         } else {
-            config = &gpio->Programs[gpio->CurrentProgram];
+            config = &gpio->Programs[gpio->CurrentProgram1];
         }
         //printf("cur_prog:%d\n", gpio->CurrentProgram);
         for(int i=0;i<PIN_COUNT;i++) {

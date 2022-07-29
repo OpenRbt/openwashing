@@ -14,7 +14,6 @@ setup = function()
 
     min_electron_balance = 10
     max_electron_balance = 900
-    min_cash_balance = 10
     max_cash_balance = 900
 
     keyboard_pressed_left = false       -- Утверждает то, что пользователь нажал на кнопку клавиатуры при вводе суммы
@@ -69,6 +68,7 @@ setup = function()
     mode_apology = 70       -- Извинения
 
     real_ms_per_loop = 100
+    pressed_key = 0
     
     current_right_mode = mode_welcome
     current_left_mode = mode_welcome
@@ -79,9 +79,6 @@ setup = function()
     smart_delay(1)
     return 0
 end
-
-
-
 
 loop = function()
     pressed_key = get_key()
@@ -97,88 +94,6 @@ init_prices = function()
     price_p[3] = get_price(3)
     price_p[4] = get_price(4)
 end
-
-
-
-click_handling = function()
-    if pressed_key == cash_button_left then
-        if fundraiser_active_right == false then
-            fundraiser_active_left = true
-            current_left_mode = mode_fundraising
-        end
-    end
-    if pressed_key == cashless_button_left then current_left_mode = mode_keyboard end
-    if pressed_key == begin_button_left and current_left_mode == mode_keyboard then
-        if fundraiser_active_right == false then
-            fundraiser_active_left = true
-            current_left_mode = mode_wait
-        end
-    end
-    if pressed_key == begin_button_left and current_left_mode == mode_fundraising then
-        fundraiser_active_left = false
-        current_left_mode = mode_work
-    end
-    if pressed_key == cancel_button_left and (current_left_mode == mode_fundraising or current_left_mode == mode_keyboard) then
-        keyboard_pressed_left = false
-        electron_balance_left = 0
-        left_charge_balance(0)
-        fundraiser_active_left = false
-        current_left_mode = mode_choose
-    end
-    if pressed_key == cancel_button_left and current_left_mode == mode_wait then
-        if electron_balance_left == min_electron_balance then 
-            keyboard_pressed_left = false
-            electron_balance_left = 0
-            left_charge_balance(0)
-        end
-        waiting_loops_left = 0
-    end
-    if pressed_key >= 1 and pressed_key <= 10 then
-        keyboard_pressed_left = true
-        electron_balance_left = electron_balance_left * 10 + pressed_key - 1
-        if electron_balance_left > max_electron_balance then electron_balance_left = max_electron_balance end
-    end
-        
-
-    if pressed_key == cash_button_right then
-        if fundraiser_active_left == false then
-            fundraiser_active_right = true
-            current_right_mode = mode_fundraising
-        end
-    end
-    if pressed_key == cashless_button_right then current_right_mode = mode_keyboard end
-    if pressed_key == begin_button_right and current_right_mode == mode_keyboard then
-        if fundraiser_active_left == false then
-            fundraiser_active_right = true
-            current_right_mode = mode_wait
-        end
-    end
-    if pressed_key == begin_button_right and current_right_mode == mode_fundraising then
-        fundraiser_active_right = false
-        current_right_mode = mode_work
-    end
-    if pressed_key == cancel_button_right and (current_right_mode == mode_fundraising or current_right_mode == mode_keyboard) then
-        keyboard_pressed_right = false
-        electron_balance_right = 0
-        right_charge_balance(0)
-        fundraiser_active_right = false
-        current_right_mode = mode_choose
-    end
-    if pressed_key == cancel_button_right and current_right_mode == mode_wait then
-        if electron_balance_right == min_electron_balance then 
-            keyboard_pressed_right = false
-            electron_balance_right = 0
-            right_charge_balance(0)
-        end
-        waiting_loops_right = 0
-    end
-    if pressed_key >= 11 and pressed_key <= 20 then
-        keyboard_pressed_right = true
-        electron_balance_right = electron_balance_right * 10 + pressed_key - 11
-        if electron_balance_right > max_electron_balance then electron_balance_right = max_electron_balance end
-    end
-end
-
 
 -- Mode
 
@@ -211,7 +126,6 @@ right_welcome_mode = function()
     run_stop()
     turn_light(0, animation.idle)
     smart_delay(1000 * welcome_mode_seconds)
-    forget_pressed_key()
     return mode_choose
 end
 
@@ -220,32 +134,33 @@ left_welcome_mode = function()
     run_stop()
     turn_light(0, animation.idle)
     smart_delay(1000 * welcome_mode_seconds)
-    forget_pressed_key()
     return mode_choose
 end
 
 right_choose_mode = function()
-    right_show_choose()
+    right_show_choose(balance_right)
     run_stop()
     turn_light(0, animation.idle)
 
-    --update_balance()
-    --if balance > 0.99 then
-    --    return mode_work
-    --end
+    if pressed_key == cash_button_right and fundraiser_active_left == false then
+        fundraiser_active_right = true
+        return mode_fundraising
+    end
+    if pressed_key == cashless_button_right then return mode_keyboard end
 
     return mode_choose
 end
 
 left_choose_mode = function()
-    left_show_choose()
+    left_show_choose(balance_left)
     run_stop()
     turn_light(0, animation.idle)
 
-    --update_balance()
-    --if balance > 0.99 then
-    --    return mode_work
-    --end
+    if pressed_key == cash_button_left and fundraiser_active_right == false then
+        fundraiser_active_left = true
+        return mode_fundraising
+    end
+    if pressed_key == cashless_button_left then return mode_keyboard end
 
     return mode_choose
 end
@@ -256,12 +171,16 @@ right_fundraising_mode = function()
     turn_light(0, animation.idle)
 
     update_balance()
+    set_current_state(balance_right + balance_left)
     
-    if balance_right >= max_electron_balance then
+    if pressed_key == begin_button_right then
         fundraiser_active_right = false
         return mode_work
     end
-    set_current_state(balance_right + balance_left)
+    if pressed_key == cancel_button_right then
+        fundraiser_active_right = false
+        return mode_choose
+    end
 
     return mode_fundraising
 end
@@ -272,47 +191,72 @@ left_fundraising_mode = function()
     turn_light(0, animation.idle)
 
     update_balance()
-    if balance_left >= max_electron_balance then
+    set_current_state(balance_right + balance_left)
+
+    if pressed_key == begin_button_left then
         fundraiser_active_left = false
         return mode_work
     end
-    set_current_state(balance_right + balance_left)
+    if pressed_key == cancel_button_left then
+        fundraiser_active_left = false
+        return mode_choose
+    end
     
     return mode_fundraising
 end
 
 right_keyboard_mode = function()
-    if keyboard_pressed_right then
-        right_show_keyboard(electron_balance_right)
-    else
-        right_show_keyboard(min_electron_balance)
-    end
+    if keyboard_pressed_right then right_show_keyboard(electron_balance_right)
+    else right_show_keyboard(min_electron_balance) end
 
     run_stop()
     turn_light(0, animation.idle)
 
-    --update_balance()
-    --if balance > 0.99 then
-    --    return mode_work
-    --end
+    if pressed_key == cancel_button_right then
+        keyboard_pressed_right = false
+        electron_balance_right = 0
+        fundraiser_active_right = false
+        return mode_choose
+    end
+    if pressed_key == begin_button_right and fundraiser_active_left == false then
+        fundraiser_active_right = true
+        if keyboard_pressed_right == false then electron_balance_right = min_electron_balance end
+        keyboard_pressed_right = false
+        return mode_wait
+    end
+    if pressed_key >= 11 and pressed_key <= 20 then
+        keyboard_pressed_right = true
+        electron_balance_right = electron_balance_right * 10 + pressed_key - 11
+        if electron_balance_right > max_electron_balance then electron_balance_right = max_electron_balance end
+    end
 
     return mode_keyboard
 end
 
 left_keyboard_mode = function()
-    if keyboard_pressed_left then
-        left_show_keyboard(electron_balance_left)
-    else
-        left_show_keyboard(min_electron_balance)
-    end
+    if keyboard_pressed_left then left_show_keyboard(electron_balance_left)
+    else left_show_keyboard(min_electron_balance) end
     
     run_stop()
     turn_light(0, animation.idle)
 
-    --update_balance()
-    --if balance > 0.99 then
-    --    return mode_work
-    --end
+    if pressed_key == begin_button_left and fundraiser_active_right == false then
+        fundraiser_active_left = true
+        if keyboard_pressed_left == false then electron_balance_left = min_electron_balance end
+        keyboard_pressed_left = false
+        return mode_wait
+    end
+    if pressed_key == cancel_button_left then
+        keyboard_pressed_left = false
+        electron_balance_left = 0
+        fundraiser_active_left = false
+        return mode_choose
+    end
+    if pressed_key >= 1 and pressed_key <= 10 then
+        keyboard_pressed_left = true
+        electron_balance_left = electron_balance_left * 10 + pressed_key - 1
+        if electron_balance_left > max_electron_balance then electron_balance_left = max_electron_balance end
+    end
 
     return mode_keyboard
 end
@@ -351,12 +295,20 @@ right_wait_mode = function()
         return mode_choose
     end
 
-    if status == 0 and is_transaction_started == true then    -- Если транзакция не идет, то возращаем на выбор. обавить условие наскардридер
+    if status == 0 and is_transaction_started == true then    -- Если транзакция не идет, то возращаем на выбор
         is_transaction_started = false
         abort_transaction()
         fundraiser_active_right = false
         return mode_choose
 	end
+
+    if pressed_key == cancel_button_right then
+        if electron_balance_right == min_electron_balance then 
+            keyboard_pressed_right = false
+            electron_balance_right = 0
+        end
+        waiting_loops_right = 0
+    end
 
     smart_delay(100)
     waiting_loops_right = waiting_loops_right - 1
@@ -403,6 +355,14 @@ left_wait_mode = function()
         fundraiser_active_left = false
         return mode_choose
 	end
+
+    if pressed_key == cancel_button_left then
+        if electron_balance_left == min_electron_balance then 
+            keyboard_pressed_left = false
+            electron_balance_left = 0
+        end
+        waiting_loops_left = 0
+    end
 
     smart_delay(100)
     waiting_loops_left = waiting_loops_left - 1
@@ -480,14 +440,14 @@ left_show_welcome = function()
     main_screen:Display()
 end
 
-left_show_choose = function()
+left_show_choose = function(balance_rur)
     left_disable_visibility()
+    left_charge_balance(balance_rur)
+
     main_screen:Set("programs_left.position", "700;544")
     main_screen:Set("payment_method_left.position", "1300;590")
-    if fundraiser_active_right == false and hascardreader() then
-        main_screen:Set("button_cash_left.position", "1360;587")
-    end
-    main_screen:Set("button_cashless_left.position", "1500;587")
+    if fundraiser_active_right == false then main_screen:Set("button_cash_left.position", "1360;587") end
+    if  hascardreader() then main_screen:Set("button_cashless_left.position", "1500;587") end
     main_screen:Display()
 end
 
@@ -496,9 +456,7 @@ left_show_fundraising = function(balance_rur)
     left_charge_balance(balance_rur)
     
     main_screen:Set("fundraising_left.position", "700;580")
-    if balance_left >= min_cash_balance then
-        main_screen:Set("button_begin_left.position", "1360;587")
-    end
+    if balance_left > 0 then main_screen:Set("button_begin_left.position", "1360;587") end
     main_screen:Set("button_cancel_left.position", "1500;587")
     
     main_screen:Display()
@@ -509,7 +467,7 @@ left_show_keyboard = function(balance_rur)
     left_charge_balance(balance_rur)
     
     main_screen:Set("balance_left.position", "30;100")
-    main_screen:Set("enter_amount_left.position", "700;156")
+    main_screen:Set("enter_amount_left.position", "700;678")
 
     main_screen:Set("button_1_left.position", "780;627")
     main_screen:Set("button_2_left.position", "780;760")
@@ -571,14 +529,14 @@ right_show_welcome = function()
     main_screen:Display()
 end
 
-right_show_choose = function()
+right_show_choose = function(balance_rur)
     right_disable_visibility()
+    right_charge_balance(balance_rur)
+
     main_screen:Set("programs_right.position", "700;8")
     main_screen:Set("payment_method_right.position", "1300;101")
-    if fundraiser_active_left == false then
-        main_screen:Set("button_cash_right.position", "1360;77")
-    end
-    main_screen:Set("button_cashless_right.position", "1500;77")
+    if fundraiser_active_left == false then main_screen:Set("button_cash_right.position", "1360;77") end
+    if hascardreader() then main_screen:Set("button_cashless_right.position", "1500;77") end
     main_screen:Display()
 end
 
@@ -587,9 +545,7 @@ right_show_fundraising = function(balance_rur)
     right_charge_balance(balance_rur)
 
     main_screen:Set("fundraising_right.position", "700;79")
-    if balance_right >= min_cash_balance then
-        main_screen:Set("button_begin_right.position", "1360;77")
-    end
+    if balance_right > 0 then main_screen:Set("button_begin_right.position", "1360;77") end
     main_screen:Set("button_cancel_right.position", "1500;77")
 
     main_screen:Display()
@@ -600,7 +556,7 @@ right_show_keyboard = function(balance_rur)
     right_charge_balance(balance_rur)
     
     main_screen:Set("balance_right.position", "300;100")
-    main_screen:Set("enter_amount_right.position", "700;678")
+    main_screen:Set("enter_amount_right.position", "700;156")
 
     main_screen:Set("button_1_right.position", "780;353")
     main_screen:Set("button_2_right.position", "780;220")
