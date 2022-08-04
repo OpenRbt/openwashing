@@ -13,6 +13,89 @@
 
 
 
+
+        {
+            "id":"degrees",
+            "type": "digits",
+            "position": "165;975",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"fraction",
+            "type": "digits",
+            "position": "165;952",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"plus",
+            "type":"image",
+            "position": "165;1500",
+            "size":"18;19",
+            "src":"pic/plus.png",
+            "visible":"true"
+        },
+        {
+            "id":"minus",
+            "type":"image",
+            "position": "165;1500",
+            "size":"18;19",
+            "src":"pic/minus.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"hours",
+            "type": "digits",
+            "position": "165;100",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"minutes",
+            "type": "digits",
+            "position": "165;59",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"minutes_zero",
+            "type": "digits",
+            "position": "165;75",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "1",
+            "visible":"false",
+            "value": "0",
+            "is_vertical": "true"
+        },
+
+
+
+
+
         {
             "id":"balance_left",
             "type": "digits",
@@ -36,7 +119,52 @@
             "is_vertical": "true"
         },
 
+        {
+            "id":"price_work_left",
+            "type": "digits",
+            "position": "815;630",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"price_pause_left",
+            "type": "digits",
+            "position": "875;630",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
 
+
+        {
+            "id":"price_work_right",
+            "type": "digits",
+            "position": "815;90",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"price_pause_right",
+            "type": "digits",
+            "position": "875;90",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
 
 
 
@@ -498,6 +626,240 @@
             "position": "0;0",
             "size":"402;485",
             "src":"pic/apology.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"progressbar_1_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_1.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_2_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_2.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_3_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_3.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_4_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_4.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_5_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_5.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_6_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_6.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_7_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_7.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_8_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_8.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_9_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_9.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_10_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_10.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_11_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_11.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_12_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_12.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_13_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_13.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_14_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_14.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"progressbar_1_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_1.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_2_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_2.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_3_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_3.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_4_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_4.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_5_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_5.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_6_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_6.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_7_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_7.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_8_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_8.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_9_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_9.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_10_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_10.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_11_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_11.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_12_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_12.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_13_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_13.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_14_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_14.png",
             "visible":"true"
         }
     ]
