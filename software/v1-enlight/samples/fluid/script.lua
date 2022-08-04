@@ -19,7 +19,7 @@ setup = function()
     keyboard_pressed = false 
 
     -- constants
-    welcome_mode_seconds = 3
+    welcome_mode_seconds = 1
     thanks_mode_seconds = 5
     wait_mode_seconds = 40
     
@@ -62,6 +62,8 @@ end
 
 loop = function()
     printMessage("current_mode: " .. current_mode)
+    set_time(get_time_hours(), get_time_minutes())
+    set_weather(get_weather_negative(), get_weather_degrees(), get_weather_fraction())
     current_mode = run_mode(current_mode)
     real_ms_per_loop = smart_delay(100)
     return 0
@@ -320,6 +322,129 @@ show_apology =  function()
     apology:Display()
 end
 
+set_progressbar = function(progress_rur)
+    progress_int = math.ceil(progress_rur * 14)
+    if progress_int >= 1  then filling:Set("progressbar_1.visible",  "true") end
+    if progress_int >= 2  then filling:Set("progressbar_2.visible",  "true") end
+    if progress_int >= 3  then filling:Set("progressbar_3.visible",  "true") end
+    if progress_int >= 4  then filling:Set("progressbar_4.visible",  "true") end
+    if progress_int >= 5  then filling:Set("progressbar_5.visible",  "true") end
+    if progress_int >= 6  then filling:Set("progressbar_6.visible",  "true") end
+    if progress_int >= 7  then filling:Set("progressbar_7.visible",  "true") end
+    if progress_int >= 8  then filling:Set("progressbar_8.visible",  "true") end
+    if progress_int >= 9  then filling:Set("progressbar_9.visible",  "true") end
+    if progress_int >= 10 then filling:Set("progressbar_10.visible", "true") end
+    if progress_int >= 11 then filling:Set("progressbar_11.visible", "true") end
+    if progress_int >= 12 then filling:Set("progressbar_12.visible", "true") end
+    if progress_int >= 13 then filling:Set("progressbar_13.visible", "true") end
+    if progress_int >= 14 then filling:Set("progressbar_14.visible", "true") end
+end
+
+set_time = function(hours_rur, minutes_rur)
+    choose:Set("hours.value",  hours_rur)
+    choose:Set("minutes.value",  minutes_rur)
+    fundraising:Set("hours.value",  hours_rur)
+    fundraising:Set("minutes.value",  minutes_rur)
+    keyboard:Set("hours.value",  hours_rur)
+    keyboard:Set("minutes.value",  minutes_rur)
+    wait:Set("hours.value",  hours_rur)
+    wait:Set("minutes.value",  minutes_rur)
+    start_filling:Set("hours.value",  hours_rur)
+    start_filling:Set("minutes.value",  minutes_rur)
+    filling:Set("hours.value",  hours_rur)
+    filling:Set("minutes.value",  minutes_rur)
+    thanks:Set("hours.value",  hours_rur)
+    thanks:Set("minutes.value",  minutes_rur)
+    apology:Set("hours.value",  hours_rur)
+    apology:Set("minutes.value",  minutes_rur)
+
+    if minutes_rur <= 9 then
+        choose:Set("minutes_zero.visible", "true")
+        fundraising:Set("minutes_zero.visible", "true")
+        keyboard:Set("minutes_zero.visible", "true")
+        wait:Set("minutes_zero.visible", "true")
+        start_filling:Set("minutes_zero.visible", "true")
+        filling:Set("minutes_zero.visible", "true")
+        thanks:Set("minutes_zero.visible", "true")
+        apology:Set("minutes_zero.visible", "true")
+    else
+        choose:Set("minutes_zero.visible", "false")
+        fundraising:Set("minutes_zero.visible", "false")
+        keyboard:Set("minutes_zero.visible", "false")
+        wait:Set("minutes_zero.visible", "false")
+        start_filling:Set("minutes_zero.visible", "false")
+        filling:Set("minutes_zero.visible", "false")
+        thanks:Set("minutes_zero.visible", "false")
+        apology:Set("minutes_zero.visible", "false")
+    end
+end
+
+set_weather = function(negative_rur, degrees_rur, fraction_rur)
+    if negative_rur then
+        choose:Set("plus.visible", "false")
+        fundraising:Set("plus.visible", "false")
+        keyboard:Set("plus.visible", "false")
+        wait:Set("plus.visible", "false")
+        start_filling:Set("plus.visible", "false")
+        filling:Set("plus.visible", "false")
+        thanks:Set("plus.visible", "false")
+        apology:Set("plus.visible", "false")
+
+        choose:Set("minus.visible", "true")
+        fundraising:Set("minus.visible", "true")
+        keyboard:Set("minus.visible", "true")
+        wait:Set("minus.visible", "true")
+        start_filling:Set("minus.visible", "true")
+        filling:Set("minus.visible", "true")
+        thanks:Set("minus.visible", "true")
+        apology:Set("minus.visible", "true")
+        --if degrees_rur >= 10 then
+        --    main_screen:Set("minus.position", "165;1005")
+        --else
+        --    main_screen:Set("minus.position", "165;990")
+        --end
+    else
+        --if degrees_rur >= 10 then
+        --    main_screen:Set("plus.position", "165;1005")
+        --else
+        --    main_screen:Set("plus.position", "165;990")
+        --end
+        choose:Set("minus.visible", "false")
+        fundraising:Set("minus.visible", "false")
+        keyboard:Set("minus.visible", "false")
+        wait:Set("minus.visible", "false")
+        start_filling:Set("minus.visible", "false")
+        filling:Set("minus.visible", "false")
+        thanks:Set("minus.visible", "false")
+        apology:Set("minus.visible", "false")
+
+        choose:Set("plus.visible", "true")
+        fundraising:Set("plus.visible", "true")
+        keyboard:Set("plus.visible", "true")
+        wait:Set("plus.visible", "true")
+        start_filling:Set("plus.visible", "true")
+        filling:Set("plus.visible", "true")
+        thanks:Set("plus.visible", "true")
+        apology:Set("plus.visible", "true")
+    end
+    choose:Set("degrees.value",  degrees_rur)
+    fundraising:Set("degrees.value",  degrees_rur)
+    keyboard:Set("degrees.value",  degrees_rur)
+    wait:Set("degrees.value",  degrees_rur)
+    start_filling:Set("degrees.value",  degrees_rur)
+    filling:Set("degrees.value",  degrees_rur)
+    thanks:Set("degrees.value",  degrees_rur)
+    apology:Set("degrees.value",  degrees_rur)
+    choose:Set("fraction.value",  fraction_rur)
+    fundraising:Set("fraction.value",  fraction_rur)
+    keyboard:Set("fraction.value",  fraction_rur)
+    wait:Set("fraction.value",  fraction_rur)
+    start_filling:Set("fraction.value",  fraction_rur)
+    filling:Set("fraction.value",  fraction_rur)
+    thanks:Set("fraction.value",  fraction_rur)
+    apology:Set("fraction.value",  fraction_rur)
+end
+
 -- Util
 
 get_key = function()
@@ -404,4 +529,24 @@ end
 
 hascardreader = function()
   return hardware:HasCardReader()
+end
+
+get_weather_degrees = function()
+    return weather:GetTempDegrees()
+end
+
+get_weather_fraction = function()
+    return weather:GetTempFraction()
+end
+
+get_weather_negative = function()
+    return weather:IsNegative()
+end
+
+get_time_hours = function()
+    return hardware:GetHours()
+end
+  
+get_time_minutes = function()
+    return hardware:GetMinutes()
 end
