@@ -157,7 +157,7 @@ int turn_program(void *object, int program1, int program2) {
         _CurrentProgram2 = program2;
         _CurrentProgramID2 = 0;
         if (config && program2 > 0) {
-            _CurrentProgram2 = config->GetProgramID(program2);
+            _CurrentProgramID2 = config->GetProgramID(program2);
         }
     }
     return 0;
@@ -370,6 +370,7 @@ int smart_delay_function(void * arg, int ms) {
 /////// End of Runtime functions ///////
 
 int RunProgram() {
+    printf("\n\n!!!!RunProgram!!!!\n\n");
     if ((_IsServerRelayBoard) && (_IsPreflight == 0)) {
         _IntervalsCountProgram++;
     }
@@ -383,6 +384,7 @@ int RunProgram() {
     }
     if (_CurrentProgram1 != _OldProgram1 || _CurrentProgram2 != _OldProgram2) {
         if (_IsPreflight) {
+            printf("\n\n_IsServerRelayBoard: %d\n\n", _IsServerRelayBoard);
             if (_IsServerRelayBoard) {
                 int count = 0;
                 int err = 1;
@@ -529,6 +531,7 @@ void * pinging_func(void * ptr) {
 
 void * run_program_func(void * ptr) {
     while(!_to_be_destroyed) {
+        printf("\n\n!!!run_program_func!!!\n\n")
         RunProgram();
         delay(100);
     }
@@ -997,7 +1000,7 @@ int main(int argc, char ** argv) {
     } else {
         printf("no additional coin handler\n");
     }
-
+    printf("\n\n\n\nYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy\n\n\n\n");
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     while(!keypress) {
         // Call Lua loop function

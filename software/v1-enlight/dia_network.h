@@ -358,7 +358,8 @@ public:
     // RunProgramOnServer request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     int RunProgramOnServer(int programID1, int programID2, int preflight) {
-	    std::string url = _Host+ _Port + "/run-program";
+        printf("\n\nRunProgramOnServer\n\n");
+	    std::string url = _Host+ _Port + "/run-2program";
         std::string answer;
 
         int result;
@@ -974,7 +975,7 @@ private:
 
         json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "programID", json_integer(programID1));
-        //json_object_set_new(object, "secondProgramID", json_integer(programID2));
+        json_object_set_new(object, "programID2", json_integer(programID2));
         json_object_set_new(object, "preflight", json_boolean(preflight));
         char *str = json_dumps(object, 0);
         std::string res = str;
