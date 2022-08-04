@@ -102,6 +102,168 @@
         "size":"662;722",
         "src":"pic/filling.png",
         "visible":"true"
+      },
+
+
+      {
+        "id":"progressbar_1",
+        "type":"image",
+        "position": "0;0",
+        "size":"461;917",
+        "src":"pic/progressbar/progressbar_1.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_2",
+        "type":"image",
+        "position": "0;0",
+        "size":"517;917",
+        "src":"pic/progressbar/progressbar_2.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_3",
+        "type":"image",
+        "position": "0;0",
+        "size":"542;904",
+        "src":"pic/progressbar/progressbar_3.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_4",
+        "type":"image",
+        "position": "0;0",
+        "size":"562;866",
+        "src":"pic/progressbar/progressbar_4.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_5",
+        "type":"image",
+        "position": "0;0",
+        "size":"578;805",
+        "src":"pic/progressbar/progressbar_5.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_6",
+        "type":"image",
+        "position": "0;0",
+        "size":"588;727",
+        "src":"pic/progressbar/progressbar_6.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_7",
+        "type":"image",
+        "position": "0;0",
+        "size":"591;636",
+        "src":"pic/progressbar/progressbar_7.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_8",
+        "type":"image",
+        "position": "0;0",
+        "size":"591;538",
+        "src":"pic/progressbar/progressbar_8.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_9",
+        "type":"image",
+        "position": "0;0",
+        "size":"587;462",
+        "src":"pic/progressbar/progressbar_9.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_10",
+        "type":"image",
+        "position": "0;0",
+        "size":"577;391",
+        "src":"pic/progressbar/progressbar_10.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_11",
+        "type":"image",
+        "position": "0;0",
+        "size":"561;327",
+        "src":"pic/progressbar/progressbar_11.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_12",
+        "type":"image",
+        "position": "0;0",
+        "size":"540;275",
+        "src":"pic/progressbar/progressbar_12.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_13",
+        "type":"image",
+        "position": "0;0",
+        "size":"516;238",
+        "src":"pic/progressbar/progressbar_13.png",
+        "visible":"true"
+      },
+      {
+        "id":"progressbar_14",
+        "type":"image",
+        "position": "0;0",
+        "size":"461;218",
+        "src":"pic/progressbar/progressbar_14.png",
+        "visible":"true"
+      },
+
+      {
+        "id":"progress",
+        "type":"image_array",
+        "position": "1135;445",
+        "size":"163;163",
+        "visible":"true",
+        "index":"0",
+        "length":"12",
+        "sources": [
+          {
+            "src":"pic/progressbar/progress_1.png"
+          },
+          {
+            "src":"pic/progressbar/progress_2.png"
+          },
+          {
+            "src":"pic/progressbar/progress_3.png"
+          },
+          {
+            "src":"pic/progressbar/progress_4.png"
+          },
+          {
+            "src":"pic/progressbar/progress_5.png"
+          },
+          {
+            "src":"pic/progressbar/progress_6.png"
+          },
+          {
+            "src":"pic/progressbar/progress_7.png"
+          },
+          {
+            "src":"pic/progressbar/progress_8.png"
+          },
+          {
+            "src":"pic/progressbar/progress_9.png"
+          },
+          {
+            "src":"pic/progressbar/progress_10.png"
+          },
+          {
+            "src":"pic/progressbar/progress_11.png"
+          },
+          {
+            "src":"pic/progressbar/progress_12.png"
+          }
+        ]
       }
     ]
   }

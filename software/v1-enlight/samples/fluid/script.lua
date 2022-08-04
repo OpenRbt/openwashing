@@ -4,6 +4,7 @@
 setup = function()
     -- global variables
     balance = 0.0
+    start_balance = 0
 
     min_electron_balance = 10
     max_electron_balance = 900
@@ -19,7 +20,7 @@ setup = function()
     keyboard_pressed = false 
 
     -- constants
-    welcome_mode_seconds = 1
+    welcome_mode_seconds = 0.1
     thanks_mode_seconds = 5
     wait_mode_seconds = 40
     
@@ -52,6 +53,8 @@ setup = function()
     real_ms_per_loop = 100
     
     current_mode = mode_welcome
+
+    waiting_loops_progress = 0
 
     version = "1.0.0"
 
@@ -206,7 +209,10 @@ start_filling_mode = function()
     turn_light(0, animation.idle)
     
     pressed_key = get_key()
-    if pressed_key == button_begin then return mode_filling end
+    if pressed_key == button_begin then
+        start_balance = balance
+        return mode_filling
+    end
 
     update_balance()
 
@@ -311,6 +317,10 @@ end
 show_filling = function(balance_rur)
     balance_int = math.ceil(balance_rur)
     filling:Set("balance.value", balance_int)
+    set_progressbar(balance_rur / start_balance)
+    waiting_loops_progress = waiting_loops_progress + 1
+    if waiting_loops_progress >= 12 then waiting_loops_progress = 0 end
+    set_progress_indicator(waiting_loops_progress)
     filling:Display()
 end
 
@@ -324,20 +334,16 @@ end
 
 set_progressbar = function(progress_rur)
     progress_int = math.ceil(progress_rur * 14)
-    if progress_int >= 1  then filling:Set("progressbar_1.visible",  "true") end
-    if progress_int >= 2  then filling:Set("progressbar_2.visible",  "true") end
-    if progress_int >= 3  then filling:Set("progressbar_3.visible",  "true") end
-    if progress_int >= 4  then filling:Set("progressbar_4.visible",  "true") end
-    if progress_int >= 5  then filling:Set("progressbar_5.visible",  "true") end
-    if progress_int >= 6  then filling:Set("progressbar_6.visible",  "true") end
-    if progress_int >= 7  then filling:Set("progressbar_7.visible",  "true") end
-    if progress_int >= 8  then filling:Set("progressbar_8.visible",  "true") end
-    if progress_int >= 9  then filling:Set("progressbar_9.visible",  "true") end
-    if progress_int >= 10 then filling:Set("progressbar_10.visible", "true") end
-    if progress_int >= 11 then filling:Set("progressbar_11.visible", "true") end
-    if progress_int >= 12 then filling:Set("progressbar_12.visible", "true") end
-    if progress_int >= 13 then filling:Set("progressbar_13.visible", "true") end
-    if progress_int >= 14 then filling:Set("progressbar_14.visible", "true") end
+    for i = 1, progress_int do
+        filling:Set("progressbar_" .. i .. ".visible",  "true")
+    end
+    for i = progress_int + 1, 14 do
+        filling:Set("progressbar_" .. i .. ".visible",  "false")
+    end
+end
+
+set_progress_indicator = function(progress_rur)
+    filling:Set("progress.index", math.floor(progress_rur))
 end
 
 set_time = function(hours_rur, minutes_rur)
