@@ -459,6 +459,8 @@ left_thanks_mode = function()
     cash_balance_left = 0
     electronical_balance_left = 0
 
+    
+
     return mode_choose
 end
 --[[
@@ -816,14 +818,6 @@ end
 
 -- Util
 
-get_mode_by_pressed_key = function(current_mode)
-    pressed_key = get_key()
-    
-    if pressed_key < 1 then return -1 end
-    if is_working_mode(current_mode) and current_mode~=mode_work then return mode_pause end
-    return mode_work + 1
-end
-
 get_key = function()    -- Получает нажатую клиентом кнопку
     return hardware:GetKey()
 end
@@ -893,11 +887,6 @@ end
 charge_balance_right = function(price)  -- Уменьшает баланс в соответсвии с указанной ценой в минуту (?)
     balance_right = balance_right - price * real_ms_per_loop / 60000
     if balance_right < 0 then balance_right = 0 end
-end
-
-is_working_mode = function(mode_to_check)
-  if mode_to_check >= mode_work and mode_to_check<mode_work+10 then return true end
-  return false
 end
 
 hascardreader = function()
