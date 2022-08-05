@@ -358,17 +358,21 @@ public:
     // RunProgramOnServer request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     int RunProgramOnServer(int programID1, int programID2, int preflight) {
-        printf("\n\nRunProgramOnServer\n\n");
+        printf("\n\nRunProgramOnServer function start");
 	    std::string url = _Host+ _Port + "/run-2program";
+        printf("\nRequest for address %s", url.c_str());
         std::string answer;
 
         int result;
         std::string json_run_program_request = json_create_run_program(programID1, programID2, preflight);
+        printf("\nJSON: %s\n", json_run_program_request.c_str());
         result = SendRequest(&json_run_program_request, &answer, url);
         if ((result) || (answer !="")) {
-            fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
+            printf("\nRunProgramOnServer answer: %s   result: %d\n", answer.c_str(), result);
+            printf("\nRunProgramOnServer function end. Code 1\n\n");
             return 1;
         }
+        printf("\nRunProgramOnServer function end. Code 0\n\n");
         return 0;
     }
 

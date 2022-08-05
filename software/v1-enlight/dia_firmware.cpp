@@ -531,7 +531,7 @@ void * pinging_func(void * ptr) {
 
 void * run_program_func(void * ptr) {
     while(!_to_be_destroyed) {
-        printf("\n\n!!!run_program_func!!!\n\n")
+        printf("\n\n!!!run_program_func!!!\n\n");
         RunProgram();
         delay(100);
     }
