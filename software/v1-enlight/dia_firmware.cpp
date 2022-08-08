@@ -139,27 +139,24 @@ int increment_cars() {
 }
 
 int turn_program(void *object, int program1, int program2) {
-    if (program1 != _CurrentProgram1) {
-        printf("TURN PROGRAM %d intervals count preflight %d\n", _CurrentProgramID1, _IntervalsCountPreflight);
+    printf("\nturn_program function start: %d, %d", program1, program2);
+    if (program1 != _CurrentProgram1 || program2 != _CurrentProgram2) {
+        printf("\nTURN PROGRAM %d, %d intervals count preflight %d\n", _CurrentProgramID1, _CurrentProgramID2, _IntervalsCountPreflight);
         _IntervalsCountProgram = 0;
         _CurrentProgram1 = program1;
-        _CurrentProgramID1 = 0;
-        _IntervalsCountPreflight = 0;
-        if ((config) && (program1>0)){
-            _CurrentProgramID1 = config->GetProgramID(program1);
-            _IntervalsCountPreflight = config->GetPreflightSec(program1)*10;
-            printf("TURN PROGRAM %d intervals count preflight %d\n", _CurrentProgramID1, _IntervalsCountPreflight);
-        }
-    }
-    _IsPreflight = (_IntervalsCountPreflight>0);
-
-    if (program2 != _CurrentProgram2) {
         _CurrentProgram2 = program2;
+        _CurrentProgramID1 = 0;
         _CurrentProgramID2 = 0;
-        if (config && program2 > 0) {
+        _IntervalsCountPreflight = 0;
+        if ((config) && (program1>0 || program2>0)){
+            _CurrentProgramID1 = config->GetProgramID(program1);
             _CurrentProgramID2 = config->GetProgramID(program2);
+            _IntervalsCountPreflight = config->GetPreflightSec(program1)*10;
+            printf("\nTURN PROGRAM %d intervals count preflight %d\n", _CurrentProgramID1, _IntervalsCountPreflight);
         }
     }
+    printf("\nturn_program function end: %d, %d     %d, %d", _CurrentProgramID1, _CurrentProgramID2, _CurrentProgram1, _CurrentProgram2);
+    _IsPreflight = (_IntervalsCountPreflight>0);
     return 0;
 }
 
@@ -370,7 +367,6 @@ int smart_delay_function(void * arg, int ms) {
 /////// End of Runtime functions ///////
 
 int RunProgram() {
-    printf("\n\n!!!!RunProgram!!!!\n\n");
     if ((_IsServerRelayBoard) && (_IsPreflight == 0)) {
         _IntervalsCountProgram++;
     }
@@ -531,7 +527,6 @@ void * pinging_func(void * ptr) {
 
 void * run_program_func(void * ptr) {
     while(!_to_be_destroyed) {
-        printf("\n\n!!!run_program_func!!!\n\n");
         RunProgram();
         delay(100);
     }

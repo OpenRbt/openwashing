@@ -22,6 +22,9 @@ setup = function()
     fundraiser_active_left = false      -- Утверждает, что в настоящий момент происходит оплата для левого / правого экрана. Необходимо для того, чтобы деньги приходили куда надо
     fundraiser_active_right = false
 
+    left_thanks_mode_current = false
+    right_thanks_mode_current = false
+
     starting_balance_right = 0
     starting_balance_left = 0
 
@@ -419,7 +422,7 @@ left_work_mode = function()
     set_current_state(balance_right + balance_left)
 
     charge_balance_left(price_p[current_left_program])
-    run_program(current_left_program, current_left_program)
+    run_program(current_left_program, current_right_program)
     turn_light(0, animation.idle)
 
     if balance_left <= 0.01 then
@@ -438,30 +441,59 @@ end
 right_thanks_mode = function()
     right_show_thanks()
     
-    balance_right = 0
-    set_current_state(balance_left + balance_right)
+    if right_thanks_mode_current == false then
+        right_thanks_mode_current = true
 
-    send_receipt(post_position, cash_balance_right, electronical_balance_right)
-    cash_balance_right = 0
-    electronical_balance_right = 0
+        turn_light(1, animation.one_button)
 
-    return mode_choose
+        balance_right = 0
+        set_current_state(balance_left + balance_right)
+
+        send_receipt(post_position, cash_balance_right, electronical_balance_right)
+        cash_balance_right = 0
+        electronical_balance_right = 0
+
+        waiting_loops_right = thanks_mode_seconds * 10
+    end
+
+    if waiting_loops_right <= 0 then
+        right_thanks_mode_current = false
+        return mode_choose
+    end
+
+    if pressed_key == 301 then waiting_loops_right = 0 end
+    waiting_loops_right = waiting_loops_right - 1
+
+    return mode_thanks
 end
 
 left_thanks_mode = function()
     left_show_thanks()
-    turn_light(1, animation.one_button)
 
-    balance_left = 0
-    set_current_state(balance_left + balance_right)
+    if left_thanks_mode_current == false then
+        left_thanks_mode_current = true
 
-    send_receipt(post_position, cash_balance_left, electronical_balance_left)
-    cash_balance_left = 0
-    electronical_balance_left = 0
+        turn_light(1, animation.one_button)
 
-    
+        balance_left = 0
+        set_current_state(balance_left + balance_right)
 
-    return mode_choose
+        send_receipt(post_position, cash_balance_left, electronical_balance_left)
+        cash_balance_left = 0
+        electronical_balance_left = 0
+
+        waiting_loops_left = thanks_mode_seconds * 10
+    end
+
+    if waiting_loops_left <= 0 then
+        left_thanks_mode_current = false
+        return mode_choose
+    end
+
+    if pressed_key == 300 then waiting_loops_left = 0 end
+    waiting_loops_left = waiting_loops_left - 1
+
+    return mode_thanks
 end
 --[[
 right_apology_mode = function()
@@ -560,6 +592,7 @@ left_show_thanks = function()
     left_disable_visibility()
     left_charge_balance(0)
     main_screen:Set("thanks_left.position", "700;580")
+    main_screen:Set("background_left.click_id", "300")
     main_screen:Display()
 end
 
@@ -654,6 +687,7 @@ right_show_thanks = function()
     right_disable_visibility()
     right_charge_balance(0)
     main_screen:Set("thanks_right.position", "700;79")
+    main_screen:Set("background_right.click_id", "301")
     main_screen:Display()
 end
 
@@ -665,6 +699,7 @@ right_show_apology = function()
 end
 
 right_disable_visibility = function()
+    main_screen:Set("background_right.click_id", "0")
     main_screen:Set("price_work_right.visible", "false")
     main_screen:Set("price_pause_right.visible", "false")
     main_screen:Set("programs_right.position", "2000;2000")
@@ -707,6 +742,7 @@ right_disable_visibility = function()
 end
 
 left_disable_visibility = function()
+    main_screen:Set("background_left.click_id", "0")
     main_screen:Set("price_work_left.visible", "false")
     main_screen:Set("price_pause_left.visible", "false")
     main_screen:Set("programs_left.position", "2000;2000")

@@ -1,11 +1,20 @@
 {
     "items":[
         {
-            "id":"background",
+            "id":"background_left",
+            "type":"image",
+            "position": "0;540",
+            "size":"1920;540",
+            "src":"pic/background_left.png",
+            "visible":"true",
+            "click_id":"0"
+        },
+        {
+            "id":"background_right",
             "type":"image",
             "position": "0;0",
-            "size":"1920;1080",
-            "src":"pic/background.png",
+            "size":"1920;540",
+            "src":"pic/background_right.png",
             "visible":"true",
             "click_id":"0"
         },
@@ -600,7 +609,7 @@
             "id":"thanks_right",
             "type":"image",
             "position": "0;0",
-            "size":"422;455",
+            "size":"455;422",
             "src":"pic/thanks.png",
             "visible":"true"
         },

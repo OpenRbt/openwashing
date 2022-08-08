@@ -358,7 +358,7 @@ public:
     // RunProgramOnServer request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     int RunProgramOnServer(int programID1, int programID2, int preflight) {
-        printf("\n\nRunProgramOnServer function start");
+        printf("\n\nRunProgramOnServer function start. ID1: %d, ID2: %d", programID1, programID2);
 	    std::string url = _Host+ _Port + "/run-2program";
         printf("\nRequest for address %s", url.c_str());
         std::string answer;

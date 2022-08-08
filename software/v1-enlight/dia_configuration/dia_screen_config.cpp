@@ -41,7 +41,7 @@ int DiaScreenConfig::Display(DiaScreen * screen) {
                 return err;
             }
         } else {
-            printf("not visible!\n");
+            //printf("not visible!\n");
         }
     }
 
