@@ -374,7 +374,7 @@ public:
     // RunProgramOnServer request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     int GetVolume() {
-	    std::string url = _Host+ _Port + "/volume-arduino";
+	    std::string url = _Host+ _Port + "/volume-despenser";
         std::string answer;
         std::string json_get_volue_request = json_create_get_volue();
         int result;
@@ -393,7 +393,7 @@ public:
     }
 
     int StartFluidFlowSensor(int volume){
-        std::string url = _Host+ _Port + "/run-arduino";
+        std::string url = _Host+ _Port + "/run-despenser";
         std::string answer;
         std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume);
         int result;

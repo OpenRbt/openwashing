@@ -221,19 +221,19 @@ start_filling_mode = function()
 end
 
 filling_mode = function()
-  run_fillin()
-  show_filling(balance)
-  
-  -- тут тарн лайт
-  
-  charge_balance(price_p[1])
-  printMessage("Volume: " .. get_volume())
+    run_fillin()
+    show_filling(balance)
+    
+    turn_light(0, animation.one_button)
+    
+    balance = price_p[1] * (volume - get_volume() / 1000)
 
-  if balance <= 0.01 then return mode_thanks end
+    if balance <= 0.01 then
+        balance = 0
+        return mode_thanks
+    end
 
-  update_balance()
-
-  return mode_filling
+    return mode_filling
 end
 
 thanks_mode = function()
@@ -492,7 +492,6 @@ run_stop = function()
 end
 
 run_program = function(program_num)
-    printMessage("Start program in lua " .. program_num)
     hardware:TurnProgram(program_num)
 end
 
