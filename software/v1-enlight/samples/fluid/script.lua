@@ -211,6 +211,7 @@ start_filling_mode = function()
     pressed_key = get_key()
     if pressed_key == button_begin then
         start_balance = balance
+        start_fluid_flow_sensor(volume * 1000)
         return mode_filling
     end
 
@@ -226,6 +227,7 @@ filling_mode = function()
   -- тут тарн лайт
   
   charge_balance(price_p[1])
+  printMessage("Volume: " .. get_volume())
 
   if balance <= 0.01 then return mode_thanks end
 
@@ -490,6 +492,7 @@ run_stop = function()
 end
 
 run_program = function(program_num)
+    printMessage("Start program in lua " .. program_num)
     hardware:TurnProgram(program_num)
 end
 
@@ -555,4 +558,12 @@ end
   
 get_time_minutes = function()
     return hardware:GetMinutes()
+end
+
+get_volume = function()
+    return hardware:GetVolume()
+end
+
+start_fluid_flow_sensor = function(volume_rur)
+    hardware:StartFluidFlowSensor(math.ceil(volume_rur))
 end
