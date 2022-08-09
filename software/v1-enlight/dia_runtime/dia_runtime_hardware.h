@@ -35,10 +35,20 @@ public:
     }
 
     void * program_object;
-    int (*turn_program_function)(void * object, int program1, int program2);
-    int TurnProgram(int ProgramNum1, int ProgramNum2) {
+    int (*turn_program_function)(void * object, int program);
+    int TurnProgram(int ProgramNum) {
         if(/*program_object && */turn_program_function) {
-            turn_program_function(program_object, ProgramNum1, ProgramNum2);
+            turn_program_function(program_object, ProgramNum);
+        } else {
+            //printf("error: NIL object or function TurnActivator\n");
+        }
+        return 0;
+    }
+
+    int (*turn_2program_function)(void * object, int program1, int program2);
+    int Turn2Program(int ProgramNum1, int ProgramNum2) {
+        if(/*program_object && */turn_2program_function) {
+            turn_2program_function(program_object, ProgramNum1, ProgramNum2);
         } else {
             //printf("error: NIL object or function TurnActivator\n");
         }
@@ -220,6 +230,7 @@ public:
 
         program_object = 0;
         turn_program_function = 0;
+        turn_2program_function = 0;
 
 	    send_receipt_function = 0;
 

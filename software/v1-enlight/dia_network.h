@@ -357,22 +357,33 @@ public:
 
     // RunProgramOnServer request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
-    int RunProgramOnServer(int programID1, int programID2, int preflight) {
-        printf("\n\nRunProgramOnServer function start. ID1: %d, ID2: %d", programID1, programID2);
-	    std::string url = _Host+ _Port + "/run-2program";
-        printf("\nRequest for address %s", url.c_str());
+    int RunProgramOnServer(int programID, int preflight) {
+	    std::string url = _Host+ _Port + "/run-program";
         std::string answer;
 
         int result;
-        std::string json_run_program_request = json_create_run_program(programID1, programID2, preflight);
-        printf("\nJSON: %s\n", json_run_program_request.c_str());
+        std::string json_run_program_request = json_create_run_program(programID, preflight);
         result = SendRequest(&json_run_program_request, &answer, url);
         if ((result) || (answer !="")) {
-            printf("\nRunProgramOnServer answer: %s   result: %d\n", answer.c_str(), result);
-            printf("\nRunProgramOnServer function end. Code 1\n\n");
+            fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
-        printf("\nRunProgramOnServer function end. Code 0\n\n");
+        return 0;
+    }
+
+    // Run2ProgramOnServer request to specified URL with method POST. 
+    // Returns 0, if request was OK, other value - in case of failure.
+    int Run2ProgramOnServer(int programID1, int programID2, int preflight) {
+	    std::string url = _Host+ _Port + "/run-2program";
+        std::string answer;
+
+        int result;
+        std::string json_run_program_request = json_create_run_2program(programID1, programID2, preflight);
+        result = SendRequest(&json_run_program_request, &answer, url);
+        if ((result) || (answer !="")) {
+            printf("\nRunProgramOnServer answer: %s\n", answer.c_str());
+            return 1;
+        }
         return 0;
     }
 
@@ -440,12 +451,12 @@ public:
     // PING request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program1, int program2, int& lastUpdate, int& lastDiscountUpdate) {
+    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate, int& lastDiscountUpdate) {
         std::string answer;
 	    std::string url = _Host + _Port + "/ping";
         
         int result;
-        std::string json_ping_request = json_create_ping_report(balance, program1, program2);
+        std::string json_ping_request = json_create_ping_report(balance, program);
         result = SendRequest(&json_ping_request, &answer, url);
 	//printf("Server answer on PING:\n%s\n", answer.c_str());
 	
@@ -945,13 +956,12 @@ private:
     }
 
     // Encodes _PublicKey to JSON string.
-    std::string json_create_ping_report(int balance, int program1, int program2) {
+    std::string json_create_ping_report(int balance, int program1) {
         json_t *object = json_object();
 
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "CurrentBalance", json_integer(balance));
         json_object_set_new(object, "CurrentProgram", json_integer(program1));
-        //json_object_set_new(object, "SecondCurrentProgram", json_integer(program2));
         char *str = json_dumps(object, 0);
         std::string res = str;
 
@@ -974,7 +984,22 @@ private:
         return res;
     }
 
-    std::string json_create_run_program(int programID1, int programID2, int preflight) {
+    std::string json_create_run_program(int programID, int preflight) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "programID", json_integer(programID));
+        json_object_set_new(object, "preflight", json_boolean(preflight));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_run_2program(int programID1, int programID2, int preflight) {
         json_t *object = json_object();
 
         json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
