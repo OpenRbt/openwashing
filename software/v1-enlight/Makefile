@@ -15,8 +15,8 @@ FLGS+=-I./dia_configuration -I./dia_configuration/storage
 LIBS= -DCURL_STATICLIB -l:libevent.a -lwiringPi -lpthread `sdl-config --cflags` `sdl-config --libs` -lSDL -lSDL_image -lSDL_ttf -l:libcrypto.a
 LIBS+=-l:libjansson.a `curl-config --static-libs` ./3rd/lua53/src/liblua.a -ldl -Wall
 prod:
-	$(CC) -o firmware.exe $(SRC) $(FLGS) $(LIBS) -DUSE_GPIO -O3
+	$(CC) -o firmware.exe $(SRC) $(FLGS) $(LIBS) -DUSE_GPIO -DSCAN_DEVICES -O3
 test:
-	$(CC) -o firmware.test.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS)
+	$(CC) -o firmware.test.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS) -DSCAN_DEVICES
 debug:
-	$(CC) -o firmware.debug.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS) -DDEBUG -DUSE_GPIO
+	$(CC) -o firmware.debug.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS) -DDEBUG -DUSE_GPIO -DSCAN_DEVICES
