@@ -426,7 +426,7 @@ abort_transaction = function()
 end
 
 set_current_state = function(current_balance, current_program)
-    return hardware:SetCurrentState(math.floor(current_balance + 100), current_program + 2)
+    return hardware:SetCurrentState(math.floor(current_balance), current_program)
 end
 
 update_balance = function()
