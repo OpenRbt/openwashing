@@ -371,8 +371,7 @@ public:
         return 0;
     }
 
-    // RunProgramOnServer request to specified URL with method POST. 
-    // Returns 0, if request was OK, other value - in case of failure.
+    // GetVolume request to specified URL with method POST. 
     int GetVolume() {
 	    std::string url = _Host+ _Port + "/volume-despenser";
         std::string answer;
@@ -381,7 +380,7 @@ public:
         
         result = SendRequest(&json_get_volue_request, &answer, url);
 
-        if ((result) || (answer !="")) {
+        if (result == 0 && answer != "") {
             printf("GetVolume answer %s\n", answer.c_str());
             
             answer = answer.substr(10, answer.length() - 12);
