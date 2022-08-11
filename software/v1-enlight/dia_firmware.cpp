@@ -71,6 +71,7 @@ int _IntervalsCountPreflight = 0;
 int _Volume = 0;
 int _SensorVolume = 0;
 bool _SensorActive = false;
+bool _SensorActivate = false;
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
@@ -164,8 +165,7 @@ int get_volume() {
 int start_fluid_flow_sensor(int volume){
     _SensorVolume = volume;
     _Volume = 0;
-    _SensorActive = true;
-    int err = network->StartFluidFlowSensor(_SensorVolume);
+    _SensorActivate = true;
     return 0;
 }
 
@@ -450,6 +450,11 @@ int RunProgram() {
 }
 
 int GetVolume() {
+    if (_SensorActivate){
+        _SensorActivate = false;
+        _SensorActive = true;
+        int err = network->StartFluidFlowSensor(_SensorVolume);
+    }
     if (_SensorActive){
         _Volume = network->GetVolume();
         if (_SensorVolume <= _Volume){
