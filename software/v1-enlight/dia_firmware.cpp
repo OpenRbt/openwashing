@@ -452,11 +452,25 @@ int RunProgram() {
 int GetVolume() {
     if (_SensorActivate){
         _SensorActivate = false;
-        _SensorActive = true;
-        int err = network->StartFluidFlowSensor(_SensorVolume);
+        for (int i = 0; i < 4; i++){
+            int err = network->StartFluidFlowSensor(_SensorVolume);
+            if (err == 0){
+                break;
+                _SensorActive = true;
+            }
+        }
     }
     if (_SensorActive){
-        _Volume = network->GetVolume();
+        for (int i = 0; i < 4; i++){
+            int v = network->GetVolume();
+            if (v >= 0){
+                _Volume = v;
+                break;
+            }
+            if (i == 3){
+                _Volume = _SensorVolume;
+            }
+        }
         if (_SensorVolume <= _Volume){
             _SensorActive = false;
             _SensorVolume = 0;

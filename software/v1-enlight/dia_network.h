@@ -388,7 +388,7 @@ public:
 
             return v;
         }
-        return 0;
+        return -1;
     }
 
     int StartFluidFlowSensor(int volume){
