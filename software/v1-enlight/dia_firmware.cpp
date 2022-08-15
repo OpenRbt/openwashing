@@ -455,8 +455,8 @@ int GetVolume() {
         for (int i = 0; i < 4; i++){
             int err = network->StartFluidFlowSensor(_SensorVolume);
             if (err == 0){
-                break;
                 _SensorActive = true;
+                break;
             }
         }
     }
