@@ -161,6 +161,16 @@ public:
         return 0;
     }
 
+    bool (*get_sensor_active_function)();
+    bool GetSensorActive(){
+        if(get_sensor_active_function){
+            return get_sensor_active_function();
+        } else{
+            printf("error: NIL object or function GetSensorActive\n");
+        }
+        return false;
+    }
+
     int (*start_fluid_flow_sensor_function)(int volume);
     int StartFluidFlowSensor(int volume){
         if(start_fluid_flow_sensor_function){

@@ -9,7 +9,6 @@ setup = function()
     min_electron_balance = 10
     max_electron_balance = 900
     electron_balance = 0
-    free_pause_seconds = 0
     volume = 0
     
     balance_seconds = 0
@@ -22,6 +21,7 @@ setup = function()
     -- constants
     welcome_mode_seconds = 0.1
     thanks_mode_seconds = 5
+    apology_mode_seconds = 10
     wait_mode_seconds = 40
     
     is_transaction_started = false
@@ -233,6 +233,11 @@ filling_mode = function()
         return mode_thanks
     end
 
+    if get_sensor_active() == false then
+        balance = 0
+        return mode_apology
+    end
+
     return mode_filling
 end
 
@@ -268,6 +273,17 @@ thanks_mode = function()
     end
 
     return mode_thanks
+end
+
+apology_mode = function()
+    run_stop()
+    show_apology()
+
+    if waiting_loops <= 0 then waiting_loops = apology_mode_seconds * 10 end
+    waiting_loops = waiting_loops - 1
+
+    if waiting_loops <= 0 then return mode_choose end
+    return mode_apology
 end
 
 -- Show
@@ -565,4 +581,8 @@ end
 
 start_fluid_flow_sensor = function(volume_rur)
     hardware:StartFluidFlowSensor(math.ceil(volume_rur))
+end
+
+get_sensor_active = function()
+    return hardware:GetSensorActive()
 end

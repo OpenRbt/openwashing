@@ -71,6 +71,7 @@ int _IntervalsCountPreflight = 0;
 int _Volume = 0;
 int _SensorVolume = 0;
 bool _SensorActive = false;
+bool _SensorActiveUI = false;
 bool _SensorActivate = false;
 
 pthread_t run_program_thread;
@@ -162,10 +163,15 @@ int get_volume() {
     return _Volume;
 }
 
+bool get_sensor_active() {
+    return _SensorActiveUI;
+}
+
 int start_fluid_flow_sensor(int volume){
     _SensorVolume = volume;
     _Volume = 0;
     _SensorActivate = true;
+    _SensorActiveUI = true;
     return 0;
 }
 
@@ -458,6 +464,9 @@ int GetVolume() {
                 _SensorActive = true;
                 break;
             }
+            if(i == 3){
+                _SensorActiveUI = false;
+            }
         }
     }
     if (_SensorActive){
@@ -475,6 +484,7 @@ int GetVolume() {
         if (_SensorVolume <= _Volume || status == 0){
             _Volume = _SensorVolume;
             _SensorActive = false;
+            _SensorActiveUI = false;
             _SensorVolume = 0;
         }
     }
@@ -1007,6 +1017,7 @@ int main(int argc, char ** argv) {
     hardware->request_transaction_function = request_transaction;  
     hardware->get_transaction_status_function = get_transaction_status;
     hardware->get_volume_function = get_volume;
+    hardware->get_sensor_active_function = get_sensor_active;
     hardware->start_fluid_flow_sensor_function = start_fluid_flow_sensor;
     hardware->abort_transaction_function = abort_transaction;
     hardware->set_current_state_function = set_current_state;
