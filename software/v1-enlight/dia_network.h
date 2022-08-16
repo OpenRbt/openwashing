@@ -372,7 +372,7 @@ public:
     }
 
     // GetVolume request to specified URL with method POST. 
-    int GetVolume() {
+    int GetVolume(int *status) {
 	    std::string url = _Host+ _Port + "/volume-despenser";
         std::string answer;
         std::string json_get_volue_request = json_create_get_volue();
@@ -381,13 +381,29 @@ public:
         result = SendRequest(&json_get_volue_request, &answer, url);
 
         if (result == 0 && answer != "") {
-            printf("GetVolume answer %s\n", answer.c_str());
-            
-            answer = answer.substr(10, answer.length() - 12);
-            int v = std::stoi(answer);
+            json_error_t error;
+            json_t *json = json_loads(answer.c_str(), 0, &error);
 
+            if(!json_is_object(json)){
+                printf("GetVolume answer %s\n", answer.c_str());
+                json_decref(json);
+                return -1;
+            }
+
+            json_t *volume_json = json_object_get(json, "volume");
+            json_t *status_json = json_object_get(json, "status");
+
+            if(!(json_is_integer(volume_json) && json_is_integer(status_json))){
+                printf("GetVolume answer %s\n", answer.c_str());
+                json_decref(json);
+                return -1;
+            }
+            *status = json_integer_value(status_json);
+            int v = json_integer_value(volume_json);
+            json_decref(json);
             return v;
         }
+        printf("GetVolume answer %s\n", answer.c_str());
         return -1;
     }
 

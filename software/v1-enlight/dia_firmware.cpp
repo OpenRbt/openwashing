@@ -461,8 +461,9 @@ int GetVolume() {
         }
     }
     if (_SensorActive){
+        int status = 0;
         for (int i = 0; i < 4; i++){
-            int v = network->GetVolume();
+            int v = network->GetVolume(&status);
             if (v >= 0){
                 _Volume = v;
                 break;
@@ -471,7 +472,7 @@ int GetVolume() {
                 _Volume = _SensorVolume;
             }
         }
-        if (_SensorVolume <= _Volume){
+        if (_SensorVolume <= _Volume || status == 0){
             _SensorActive = false;
             _SensorVolume = 0;
         }
