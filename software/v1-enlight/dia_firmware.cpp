@@ -473,6 +473,7 @@ int GetVolume() {
             }
         }
         if (_SensorVolume <= _Volume || status == 0){
+            _Volume = _SensorVolume;
             _SensorActive = false;
             _SensorVolume = 0;
         }
