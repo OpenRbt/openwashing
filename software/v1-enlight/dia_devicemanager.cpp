@@ -229,7 +229,9 @@ DiaDeviceManager::DiaDeviceManager()
     BanknoteMoney = 0;
     ElectronMoney = 0;
     ServiceMoney = 0;
+    #ifdef SCAN_DEVICES
     pthread_create(&WorkingThread, NULL, DiaDeviceManager_WorkingThread, this);
+    #endif
 }
 
 DiaDeviceManager::~DiaDeviceManager() {

@@ -1,0 +1,108 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1920;1080",
+        "src":"pic/background.png",
+        "visible":"true",
+        "click_id":"103"
+      },
+
+
+      {
+        "id":"degrees",
+        "type": "digits",
+        "position": "412;975",
+        "font": "standard_number",
+        "symbol_size":"20;15",
+        "padding": "2",
+        "length": "2",
+        "visible":"true",
+        "is_vertical": "true"
+      },
+      {
+        "id":"fraction",
+        "type": "digits",
+        "position": "412;952",
+        "font": "standard_number",
+        "symbol_size":"20;15",
+        "padding": "2",
+        "length": "2",
+        "visible":"true",
+        "is_vertical": "true"
+      },
+      {
+        "id":"plus",
+        "type":"image",
+        "position": "412;1500",
+        "size":"18;19",
+        "src":"pic/plus.png",
+        "visible":"true"
+      },
+      {
+        "id":"minus",
+        "type":"image",
+        "position": "412;1500",
+        "size":"18;19",
+        "src":"pic/minus.png",
+        "visible":"true"
+      },
+      {
+        "id":"hours",
+        "type": "digits",
+        "position": "412;100",
+        "font": "standard_number",
+        "symbol_size":"20;15",
+        "padding": "2",
+        "length": "2",
+        "visible":"true",
+        "is_vertical": "true"
+      },
+      {
+        "id":"minutes",
+        "type": "digits",
+        "position": "412;59",
+        "font": "standard_number",
+        "symbol_size":"20;15",
+        "padding": "2",
+        "length": "2",
+        "visible":"true",
+        "is_vertical": "true"
+      },
+      {
+        "id":"minutes_zero",
+        "type": "digits",
+        "position": "412;75",
+        "font": "standard_number",
+        "symbol_size":"20;15",
+        "padding": "2",
+        "length": "1",
+        "visible":"false",
+        "value": "0",
+        "is_vertical": "true"
+      },
+
+
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "340;460",
+        "font": "standard_number",
+        "symbol_size":"100;67",
+        "padding": "2",
+        "length": "3",
+        "visible":"true",
+        "is_vertical": "true"
+      },
+      {
+        "id":"content",
+        "type":"image",
+        "position": "680;179",
+        "size":"681;722",
+        "src":"pic/apology.png",
+        "visible":"true"
+      }
+    ]
+  }

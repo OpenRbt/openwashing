@@ -1,0 +1,137 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"1920;1080",
+      "src":"pic/background.png",
+      "visible":"true"
+    },
+
+
+    {
+      "id":"degrees",
+      "type": "digits",
+      "position": "412;975",
+      "font": "standard_number",
+      "symbol_size":"20;15",
+      "padding": "2",
+      "length": "2",
+      "visible":"true",
+      "is_vertical": "true"
+    },
+    {
+      "id":"fraction",
+      "type": "digits",
+      "position": "412;952",
+      "font": "standard_number",
+      "symbol_size":"20;15",
+      "padding": "2",
+      "length": "2",
+      "visible":"true",
+      "is_vertical": "true"
+    },
+    {
+      "id":"plus",
+      "type":"image",
+      "position": "412;1500",
+      "size":"18;19",
+      "src":"pic/plus.png",
+      "visible":"true"
+    },
+    {
+      "id":"minus",
+      "type":"image",
+      "position": "412;1500",
+      "size":"18;19",
+      "src":"pic/minus.png",
+      "visible":"true"
+    },
+    {
+      "id":"hours",
+      "type": "digits",
+      "position": "412;100",
+      "font": "standard_number",
+      "symbol_size":"20;15",
+      "padding": "2",
+      "length": "2",
+      "visible":"true",
+      "is_vertical": "true"
+    },
+    {
+      "id":"minutes",
+      "type": "digits",
+      "position": "412;59",
+      "font": "standard_number",
+      "symbol_size":"20;15",
+      "padding": "2",
+      "length": "2",
+      "visible":"true",
+      "is_vertical": "true"
+    },
+    {
+      "id":"minutes_zero",
+      "type": "digits",
+      "position": "412;75",
+      "font": "standard_number",
+      "symbol_size":"20;15",
+      "padding": "2",
+      "length": "1",
+      "visible":"false",
+      "value": "0",
+      "is_vertical": "true"
+    },
+
+
+    {
+      "id":"balance",
+      "type": "digits",
+      "position": "340;460",
+      "font": "standard_number",
+      "symbol_size":"100;67",
+      "padding": "2",
+      "length": "3",
+      "visible":"true",
+      "is_vertical": "true",
+      "value": "0"
+    },
+    {
+      "id":"content",
+      "type":"image",
+      "position": "680;56",
+      "size":"679;968",
+      "src":"pic/choose.png",
+      "visible":"true"
+    },
+    {
+      "id":"price",
+      "type": "digits",
+      "position": "815;200",
+      "font": "standard_number",
+      "symbol_size":"30;20",
+      "padding": "2",
+      "length": "3",
+      "visible":"true",
+      "is_vertical": "true"
+    },
+    {
+      "id":"button_cash",
+      "type":"image",
+      "position": "1360;57",
+      "size":"120;966",
+      "src":"pic/buttons/cash.png",
+      "visible":"true",
+      "click_id":"100"
+    },
+    {
+      "id":"button_cashless",
+      "type":"image",
+      "position": "1500;57",
+      "size":"120;966",
+      "src":"pic/buttons/cashless.png",
+      "visible":"true",
+      "click_id":"101"
+    }
+  ]
+}
