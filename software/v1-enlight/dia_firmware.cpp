@@ -480,7 +480,7 @@ int RunProgram() {
 // Sends PING request to Central Server every 2 seconds.
 // May get service money from server.
 int CentralServerDialog() {
-    //printf("PING CENTRAL SERVER\n");
+    printf("PING CENTRAL SERVER\n");
     
     _IntervalsCount++;
     if(_IntervalsCount < 0) {
@@ -488,7 +488,7 @@ int CentralServerDialog() {
         _IntervalsCount = 0;
     }
 
-    //printf("Sending another PING request to server...\n");
+    printf("Sending another PING request to server...\n");
 
     int serviceMoney = 0;
     bool openStation = false;
@@ -1025,7 +1025,6 @@ int main(int argc, char ** argv) {
     } else {
         printf("no additional coin handler\n");
     }
-    printf("\n\n\n\nYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYy\n\n\n\n");
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     while(!keypress) {
         // Call Lua loop function
@@ -1046,7 +1045,7 @@ int main(int argc, char ** argv) {
 
         for (auto it = config->ScreenConfigs[last]->clickAreas.begin(); it != config->ScreenConfigs[last]->clickAreas.end(); ++it) {
             if (x >= (*it).X && x <= (*it).X + (*it).Width && y >= (*it).Y && y <= (*it).Y + (*it).Height && mousepress == 1) {
-                printf("\nCLICK!!!\n");
+                printf("CLICK!!!\n");
                 mousepress = 0;
                 _DebugKey = std::stoi((*it).ID);
                 printf("DEBUG KEY = %d\n", _DebugKey);

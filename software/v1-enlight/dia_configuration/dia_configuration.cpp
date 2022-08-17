@@ -63,7 +63,6 @@ int DiaConfiguration::Init() {
         }
         _Gpio = 0;
         #ifdef USE_GPIO
-        printf("\n\nCreate GPIO\n\n");
         _Gpio = new DiaGpio(GetButtonsNumber(), GetRelaysNumber(), GetStorage());
         if (!_Gpio->InitializedOk) {
             printf("ERROR: GPIO INIT");

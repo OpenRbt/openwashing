@@ -16,10 +16,10 @@ setup = function()
     max_electron_balance = 900
     max_cash_balance = 900
 
-    keyboard_pressed_left = false       -- Утверждает то, что пользователь нажал на кнопку клавиатуры при вводе суммы
+    keyboard_pressed_left = false
     keyboard_pressed_right = false
 
-    fundraiser_active_left = false      -- Утверждает, что в настоящий момент происходит оплата для левого / правого экрана. Необходимо для того, чтобы деньги приходили куда надо
+    fundraiser_active_left = false      -- States that payment is currently in progress for the left/right screen. Needed to get the money where it needs
     fundraiser_active_right = false
 
     left_thanks_mode_current = false
@@ -61,14 +61,14 @@ setup = function()
     price_p[3] = 0
     price_p[4] = 0
 
-    mode_welcome = 0        -- Велком
-    mode_choose = 10        -- Выбор способа оплаты
-    mode_fundraising = 20   -- Наличная оплата
-    mode_keyboard = 30      -- Клавиатура для ввода суммы
-    mode_wait = 40          -- Ожидание оплаты
-    mode_work = 50          -- Работа
-    mode_thanks = 60        -- Благодарности
-    mode_apology = 70       -- Извинения
+    mode_welcome = 0
+    mode_choose = 10
+    mode_fundraising = 20
+    mode_keyboard = 30
+    mode_wait = 40
+    mode_work = 50
+    mode_thanks = 60
+    mode_apology = 70
 
     real_ms_per_loop = 100
     pressed_key = 0
@@ -281,7 +281,7 @@ right_wait_mode = function()
     run_program(current_left_program, current_right_program)
     turn_light(0, animation.idle)
 
-    if is_transaction_started == false then   -- Запуск ожидания транзакции
+    if is_transaction_started == false then
         waiting_loops_right = wait_mode_seconds * 10;
 
         request_transaction(electron_balance_right)
@@ -301,16 +301,16 @@ right_wait_mode = function()
         return mode_work
     end
 
-    if waiting_loops_right <= 0 then -- Если счетчик истек, то возращаем на экран выбора. Надо бы добавить условие имения кардридера
+    if waiting_loops_right <= 0 then
         is_transaction_started = false
-	    if status ~= 0 then -- Если запущена активная транзакция, то абортируем ее
+	    if status ~= 0 then
 	        abort_transaction()
 	    end
         fundraiser_active_right = false
         return mode_choose
     end
 
-    if status == 0 and is_transaction_started == true then    -- Если транзакция не идет, то возращаем на выбор
+    if status == 0 and is_transaction_started == true then
         is_transaction_started = false
         abort_transaction()
         fundraiser_active_right = false
@@ -335,7 +335,7 @@ left_wait_mode = function()
     run_program(current_left_program, current_right_program)
     turn_light(0, animation.idle)
 
-    if is_transaction_started == false then   -- Запуск ожидания транзакции
+    if is_transaction_started == false then
         waiting_loops_left = wait_mode_seconds * 10;
 
         request_transaction(electron_balance_left)
@@ -355,16 +355,16 @@ left_wait_mode = function()
         return mode_work
     end
 
-    if waiting_loops_left <= 0 then -- Если счетчик истек, то возращаем на экран выбора. Надо бы добавить условие имения кардридера
+    if waiting_loops_left <= 0 then
         is_transaction_started = false
-	    if status ~= 0 then -- Если запущена активная транзакция, то абортируем ее
+	    if status ~= 0 then
 	        abort_transaction()
 	    end
         fundraiser_active_left = false
         return mode_choose
     end
 
-    if status == 0 and is_transaction_started == true then    -- Если транзакция не идет, то возращаем на выбор. обавить условие наскардридер
+    if status == 0 and is_transaction_started == true then
         is_transaction_started = false
         abort_transaction()
         fundraiser_active_left = false
@@ -854,23 +854,23 @@ end
 
 -- Util
 
-get_key = function()    -- Получает нажатую клиентом кнопку
+get_key = function()
     return hardware:GetKey()
 end
 
-smart_delay = function(ms)  -- Задержка на столько то милисекунд
+smart_delay = function(ms)
     return hardware:SmartDelay(ms)
 end
 
-get_price = function(key)   -- Стоймость указанной программы
+get_price = function(key)
     return registry:GetPrice(key)
 end
 
-turn_light = function(rel_num, animation_code)  -- Включает свет на указанном реле
+turn_light = function(rel_num, animation_code)
     hardware:TurnLight(rel_num, animation_code)
 end
 
-send_receipt = function(post_pos, cash, electronical)   -- Выдает чек
+send_receipt = function(post_pos, cash, electronical)
     hardware:SendReceipt(post_pos, cash, electronical)
 end
 
@@ -878,27 +878,27 @@ increment_cars = function()
     hardware:IncrementCars()
 end
 
-run_program = function(program_left_num, program_right_num)     -- Запускает указанную программу
+run_program = function(program_left_num, program_right_num)
     hardware:Turn2Program(program_left_num, program_right_num)
 end
 
-request_transaction = function(money)   -- Запрос на транзакцию
+request_transaction = function(money)
     return hardware:RequestTransaction(money)
 end
 
-get_transaction_status = function()     -- 0 - транзакции нет, > 0 -  ожидание средств в размере возращаемого значения
+get_transaction_status = function()
     return hardware:GetTransactionStatus()
 end
 
-abort_transaction = function()          -- Прерывает транзакцию
+abort_transaction = function()
     return hardware:AbortTransaction()
 end
 
-set_current_state = function(current_balance)  -- Устанавливает текущее состояние для сервера. Баланс будет отображаться в приложении
+set_current_state = function(current_balance)
     return hardware:SetCurrentState(math.floor(current_balance))
 end
 
-update_balance = function()     -- Обновление баланса
+update_balance = function()
     new_coins = hardware:GetCoins()
     new_banknotes = hardware:GetBanknotes()
     new_electronical = hardware:GetElectronical()
@@ -915,12 +915,12 @@ update_balance = function()     -- Обновление баланса
     end
 end
 
-charge_balance_left = function(price)   -- Уменьшает баланс в соответсвии с указанной ценой в минуту (?)
+charge_balance_left = function(price)
     balance_left = balance_left - price * real_ms_per_loop / 60000
     if balance_left < 0 then balance_left = 0 end
 end
 
-charge_balance_right = function(price)  -- Уменьшает баланс в соответсвии с указанной ценой в минуту (?)
+charge_balance_right = function(price)
     balance_right = balance_right - price * real_ms_per_loop / 60000
     if balance_right < 0 then balance_right = 0 end
 end

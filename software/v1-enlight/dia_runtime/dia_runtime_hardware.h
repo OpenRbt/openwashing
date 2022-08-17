@@ -50,7 +50,7 @@ public:
         if(/*program_object && */turn_2program_function) {
             turn_2program_function(program_object, ProgramNum1, ProgramNum2);
         } else {
-            //printf("error: NIL object or function TurnActivator\n");
+            printf("error: NIL object or function TurnActivator\n");
         }
         return 0;
     }

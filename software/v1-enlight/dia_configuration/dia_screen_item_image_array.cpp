@@ -79,7 +79,7 @@ DiaScreenItemImageArray::~DiaScreenItemImageArray() {
 
 
 int dia_screen_item_image_array_display(DiaScreenItem * base_item, void * image_array_ptr, DiaScreen * screen) {
-    //printf("image array display function engaged\n");
+    printf("image array display function engaged\n");
     if (!base_item) {
         printf("error: nil base item\n");
         return 1;
@@ -92,7 +92,7 @@ int dia_screen_item_image_array_display(DiaScreenItem * base_item, void * image_
 
     DiaScreenItemImageArray * image_array = (DiaScreenItemImageArray *)image_array_ptr;
 
-    // printf("trying to display %d index, must be from 0 to %d\n", image_array->index.value, image_array->length.value - 1);
+    printf("trying to display %d index, must be from 0 to %d\n", image_array->index.value, image_array->length.value - 1);
     int picture_to_show = image_array->index.value;
     if (picture_to_show < 0) {
         picture_to_show = 0;
@@ -109,11 +109,11 @@ int dia_screen_item_image_array_display(DiaScreenItem * base_item, void * image_
                 screen->Canvas,
                 image_array->OutputRectangle);
 
-    //printf("img displayed at (%d, %d) size (%d, %d) \n",
-    //image_array->OutputRectangle->x,
-    //image_array->OutputRectangle->y,
-    //image_array->OutputRectangle->w,
-    //image_array->OutputRectangle->h);
+    printf("img displayed at (%d, %d) size (%d, %d) \n",
+    image_array->OutputRectangle->x,
+    image_array->OutputRectangle->y,
+    image_array->OutputRectangle->w,
+    image_array->OutputRectangle->h);
     
     return 0;
 }

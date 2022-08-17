@@ -225,7 +225,6 @@ void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
             config2 = &gpio->Programs[gpio->CurrentProgram2];
         }
 
-        printf("\nStart Check relays:");
         for(int i = 0; i < PIN_COUNT; i++) {
             if(gpio->RelayPin[i] < 0) {
                 //printf("skipping %d\n",i);
@@ -264,12 +263,8 @@ void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
                     }
                 }
                 DiaGpio_WriteRelay(gpio, i, value);
-                if (value > 0){
-                    printf("\nrele %d", i);
-                }
             }
         }
-        printf("\n");
     }
 }
 

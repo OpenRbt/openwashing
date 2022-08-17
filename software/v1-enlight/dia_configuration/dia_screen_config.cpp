@@ -5,7 +5,7 @@
 
 int DiaScreenConfig::Display(DiaScreen * screen) {
     Changed = 0;
-    //printf("Displaying screen '%s' ..........,,, \n", this->id.c_str());
+    printf("Displaying screen '%s' ..........,,, \n", this->id.c_str());
     clickAreas.clear();
     auto t1 = std::chrono::high_resolution_clock::now();
     for (auto it = items_list.begin(); it != items_list.end(); ++it) {
@@ -34,21 +34,21 @@ int DiaScreenConfig::Display(DiaScreen * screen) {
             }
         }
 
-        //printf("--item '%s' of type '%s' --- \n", currentItem->id.c_str(), currentItem->type.c_str());
+        printf("--item '%s' of type '%s' --- \n", currentItem->id.c_str(), currentItem->type.c_str());
         if (currentItem->visible.value) {
             int err = currentItem->display_ptr(currentItem, currentItem->specific_object_ptr, screen);
             if (err!=0) {
                 return err;
             }
         } else {
-            //printf("not visible!\n");
+            printf("not visible!\n");
         }
     }
 
     screen->FlipFrame();
     auto t2 = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-    //printf("create screen time '%.3f' ms\n", duration/1000.0);
+    printf("create screen time '%.3f' ms\n", duration/1000.0);
 
     return 0;
 }
@@ -184,7 +184,7 @@ int dia_screen_display_screen (void * screen_object, void * screen_config) {
     if (screenConfig->id == screen->LastDisplayed) {
         if (screenConfig->Changed) {
             screenConfig->Changed = 0;
-            //printf("disp:[%s]\n",screenConfig->id.c_str() );
+            printf("disp:[%s]\n",screenConfig->id.c_str() );
             return screenConfig->Display(screen);
         }
         // if everything is the same we do not need to do anything

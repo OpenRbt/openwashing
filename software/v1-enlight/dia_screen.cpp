@@ -54,9 +54,9 @@ void DiaScreen_DrawPage1(DiaScreen * screen, int num) {
 }
 
 void DiaScreen::FlipFrame() {
-    //printf("frame ... ");
+    printf("frame ... ");
     SDL_Flip(Canvas);
-    //printf(" ... flipped \n");
+    printf(" ... flipped \n");
 }
 void DiaScreen::FillBackground(Uint8 r, Uint8 g, Uint8 b) {
 	SDL_FillRect(Canvas, NULL, SDL_MapRGB(Canvas->format, r, g, b));
