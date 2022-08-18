@@ -71,7 +71,14 @@ int _IsServerRelayBoard = 0;
 int _IntervalsCountProgram = 0;
 int _IntervalsCountPreflight = 0;
 
+int _Volume = 0;
+int _SensorVolume = 0;
+bool _SensorActive = false;
+bool _SensorActiveUI = false;
+bool _SensorActivate = false;
+
 pthread_t run_program_thread;
+pthread_t get_volume_thread;
 
 int GetKey(DiaGpio * _gpio) {
     int key = 0;
@@ -172,6 +179,22 @@ int turn_2program(void *object, int program1, int program2) {
         }
     }
     _IsPreflight = (_IntervalsCountPreflight>0);
+    return 0;
+}
+
+int get_volume() {
+    return _Volume;
+}
+
+bool get_sensor_active() {
+    return _SensorActiveUI;
+}
+
+int start_fluid_flow_sensor(int volume){
+    _SensorVolume = volume;
+    _Volume = 0;
+    _SensorActivate = true;
+    _SensorActiveUI = true;
     return 0;
 }
 
@@ -475,6 +498,42 @@ int RunProgram() {
     return 0;
 }
 
+int GetVolume() {
+    if (_SensorActivate){
+        _SensorActivate = false;
+        for (int i = 0; i < 4; i++){
+            int err = network->StartFluidFlowSensor(_SensorVolume);
+            if (err == 0){
+                _SensorActive = true;
+                break;
+            }
+            if(i == 3){
+                _SensorActiveUI = false;
+            }
+        }
+    }
+    if (_SensorActive){
+        int status = 0;
+        for (int i = 0; i < 4; i++){
+            int v = network->GetVolume(&status);
+            if (v >= 0){
+                _Volume = v;
+                break;
+            }
+            if (i == 3){
+                _Volume = _SensorVolume;
+            }
+        }
+        if (_SensorVolume <= _Volume || status == 0){
+            _Volume = _SensorVolume;
+            _SensorActive = false;
+            _SensorActiveUI = false;
+            _SensorVolume = 0;
+        }
+    }
+    return 0;
+}
+
 /////// Central server communication functions //////
 
 // Sends PING request to Central Server every 2 seconds.
@@ -557,6 +616,15 @@ void * pinging_func(void * ptr) {
 void * run_program_func(void * ptr) {
     while(!_to_be_destroyed) {
         RunProgram();
+        delay(100);
+    }
+    pthread_exit(0);
+    return 0;
+}
+
+void * get_volume_func(void * ptr) {
+    while(!_to_be_destroyed) {
+        GetVolume();
         delay(100);
     }
     pthread_exit(0);
@@ -992,6 +1060,9 @@ int main(int argc, char ** argv) {
     hardware->get_electronical_function = get_electronical;    
     hardware->request_transaction_function = request_transaction;  
     hardware->get_transaction_status_function = get_transaction_status;
+    hardware->get_volume_function = get_volume;
+    hardware->get_sensor_active_function = get_sensor_active;
+    hardware->start_fluid_flow_sensor_function = start_fluid_flow_sensor;
     hardware->abort_transaction_function = abort_transaction;
     hardware->set_current_state_function = set_current_state;
 
@@ -1026,6 +1097,7 @@ int main(int argc, char ** argv) {
         printf("no additional coin handler\n");
     }
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
+    pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
     while(!keypress) {
         // Call Lua loop function
         config->GetRuntime()->Loop();

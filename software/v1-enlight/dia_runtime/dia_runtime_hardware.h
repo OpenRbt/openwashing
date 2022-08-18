@@ -161,6 +161,36 @@ public:
         return 0;
     }
 
+    int (*get_volume_function)();
+    int GetVolume() {
+        if(get_is_preflight_function) {
+            return get_volume_function();
+        } else {
+            printf("error: NIL object or function GetVolume\n");
+        }
+        return 0;
+    }
+
+    bool (*get_sensor_active_function)();
+    bool GetSensorActive(){
+        if(get_sensor_active_function){
+            return get_sensor_active_function();
+        } else{
+            printf("error: NIL object or function GetSensorActive\n");
+        }
+        return false;
+    }
+
+    int (*start_fluid_flow_sensor_function)(int volume);
+    int StartFluidFlowSensor(int volume){
+        if(start_fluid_flow_sensor_function){
+            start_fluid_flow_sensor_function(volume);
+        } else{
+            printf("error: NIL object or function StartFluidFlowSensor\n");
+        }
+        return 0;
+    }
+
     int GetHours() {
         std::time_t t = std::time(0);   // get time now
         std::tm* now = std::localtime(&t);

@@ -387,6 +387,57 @@ public:
         return 0;
     }
 
+    // GetVolume request to specified URL with method POST. 
+    int GetVolume(int *status) {
+	    std::string url = _Host+ _Port + "/volume-despenser";
+        std::string answer;
+        std::string json_get_volue_request = json_create_get_volue();
+        int result;
+        
+        result = SendRequest(&json_get_volue_request, &answer, url);
+
+        if (result == 0 && answer != "") {
+            json_error_t error;
+            json_t *json = json_loads(answer.c_str(), 0, &error);
+
+            if(!json_is_object(json)){
+                printf("GetVolume answer %s\n", answer.c_str());
+                json_decref(json);
+                return -1;
+            }
+
+            json_t *volume_json = json_object_get(json, "volume");
+            json_t *status_json = json_object_get(json, "status");
+
+            if(!(json_is_integer(volume_json) && json_is_integer(status_json))){
+                printf("GetVolume answer %s\n", answer.c_str());
+                json_decref(json);
+                return -1;
+            }
+            *status = json_integer_value(status_json);
+            int v = json_integer_value(volume_json);
+            json_decref(json);
+            return v;
+        }
+        printf("GetVolume answer %s\n", answer.c_str());
+        return -1;
+    }
+
+    int StartFluidFlowSensor(int volume){
+        std::string url = _Host+ _Port + "/run-despenser";
+        std::string answer;
+        std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume);
+        int result;
+
+        result = SendRequest(&json_start_fluid_flow_sensor_request, &answer, url);
+
+        if ((result) || (answer !="")) {
+            fprintf(stderr, "StartFluidFlowSensor answer %s\n", answer.c_str());
+            return 1;
+        }
+        return 0;
+    }
+
     // GetCardReaderConig request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     int GetCardReaderConig(std::string& cardReaderType, std::string& host, std::string& port) {
@@ -1006,6 +1057,33 @@ private:
         json_object_set_new(object, "programID", json_integer(programID1));
         json_object_set_new(object, "programID2", json_integer(programID2));
         json_object_set_new(object, "preflight", json_boolean(preflight));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_get_volue() {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_start_fluid_flow_sensor(int volume) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "volume", json_integer(volume));
         char *str = json_dumps(object, 0);
         std::string res = str;
 
