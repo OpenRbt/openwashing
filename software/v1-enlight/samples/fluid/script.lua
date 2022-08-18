@@ -228,14 +228,14 @@ filling_mode = function()
     
     balance = price_p[1] * (volume - get_volume() / 1000)
 
-    if balance <= 0.01 then
-        balance = 0
-        return mode_thanks
-    end
-
     if get_sensor_active() == false then
         balance = 0
         return mode_apology
+    end
+
+    if balance <= 0.01 then
+        balance = 0
+        return mode_thanks
     end
 
     return mode_filling
