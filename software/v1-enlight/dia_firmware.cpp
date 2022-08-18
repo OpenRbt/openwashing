@@ -481,7 +481,7 @@ int GetVolume() {
                 _Volume = _SensorVolume;
             }
         }
-        if (_SensorVolume <= _Volume || status != "<nil>"){
+        if (_SensorVolume <= _Volume || status != ""){
             _Volume = _SensorVolume;
             _SensorActive = false;
             _SensorActiveUI = false;

@@ -408,7 +408,7 @@ public:
     }
 
     int StartFluidFlowSensor(int volume){
-        std::string url = _Host+ _Port + "/run-despenser";
+        std::string url = _Host+ _Port + "/run-dispenser";
         std::string answer;
         std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume);
         int result;
