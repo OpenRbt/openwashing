@@ -478,13 +478,12 @@ int GetVolume() {
                 break;
             }
             if (i == 3){
-                _Volume = _SensorVolume;
+                status = "Server connection error";
             }
         }
         if (_SensorVolume <= _Volume || status != ""){
             _SensorActive = false;
             _SensorActiveUI = false;
-            _SensorVolume = 0;
             printf("Completion of fluid flow. Status: %s\n", status.c_str());
         }
     }
