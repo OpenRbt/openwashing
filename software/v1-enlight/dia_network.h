@@ -372,8 +372,8 @@ public:
     }
 
     // GetVolume request to specified URL with method POST. 
-    int GetVolume(int *status) {
-	    std::string url = _Host+ _Port + "/volume-despenser";
+    int GetVolume(std::string *status) {
+	    std::string url = _Host+ _Port + "/volume-dispenser";
         std::string answer;
         std::string json_get_volue_request = json_create_get_volue();
         int result;
@@ -393,12 +393,12 @@ public:
             json_t *volume_json = json_object_get(json, "volume");
             json_t *status_json = json_object_get(json, "status");
 
-            if(!(json_is_integer(volume_json) && json_is_integer(status_json))){
+            if(!(json_is_integer(volume_json) && json_is_string(status_json))){
                 printf("GetVolume answer %s\n", answer.c_str());
                 json_decref(json);
                 return -1;
             }
-            *status = json_integer_value(status_json);
+            *status = json_string_value(status_json);
             int v = json_integer_value(volume_json);
             json_decref(json);
             return v;
@@ -408,7 +408,7 @@ public:
     }
 
     int StartFluidFlowSensor(int volume){
-        std::string url = _Host+ _Port + "/run-despenser";
+        std::string url = _Host+ _Port + "/run-dispenser";
         std::string answer;
         std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume);
         int result;

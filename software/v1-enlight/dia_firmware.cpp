@@ -470,7 +470,7 @@ int GetVolume() {
         }
     }
     if (_SensorActive){
-        int status = 0;
+        std::string status;
         for (int i = 0; i < 4; i++){
             int v = network->GetVolume(&status);
             if (v >= 0){
@@ -478,14 +478,13 @@ int GetVolume() {
                 break;
             }
             if (i == 3){
-                _Volume = _SensorVolume;
+                status = "Server connection error";
             }
         }
-        if (_SensorVolume <= _Volume || status == 0){
-            _Volume = _SensorVolume;
+        if (_SensorVolume <= _Volume || status != ""){
             _SensorActive = false;
             _SensorActiveUI = false;
-            _SensorVolume = 0;
+            printf("Completion of fluid flow. Status: %s\n", status.c_str());
         }
     }
     return 0;

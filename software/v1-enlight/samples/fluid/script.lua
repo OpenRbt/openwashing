@@ -235,6 +235,7 @@ filling_mode = function()
 
     if get_sensor_active() == false then
         balance = 0
+        waiting_loops = 0
         return mode_apology
     end
 
