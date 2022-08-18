@@ -373,7 +373,7 @@ public:
 
     // GetVolume request to specified URL with method POST. 
     int GetVolume(std::string *status) {
-	    std::string url = _Host+ _Port + "/volume-despenser";
+	    std::string url = _Host+ _Port + "/volume-dispenser";
         std::string answer;
         std::string json_get_volue_request = json_create_get_volue();
         int result;
