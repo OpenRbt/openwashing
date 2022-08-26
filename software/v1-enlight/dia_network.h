@@ -407,6 +407,40 @@ public:
         return -1;
     }
 
+    // GetVolume request to specified URL with method POST. 
+    int GetServerMoney() {
+        std::string url = _Host+ _Port + "/get-global-monye";
+        std::string answer;
+        std::string json_get_volue_request = json_create_get_volue();
+        int result;
+
+        result = SendRequest(&json_get_volue_request, &answer, url);
+
+        if (result == 0 && answer != "") {
+            json_error_t error;
+            json_t *json = json_loads(answer.c_str(), 0, &error);
+
+            if(!json_is_object(json)){
+                printf("GetServerMoney answer %s\n", answer.c_str());
+                json_decref(json);
+                return -1;
+            }
+
+            json_t *money_json = json_object_get(json, "volume");
+
+            if(!json_is_integer(money_json)){
+                printf("GetServerMoney answer %s\n", answer.c_str());
+                json_decref(json);
+                return -1;
+            }
+            int m = json_integer_value(money_json);
+            json_decref(json);
+            return m;
+        }
+        printf("GetServerMoney answer %s\n", answer.c_str());
+        return -1;
+    }
+
     int StartFluidFlowSensor(int volume){
         std::string url = _Host+ _Port + "/run-dispenser";
         std::string answer;

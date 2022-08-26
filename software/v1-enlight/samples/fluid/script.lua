@@ -533,6 +533,7 @@ update_balance = function()
     new_banknotes = hardware:GetBanknotes()
     new_electronical = hardware:GetElectronical()
     new_service = hardware:GetService()
+    new_server = hardware:GetServerMoney()
 
     cash_balance = cash_balance + new_coins
     cash_balance = cash_balance + new_banknotes
@@ -541,6 +542,7 @@ update_balance = function()
     balance = balance + new_banknotes
     balance = balance + new_electronical
     balance = balance + new_service
+    balance = balance + new_server
 end
 
 charge_balance = function(price)

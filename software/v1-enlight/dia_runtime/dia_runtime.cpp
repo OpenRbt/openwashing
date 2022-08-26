@@ -98,6 +98,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
     .addFunction("SendReceipt", &DiaRuntimeHardware::SendReceipt)
     .addFunction("IncrementCars", &DiaRuntimeHardware::IncrementCars)
     .addFunction("GetElectronical", &DiaRuntimeHardware::GetElectronical)
+    .addFunction("GetServerMoney", &DiaRuntimeHardware::GetServerMoney)
     .addFunction("RequestTransaction", &DiaRuntimeHardware::RequestTransaction)
     .addFunction("GetHours", &DiaRuntimeHardware::GetHours)
     .addFunction("GetMinutes", &DiaRuntimeHardware::GetMinutes)

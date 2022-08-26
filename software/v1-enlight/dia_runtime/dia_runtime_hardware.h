@@ -141,6 +141,16 @@ public:
         return 0;
     }
 
+    int (*get_server_money_function)();
+    int GetServerMoney(){
+        if(get_server_money_function){
+            return get_server_money_function();
+        } else {
+            printf("error: NIL object or function GetServerMoney\n");
+        }
+        return 0;
+    }
+
     int (*request_transaction_function)(void * object, int money);
     int RequestTransaction(int money) {
         if(electronical_object && request_transaction_function) {

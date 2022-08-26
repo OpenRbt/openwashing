@@ -56,6 +56,7 @@ int _Balance = 0;
 int _OpenLid = 0;
 int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
+int _BalanceServer = 0;
 
 int _to_be_destroyed = 0;
 
@@ -76,6 +77,7 @@ bool _SensorActivate = false;
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
+pthread_t get_server_money_thread;
 
 int GetKey(DiaGpio * _gpio) {
     int key = 0;
@@ -106,12 +108,12 @@ int set_current_state(int balance) {
 }
 
 // Saves new income money and creates money report to Central Server.
-void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total) {
+void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int server_total) {
         network->SendMoneyReport(cars_total,
         coins_total,
         banknotes_total,
         cashless_total,
-        service_total);
+        service_total + server_total);
 }
 
 ////// Runtime functions ///////
@@ -138,7 +140,7 @@ int send_receipt(int postPosition, int cash, int electronical) {
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1,0,0,0,0);
+    SaveIncome(1, 0, 0, 0, 0, 0);
     return 0;
 }
 
@@ -181,7 +183,7 @@ int get_service() {
         
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0,0,0,0,curMoney);
+        SaveIncome(0, 0, 0, 0, curMoney, 0);
     }
     return curMoney;
 }
@@ -253,7 +255,7 @@ int get_coins(void *object) {
 
   int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
   if (totalMoney>0) {
-      SaveIncome(0,totalMoney,0,0,0);
+      SaveIncome(0, totalMoney, 0, 0, 0, 0);
   }
 
   return totalMoney;
@@ -282,7 +284,7 @@ int get_banknotes(void *object) {
   if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
   int totalMoney = curMoney + gpioBanknote;
   if (totalMoney > 0) {
-    SaveIncome(0,0,totalMoney,0,0);
+    SaveIncome(0, 0, totalMoney, 0, 0, 0);
   }
   return totalMoney;
 }
@@ -292,10 +294,20 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney>0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0,0,0,curMoney,0);
+        SaveIncome(0, 0, 0, curMoney, 0, 0);
         manager->ElectronMoney  = 0;
     }
     return curMoney;
+}
+
+int get_server_money(){
+    int money = _BalanceServer;
+    if (money > 0){
+        printf("server money %d\n", money);
+        SaveIncome(0, 0, 0, 0, 0, money);
+        _BalanceServer = 0;
+    }
+    return money;
 }
 
 // Tries to perform a bank card NFC transaction.
@@ -490,6 +502,16 @@ int GetVolume() {
     return 0;
 }
 
+int GetServerMoney() {
+    for (int i = 0; i < 4; i++){
+        int money = network->GetServerMoney();
+        if (money >= 0){
+            _BalanceServer = money;
+            break;
+        }
+    }
+}
+
 /////// Central server communication functions //////
 
 // Sends PING request to Central Server every 2 seconds.
@@ -581,6 +603,15 @@ void * run_program_func(void * ptr) {
 void * get_volume_func(void * ptr) {
     while(!_to_be_destroyed) {
         GetVolume();
+        delay(100);
+    }
+    pthread_exit(0);
+    return 0;
+}
+
+void * get_server_money_func(void * ptr) {
+    while(!_to_be_destroyed) {
+        GetServerMoney();
         delay(100);
     }
     pthread_exit(0);
@@ -1012,7 +1043,8 @@ int main(int argc, char ** argv) {
     hardware->get_service_function = get_service;
     hardware->get_is_preflight_function = get_is_preflight;
     hardware->get_openlid_function = get_openlid;
-    hardware->get_electronical_function = get_electronical;    
+    hardware->get_electronical_function = get_electronical;
+    hardware->get_server_money_function = get_server_money;
     hardware->request_transaction_function = request_transaction;  
     hardware->get_transaction_status_function = get_transaction_status;
     hardware->get_volume_function = get_volume;
@@ -1054,6 +1086,7 @@ int main(int argc, char ** argv) {
 
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
+    pthread_create(&get_server_money_thread, NULL, get_server_money_func, NULL);
     while(!keypress) {
         // Call Lua loop function
         config->GetRuntime()->Loop();
