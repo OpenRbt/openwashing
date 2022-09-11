@@ -541,14 +541,7 @@ public:
 
             json_t *obj_bonus_sustem;
             obj_bonus_sustem = json_object_get(object, "bonus_system_active");
-            if (json_is_boolean(obj_bonus_sustem)){
-                printf("\n\nJWT YES\n");
-                bonus_sustem_active = (bool)json_boolean_value(obj_bonus_sustem);
-                printf("VALUE: %d\n\n", bonus_sustem_active);
-            }
-            else{
-                printf("\n\nJWT NO\n\n");
-            }
+            bonus_sustem_active = (bool)json_boolean_value(obj_bonus_sustem);
         } while (0);
         json_decref(object);
         return err;
