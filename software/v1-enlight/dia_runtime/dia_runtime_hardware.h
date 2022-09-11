@@ -181,6 +181,17 @@ public:
         return 0;
     }
 
+    bool (*get_bonus_sustem_active_function)();
+    bool GetBonusSustemActive(){
+        if(get_bonus_sustem_active_function){
+            return get_bonus_sustem_active_function();
+        }
+        else{
+            printf("error: NIL object or function GetBonusSustemActive\n");
+        }
+        return false;
+    }
+
     int GetHours() {
         std::time_t t = std::time(0);   // get time now
         std::tm* now = std::localtime(&t);
