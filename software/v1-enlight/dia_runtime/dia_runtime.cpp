@@ -104,6 +104,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
     .addFunction("GetVolume", &DiaRuntimeHardware::GetVolume)
     .addFunction("GetSensorActive", &DiaRuntimeHardware::GetSensorActive)
     .addFunction("StartFluidFlowSensor", &DiaRuntimeHardware::StartFluidFlowSensor)
+    .addFunction("GetBonusSustemActive", &DiaRuntimeHardware::GetBonusSustemActive)
     .addFunction("GetTransactionStatus", &DiaRuntimeHardware::GetTransactionStatus)
     .addFunction("AbortTransaction", &DiaRuntimeHardware::AbortTransaction)
     .addFunction("SetCurrentState", &DiaRuntimeHardware::SetCurrentState)
