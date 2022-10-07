@@ -181,13 +181,13 @@ public:
         return 0;
     }
 
-    bool (*get_bonus_sustem_active_function)();
-    bool GetBonusSustemActive(){
-        if(get_bonus_sustem_active_function){
-            return get_bonus_sustem_active_function();
+    bool (*get_bonus_system_active_function)();
+    bool GetBonusSystemActive(){
+        if(get_bonus_system_active_function){
+            return get_bonus_system_active_function();
         }
         else{
-            printf("error: NIL object or function GetBonusSustemActive\n");
+            printf("error: NIL object or function GetBonusSystemActive\n");
         }
         return false;
     }
