@@ -490,7 +490,7 @@ public:
     // PING request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate, int& lastDiscountUpdate, bool&bonus_sustem_active) {
+    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate, int& lastDiscountUpdate, bool&bonus_system_active) {
         std::string answer;
 	    std::string url = _Host + _Port + "/ping";
         
@@ -519,7 +519,7 @@ public:
             }
 
             if(!json_is_object(object)) {
-		            printf("Not a JSON\n");
+		        printf("Not a JSON\n");
                 break;
             }
 
@@ -543,9 +543,9 @@ public:
             obj_last_discount_update = json_object_get(object, "lastDiscountUpdate");
             lastDiscountUpdate = (int)json_integer_value(obj_last_discount_update);
 
-            json_t *obj_bonus_sustem;
-            obj_bonus_sustem = json_object_get(object, "bonus_system_active");
-            bonus_sustem_active = (bool)json_boolean_value(obj_bonus_sustem);
+            json_t *obj_bonus_system;
+            obj_bonus_system = json_object_get(object, "bonus_system_active");
+            bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
         } while (0);
         json_decref(object);
         return err;

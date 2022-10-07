@@ -75,7 +75,7 @@ bool _SensorActive = false;
 bool _SensorActiveUI = false;
 bool _SensorActivate = false;
 
-bool _BonusSustemActive = false;
+bool _BonusSystemActive = false;
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
@@ -171,8 +171,8 @@ bool get_sensor_active() {
     return _SensorActiveUI;
 }
 
-bool get_bonus_sustem_active() {
-    return _BonusSustemActive;
+bool get_bonus_system_active() {
+    return _BonusSystemActive;
 }
 
 int start_fluid_flow_sensor(int volume){
@@ -515,11 +515,11 @@ int CentralServerDialog() {
 
     int serviceMoney = 0;
     bool openStation = false;
-    bool bonusSustemActive = false;
+    bool bonusSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSustemActive);
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() &&  config->GetLastUpdate() != -1){
             config->LoadConfig();
@@ -538,14 +538,10 @@ int CentralServerDialog() {
         printf("Door is going to be opened... \n");
         // TODO: add the function of turning on the relay, which will open the lock.
     }
-    if (bonusSustemActive && !_BonusSustemActive) {
-        _BonusSustemActive = true;
-        printf("Bonus sustem activated\n");
-    }
-    else if (!bonusSustemActive && _BonusSustemActive)
-    {
-        _BonusSustemActive = false;
-        printf("Bonus sustem deactivated\n");
+
+    if (bonusSystemActive != _BonusSystemActive){
+        _BonusSystemActive = bonusSystemActive;
+        printf("Bonus system activated: %d\n", bonusSystemActive);
     }
     
     if (buttonID != 0) {
@@ -691,7 +687,7 @@ int RecoverRegistry() {
 
     int tmp = 0;
     bool openStation = false;
-    bool bonusSustemActive = false;
+    bool bonusSystemActive = false;
     int buttonID = 0;
     
     int lastUpdate = 0;
@@ -700,7 +696,7 @@ int RecoverRegistry() {
     std::string default_price = "15";
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSustemActive);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1105,7 +1101,7 @@ int main(int argc, char ** argv) {
     hardware->set_current_state_function = set_current_state;
     printf("HW init 7...\n");
 
-    hardware->get_bonus_sustem_active_function = get_bonus_sustem_active;
+    hardware->get_bonus_system_active_function = get_bonus_system_active;
 
     hardware->delay_object = &stored_time;
     hardware->smart_delay_function = smart_delay_function;
