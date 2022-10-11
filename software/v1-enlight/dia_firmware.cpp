@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <wiringPi.h>
+#include <iostream>
 
 #include "dia_gpio.h"
 #include "dia_screen.h"
@@ -75,6 +76,7 @@ bool _SensorActiveUI = false;
 bool _SensorActivate = false;
 
 bool _BonusSystemActive = false;
+std::string _QrData = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
@@ -517,7 +519,9 @@ int CentralServerDialog() {
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive);
+    std::string qrData = "";
+
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() &&  config->GetLastUpdate() != -1){
             config->LoadConfig();
@@ -540,6 +544,12 @@ int CentralServerDialog() {
     if (bonusSystemActive != _BonusSystemActive){
         _BonusSystemActive = bonusSystemActive;
         printf("Bonus system activated: %d\n", bonusSystemActive);
+    }
+
+    if (_QrData != qrData){
+        _QrData = qrData;
+        std::string cmd = std::string("python3 ./qr_gen.py --data \"") + _QrData + std::string("\" --file ") + config->GetFolder();
+        system(cmd.c_str());
     }
     
     if (buttonID != 0) {
@@ -673,9 +683,10 @@ int RecoverRegistry() {
     int discountLastUpdate = 0;
 
     std::string default_price = "15";
+    std::string qrData = "";
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
