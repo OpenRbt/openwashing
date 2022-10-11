@@ -490,7 +490,7 @@ public:
     // PING request to specified URL with method POST. 
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate, int& lastDiscountUpdate, bool&bonus_system_active) {
+    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate, int& lastDiscountUpdate, bool& bonus_system_active, std::string& qrData) {
         std::string answer;
 	    std::string url = _Host + _Port + "/ping";
         
@@ -546,6 +546,12 @@ public:
             json_t *obj_bonus_system;
             obj_bonus_system = json_object_get(object, "bonus_system_active");
             bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
+
+            json_t *obj_qr_data;
+            obj_qr_data = json_object_get(object, "qr_data");
+            if (json_is_string(obj_qr_data)){
+                qrData = json_string_value(obj_qr_data);
+            }
         } while (0);
         json_decref(object);
         return err;
