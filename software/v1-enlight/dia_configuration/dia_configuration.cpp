@@ -221,6 +221,16 @@ int DiaConfiguration::InitFromJson(json_t * configuration_json) {
     }
 }
 
+int DiaConfiguration::ReLoad() {
+    std::map<std::string, DiaScreenConfig *>::iterator it;
+    for (it = ScreenConfigs.begin(); it != ScreenConfigs.end(); it++) {
+        if (it->second->reLoad){
+            ScreenConfigs[it->first]->ReLoad();
+        }
+    }
+    return 0;
+}
+
 int DiaConfiguration::LoadConfig() {
     std::string answer;
     int err = _Net->GetStationConig(answer);

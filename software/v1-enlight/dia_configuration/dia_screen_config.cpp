@@ -60,6 +60,9 @@ int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
         return 1;
     }
 
+    json_t * re_load_json = json_object_get(screen_json, "re_load");
+    reLoad = json_boolean_value(re_load_json);
+
     //printf("1\n");
     json_t * id_json = json_object_get(screen_json, "id");
     if(!json_is_string(id_json)) {
@@ -107,6 +110,32 @@ int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
     }
     src = json_string_value(src_json);
     //printf("screen definition loaded: %s:%s\n", id.c_str(), src.c_str());
+    return 0;
+}
+
+int DiaScreenConfig::ReLoad(){
+    json_t * screen_implementation = dia_get_resource_json(Folder.c_str(), src.c_str());
+    json_t *items_json = json_object_get(screen_implementation, "items");
+
+    if (!json_is_array(items_json)) {
+        printf("error: can't initialize display items\n");
+        return 1;
+    }
+
+    for(unsigned int i = 0; i < json_array_size(items_json); i++) {
+        json_t * item_json = json_array_get(items_json, i);
+        if (!json_is_object(item_json)) {
+            printf("error: can't initialize one of display items %d\n", i+1);
+            return 1;
+        }
+
+        DiaScreenItem *newItem = new DiaScreenItem(this);
+        if(newItem->Init(item_json)) {
+            printf("error happened while parsing specific item of a display\n");
+            return 1;
+        }
+        items_map.insert(std::pair<std::string, DiaScreenItem *>(newItem->id, newItem));
+    }
     return 0;
 }
 
