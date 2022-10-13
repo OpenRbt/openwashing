@@ -550,8 +550,10 @@ int CentralServerDialog() {
 
     if (_QrData != qrData){
         _QrData = qrData;
-        std::string cmd = std::string("python3 ./qr_gen.py --data \"") + _QrData + std::string("\" --file ") + config->GetFolder();
+        std::string cmd = std::string("python3 ./qr_gen.py --data \"") + _QrData + std::string("\" --file ") + config->GetFolder() + std::string("/qr.png");
         system(cmd.c_str());
+        sleep(3);
+        config->ReLoad();
     }
     
     if (buttonID != 0) {
