@@ -129,12 +129,15 @@ int DiaScreenConfig::ReLoad(){
             return 1;
         }
 
-        DiaScreenItem *newItem = new DiaScreenItem(this);
-        if(newItem->Init(item_json)) {
-            printf("error happened while parsing specific item of a display\n");
-            return 1;
+        json_t * re_load_json = json_object_get(item_json, "re_load");
+        if(json_boolean_value(re_load_json)) {
+            DiaScreenItem *newItem = new DiaScreenItem(this);
+            if(newItem->Init(item_json)) {
+                printf("error happened while parsing specific item of a display\n");
+                return 1;
+            }
+            items_map.insert(std::pair<std::string, DiaScreenItem *>(newItem->id, newItem));
         }
-        items_map.insert(std::pair<std::string, DiaScreenItem *>(newItem->id, newItem));
     }
     return 0;
 }

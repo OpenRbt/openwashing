@@ -76,7 +76,9 @@ bool _SensorActive = false;
 bool _SensorActiveUI = false;
 bool _SensorActivate = false;
 
-bool _BonusSystemActive = false;
+bool _BonusSystemIsActive = false;
+bool _BonusSystemClient = false;
+int _BonusSystemBalance = 0;
 std::string _QrData = "";
 
 pthread_t run_program_thread;
@@ -173,15 +175,30 @@ bool get_sensor_active() {
     return _SensorActiveUI;
 }
 
-bool get_bonus_system_active() {
-    return _BonusSystemActive;
-}
-
 int start_fluid_flow_sensor(int volume){
     _SensorVolume = volume;
     _Volume = 0;
     _SensorActivate = true;
     _SensorActiveUI = true;
+    return 0;
+}
+
+// Bonus system
+
+bool bonus_system_is_active() {
+    return _BonusSystemIsActive;
+}
+
+bool bonus_system_get_client() {
+    return _BonusSystemClient;
+}
+
+int bonus_system_get_balance() {
+    return _BonusSystemBalance;
+}
+
+int bonus_system_set_balance(int balance) {
+    _BonusSystemBalance = balance;
     return 0;
 }
 
@@ -543,8 +560,8 @@ int CentralServerDialog() {
         // TODO: add the function of turning on the relay, which will open the lock.
     }
 
-    if (bonusSystemActive != _BonusSystemActive){
-        _BonusSystemActive = bonusSystemActive;
+    if (bonusSystemActive != _BonusSystemIsActive){
+        _BonusSystemIsActive = bonusSystemActive;
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
 
@@ -1114,7 +1131,10 @@ int main(int argc, char ** argv) {
     hardware->set_current_state_function = set_current_state;
     printf("HW init 7...\n");
 
-    hardware->get_bonus_system_active_function = get_bonus_system_active;
+    hardware->bonus_system_is_active_function = bonus_system_is_active;
+    hardware->bonus_system_get_client_function = bonus_system_get_client;
+    hardware->bonus_system_get_balance_function = bonus_system_get_balance;
+    hardware->bonus_system_set_balance_function = bonus_system_set_balance;
 
     hardware->delay_object = &stored_time;
     hardware->smart_delay_function = smart_delay_function;
