@@ -181,16 +181,44 @@ public:
         return 0;
     }
 
-    bool (*get_bonus_system_active_function)();
-    bool GetBonusSystemActive(){
-        if(get_bonus_system_active_function){
-            return get_bonus_system_active_function();
+    // Bonus system
+
+    bool (*bonus_system_is_active_function)();
+    bool BonusSystemIsActive(){
+        if(bonus_system_is_active_function){
+            return bonus_system_is_active_function();
         }
-        else{
-            printf("error: NIL object or function GetBonusSystemActive\n");
-        }
+        printf("error: NIL object or function GetBonusSystemActive\n");
         return false;
     }
+
+    bool (*bonus_system_get_client_function)();
+    bool BonusSystemGetClient(){
+        if(bonus_system_get_client_function){
+            return bonus_system_get_client_function();
+        }
+        printf("error: NIL object or function BonusSystemGetClient\n");
+        return false;
+    }
+
+    int (*bonus_system_get_balance_function)();
+    int BonusSystemGetBalance(){
+        if(bonus_system_get_balance_function){
+            return bonus_system_get_balance_function();
+        }
+        printf("error: NIL object or function BonusSystemGetBalance\n");
+        return 0;
+    }
+
+    int (*bonus_system_set_balance_function)(int balance);
+    int BonusSystemSetBalance(int balance){
+        if(bonus_system_set_balance_function){
+            return bonus_system_set_balance_function(balance);
+        }
+        printf("error: NIL object or function BonusSystemSetBalance\n");
+        return 0;
+    }
+
 
     int GetHours() {
         std::time_t t = std::time(0);   // get time now
