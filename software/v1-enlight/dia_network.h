@@ -553,6 +553,45 @@ public:
         return err;
     }
 
+    int GetQr(std::string &qrData, int &width, int &height){
+        std::string url = _Host+ _Port + "/get-qr";
+        std::string answer;
+        std::string json_get_qr_request = json_create_get_qr();
+        int result;
+        
+        result = SendRequest(&json_get_qr_request, &answer, url);
+
+        if (result == 0 && answer != "") {
+            json_error_t error;
+            json_t *json = json_loads(answer.c_str(), 0, &error);
+
+            if(!json_is_object(json)){
+                printf("GetQr answer %s\n", answer.c_str());
+                json_decref(json);
+                return 1;
+            }
+
+            json_t *qr_data_json = json_object_get(json, "qr_data");
+            json_t *width_json = json_object_get(json, "width");
+            json_t *height_json = json_object_get(json, "height");
+
+            if(!(json_is_integer(width_json) && json_is_integer(height_json) && json_is_string(qr_data_json))){
+                printf("GetVolume answer %s\n", answer.c_str());
+                json_decref(json);
+                return 1;
+            }
+            
+            qrData = json_string_value(qr_data_json);
+            width = json_integer_value(width_json);
+            height = json_integer_value(height_json);
+
+            json_decref(json);
+            return 0;
+        }
+        printf("GetVolume answer %s\n", answer.c_str());
+        return 1;
+    }
+
     // GetStationDiscounts request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     int GetDiscounts(std::string &answer) {
@@ -1055,6 +1094,10 @@ private:
         str = 0;
         json_decref(object);
         return res;
+    }
+
+    std::string json_create_get_qr() {
+        return json_create_get_volue();
     }
 
     std::string json_create_start_fluid_flow_sensor(int volume) {

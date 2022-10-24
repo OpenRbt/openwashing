@@ -15,7 +15,7 @@ public:
     std::string type;
     DiaBoolean visible;
     DiaScreenConfig *Parent;
-
+    bool isQr;
 
     // virtual function to display an element
 

@@ -30,7 +30,6 @@ public:
     int RunCommand(std::string command);
     int LoadConfig();
     int LoadDiscounts();
-    int ReLoad();
 
     // DELETE methods above
     DiaScreen * GetScreen() {
