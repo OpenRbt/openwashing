@@ -567,10 +567,15 @@ int CentralServerDialog() {
 
     if (_QrData != qrData){
         _QrData = qrData;
-        std::string cmd = std::string("python3 ./qr_gen.py --data \"") + _QrData + std::string("\" --file ") + config->GetFolder() + std::string("/qr.png");
-        system(cmd.c_str());
-        sleep(3);
-        config->ReLoad();
+        
+        int width = 0;
+        int height = 0;
+        int err = network->GetQr(qrData, width, height);
+
+        std::map<std::string, DiaScreenConfig *>::iterator it;
+        for (it=config->ScreenConfigs.begin(); it!=config->ScreenConfigs.end(); it++) {
+            it->second->SetQr(qrData, width, height);
+        }
     }
     
     if (buttonID != 0) {

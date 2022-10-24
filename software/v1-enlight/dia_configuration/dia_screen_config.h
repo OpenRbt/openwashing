@@ -10,6 +10,7 @@
 #include "dia_screen_item.h"
 #include "dia_screen.h"
 #include "dia_all_items.h"
+#include <SDL.h>
 
 class AreaItem
 {
@@ -28,7 +29,6 @@ public:
     std::string Folder;
     std::string background;
     int Changed;
-    bool reLoad;
 
     std::list<DiaScreenItem *> items_list;
     std::map<std::string, DiaScreenItem *> items_map;
@@ -38,7 +38,7 @@ public:
     int InitDetails(json_t *screen_json);
     int AddItem(DiaScreenItem * item);
     int Display(DiaScreen * screen);
-    int ReLoad();
+    int SetQr(std::string qrData, int width, int height);
     ~DiaScreenConfig();
     DiaScreenConfig();
 };

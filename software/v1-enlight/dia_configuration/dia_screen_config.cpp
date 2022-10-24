@@ -1,6 +1,7 @@
 #include "dia_screen_config.h"
 #include "dia_functions.h"
 #include "dia_screen_item_image.h"
+#include "dia_functions.h"
 #include <chrono>
 
 int DiaScreenConfig::Display(DiaScreen * screen) {
@@ -60,9 +61,6 @@ int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
         return 1;
     }
 
-    json_t * re_load_json = json_object_get(screen_json, "re_load");
-    reLoad = json_boolean_value(re_load_json);
-
     //printf("1\n");
     json_t * id_json = json_object_get(screen_json, "id");
     if(!json_is_string(id_json)) {
@@ -113,35 +111,6 @@ int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
     return 0;
 }
 
-int DiaScreenConfig::ReLoad(){
-    json_t * screen_implementation = dia_get_resource_json(Folder.c_str(), src.c_str());
-    json_t *items_json = json_object_get(screen_implementation, "items");
-
-    if (!json_is_array(items_json)) {
-        printf("error: can't initialize display items\n");
-        return 1;
-    }
-
-    for(unsigned int i = 0; i < json_array_size(items_json); i++) {
-        json_t * item_json = json_array_get(items_json, i);
-        if (!json_is_object(item_json)) {
-            printf("error: can't initialize one of display items %d\n", i+1);
-            return 1;
-        }
-
-        json_t * re_load_json = json_object_get(item_json, "re_load");
-        if(json_boolean_value(re_load_json)) {
-            DiaScreenItem *newItem = new DiaScreenItem(this);
-            if(newItem->Init(item_json)) {
-                printf("error happened while parsing specific item of a display\n");
-                return 1;
-            }
-            items_map.insert(std::pair<std::string, DiaScreenItem *>(newItem->id, newItem));
-        }
-    }
-    return 0;
-}
-
 int DiaScreenConfig::AddItem(DiaScreenItem * item) {
     Changed = 1;
     if (item == 0) {
@@ -155,6 +124,32 @@ int DiaScreenConfig::AddItem(DiaScreenItem * item) {
     items_map.insert(std::pair<std::string, DiaScreenItem *>(item->id, item));
     items_list.push_back(items_map[item->id]);
     printf("screen element with '%s' id added\n", items_map[item->id]->id.c_str());
+    return 0;
+}
+
+int DiaScreenConfig::SetQr(std::string qrData, int width, int height){
+    std::map<std::string, DiaScreenItem *>::iterator it;
+    for (it=items_map.begin(); it!=items_map.end(); it++) {
+        if (it->second->isQr) {
+            DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
+
+            SDL_Surface * qr = SDL_CreateRGBSurface(currentItemImage->Picture->flags, width, height, currentItemImage->Picture->format->BitsPerPixel,
+                currentItemImage->Picture->format->Rmask, currentItemImage->Picture->format->Gmask, currentItemImage->Picture->format->Bmask, currentItemImage->Picture->format->Amask);
+            
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    if (qrData[i * height + j] == 1) {
+                        DrawPixel(qr, i, j, 0xffffffff);
+                    } else{
+                        DrawPixel(qr, i, j, 0x000000ff);
+                    }
+                }
+            }
+
+            dia_ScaleSurface(qr, currentItemImage->Picture->w, currentItemImage->Picture->h);
+            currentItemImage->SetPicture(qr);
+        }
+    }
     return 0;
 }
 

@@ -7,6 +7,7 @@ DiaScreenItem::DiaScreenItem(DiaScreenConfig * newParent) {
     display_ptr = 0;
     notify_ptr = 0;
     specific_object_ptr = 0;
+    isQr = false;
     Parent = newParent;
 }
 
@@ -54,10 +55,12 @@ int DiaScreenItem::Init(json_t * screen_item_json) {
         //printf("image object found...\n");
         DiaScreenItemImage * image = new DiaScreenItemImage();
 
-
         this->specific_object_ptr = image;
         this->notify_ptr = dia_screen_item_image_notify;
         this->display_ptr = dia_screen_item_image_display;
+
+        json_t * is_qr = json_object_get(screen_item_json, "is_qr");
+        this->isQr = json_boolean_value(is_qr);
 
         image->Init(this, screen_item_json);
     } else if (type.compare("image_array") == 0) {
