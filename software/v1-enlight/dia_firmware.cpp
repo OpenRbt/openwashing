@@ -58,6 +58,7 @@ int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
 
 int _to_be_destroyed = 0;
+int _start_listening_key_press = 0;
 
 int _CurrentBalance = 0;
 int _CurrentProgram = -1;
@@ -76,6 +77,7 @@ bool _SensorActivate = false;
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
+pthread_t key_press_thread;
 
 int GetKey(DiaGpio * _gpio) {
     int key = 0;
@@ -587,6 +589,25 @@ void * get_volume_func(void * ptr) {
     return 0;
 }
 
+int KeyPress(){
+    SDL_Event event;
+    while (SDL_PollEvent(&event)){
+        if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
+            printf("SDL_QUIT\n");
+            _to_be_destroyed = 1;
+        }
+    }
+}
+
+void * key_press_func(void * ptr) {
+    while(!_to_be_destroyed && !_start_listening_key_press) {
+        KeyPress();
+        delay(100);
+    }
+    pthread_exit(0);
+    return 0;
+}
+
 int RecoverRelay() {
     relay_report_t* last_relay_report = new relay_report_t;
 
@@ -788,6 +809,8 @@ int main(int argc, char ** argv) {
     }
     StartScreenUpdate();
 
+    pthread_create(&key_press_thread, NULL, key_press_func, NULL);
+
     printf("Looking for firmware in [%s]\n", folder.c_str());
     printf("Version: %s\n", DIA_VERSION);
  
@@ -804,14 +827,18 @@ int main(int argc, char ** argv) {
     StartScreenMessage(STARTUP_MESSAGE::SERVER_IP, "Server IP: Searching...");
     while (need_to_find) {
         StartScreenUpdateIP();
-    	serverIP = network->GetCentralServerAddress();
+    	serverIP = network->GetCentralServerAddress(_to_be_destroyed);
     	if (serverIP.empty()) {
         	printf("Error: Center Server is unavailable. Next try...\n");
             StartScreenMessage(STARTUP_MESSAGE::SERVER_IP, "Server IP: Searching...");
     	} else{
             StartScreenMessage(STARTUP_MESSAGE::SERVER_IP, "Server IP: "+ serverIP);
             need_to_find = 0;
-        }	    
+        }
+
+        if (_to_be_destroyed) {
+            return 1;
+        }    
     }
 
     network->SetHostAddress(serverIP);
@@ -835,6 +862,10 @@ int main(int argc, char ** argv) {
             StartScreenMessage(STARTUP_MESSAGE::POST, "POST is not assigned");
             printf("POST is not assigned\n");
             sleep(1);
+        }
+
+        if (_to_be_destroyed) {
+            return 1;
         }
     }
     StartScreenMessage(STARTUP_MESSAGE::POST, "POST: " + std::to_string(stationID));
@@ -893,7 +924,6 @@ int main(int argc, char ** argv) {
         }
     }
 
-    SDL_Event event;
     StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Configuration initialization...");
     config = new DiaConfiguration(folder, network);
     int err = config->Init();
@@ -903,24 +933,30 @@ int main(int argc, char ** argv) {
         StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Failed to create screen");
         while (1) {
             sleep(1);
+            if (_to_be_destroyed) {
+                return 1;
+            }
         }
-        return 1;
     break;
     case CONFIGURATION_STATUS::ERROR_GPIO:
         fprintf(stderr,"Configuration initialization: Failed to init GPIO\n");
         StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Failed to init GPIO");
         while (1) {
             sleep(1);
+            if (_to_be_destroyed) {
+                return 1;
+            }
         }
-        return 1;
     break;
     case CONFIGURATION_STATUS::ERROR_JSON:
         fprintf(stderr,"Configuration initialization: Bad configuration file\n");
         StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Bad configuration file");
         while (1) {
             sleep(1);
+            if (_to_be_destroyed) {
+                return 1;
+            }
         }
-        return 1;
     break;
     case CONFIGURATION_STATUS::SUCCESS:
         StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Configuration initializated");
@@ -938,6 +974,10 @@ int main(int argc, char ** argv) {
             StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Error loading settings from server");
             sleep(1);
         }
+
+        if (_to_be_destroyed) {
+            return 1;
+        }
     }
     err = 1;
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Loading discounts campagins from server");
@@ -947,6 +987,10 @@ int main(int argc, char ** argv) {
             fprintf(stderr, "Error loading discounts from server\n");
             StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Error loading discounts from server");
             sleep(1);
+        }
+        
+        if (_to_be_destroyed) {
+            return 1;
         }
     }
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Settings from server loaded");
@@ -962,6 +1006,10 @@ int main(int argc, char ** argv) {
                 StartScreenMessage(STARTUP_MESSAGE::RELAY_CONTROL_BOARD, "Relay control server board not found");
             }
             sleep(1);
+
+            if (_to_be_destroyed) {
+                return 1;
+            }
         }
         StartScreenMessage(STARTUP_MESSAGE::RELAY_CONTROL_BOARD, "Relay control server board found");
     }
@@ -1033,12 +1081,6 @@ int main(int argc, char ** argv) {
     config->GetRuntime()->Registry->get_price_function = get_price;
     config->GetRuntime()->Registry->get_discount_function = get_discount;
     config->GetRuntime()->Registry->get_is_finishing_program_function = get_is_finishing_program;
-    
-    //InitSensorButtons();
-
-    // Runtime start
-    int keypress = 0;
-    int mousepress = 0;
 
     // Call Lua setup function
     config->GetRuntime()->Setup();
@@ -1054,6 +1096,12 @@ int main(int argc, char ** argv) {
 
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
+    
+    _start_listening_key_press = 1;
+    int keypress = _to_be_destroyed;
+    int mousepress = 0;
+    SDL_Event event;
+
     while(!keypress) {
         // Call Lua loop function
         config->GetRuntime()->Loop();
@@ -1066,7 +1114,6 @@ int main(int argc, char ** argv) {
             y = config->GetResY() - y;
         }
 
-        
         // Process pressed button
         DiaScreen* screen = config->GetScreen();
         std::string last = screen->LastDisplayed;
