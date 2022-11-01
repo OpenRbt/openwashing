@@ -187,16 +187,19 @@ bool bonus_system_is_active() {
     return _BonusSystemIsActive;
 }
 
-bool bonus_system_get_client() {
-    return _BonusSystemClient;
+int bonus_system_refresh_active_qr() {
+    return 0;
 }
 
-int bonus_system_get_balance() {
-    return _BonusSystemBalance;
+int bonus_system_start_session() {
+    return 0;
 }
 
-int bonus_system_set_balance(int balance) {
-    _BonusSystemBalance = balance;
+int bonus_system_confirm_session() {
+    return 0;
+}
+
+int bonus_system_finish_session() {
     return 0;
 }
 
@@ -1071,9 +1074,10 @@ int main(int argc, char ** argv) {
     hardware->set_current_state_function = set_current_state;
 
     hardware->bonus_system_is_active_function = bonus_system_is_active;
-    hardware->bonus_system_get_client_function = bonus_system_get_client;
-    hardware->bonus_system_get_balance_function = bonus_system_get_balance;
-    hardware->bonus_system_set_balance_function = bonus_system_set_balance;
+    hardware->bonus_system_refresh_active_qr_function = bonus_system_refresh_active_qr;
+    hardware->bonus_system_start_session_function = bonus_system_start_session;
+    hardware->bonus_system_confirm_session_function = bonus_system_confirm_session;
+    hardware->bonus_system_finish_session_unction =  bonus_system_finish_session;
 
     hardware->delay_object = &stored_time;
     hardware->smart_delay_function = smart_delay_function;
