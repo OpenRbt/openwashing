@@ -38,7 +38,7 @@ public:
     int InitDetails(json_t *screen_json);
     int AddItem(DiaScreenItem * item);
     int Display(DiaScreen * screen);
-    int SetQr(std::string qrData, int width, int height);
+    int SetQr(std::string qrData);
     ~DiaScreenConfig();
     DiaScreenConfig();
 };
