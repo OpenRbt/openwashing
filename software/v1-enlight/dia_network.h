@@ -557,7 +557,7 @@ public:
         return err;
     }
 
-    int GetQr(std::string &qrData, int &width, int &height){
+    int GetQr(std::string &qrData){
         std::string url = _Host+ _Port + "/get-qr";
         std::string answer;
         std::string json_get_qr_request = json_create_get_qr();
@@ -576,18 +576,14 @@ public:
             }
 
             json_t *qr_data_json = json_object_get(json, "qr_data");
-            json_t *width_json = json_object_get(json, "width");
-            json_t *height_json = json_object_get(json, "height");
 
-            if(!(json_is_integer(width_json) && json_is_integer(height_json) && json_is_string(qr_data_json))){
+            if(!json_is_string(qr_data_json)){
                 printf("GetVolume answer %s\n", answer.c_str());
                 json_decref(json);
                 return 1;
             }
             
             qrData = json_string_value(qr_data_json);
-            width = json_integer_value(width_json);
-            height = json_integer_value(height_json);
 
             json_decref(json);
             return 0;

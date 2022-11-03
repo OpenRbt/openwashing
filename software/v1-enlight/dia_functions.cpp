@@ -370,3 +370,13 @@ Uint32 ReadPixel(SDL_Surface* surface, int x, int y) {
         return 0;       /* shouldn't happen, but avoids warnings */
     }
 }
+
+SDL_Surface* dia_SurfaceFromBase64(std::string img){
+    char* decodeImg = new char[img.size()];
+    
+    int size = base64_decode(img.c_str(), img.size(), decodeImg, img.size());
+    SDL_RWops *rw = SDL_RWFromConstMem(&decodeImg[0], size);
+    
+    delete[]decodeImg;
+    return IMG_LoadTyped_RW(rw, 1, "PNG");
+}

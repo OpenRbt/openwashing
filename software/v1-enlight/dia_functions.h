@@ -4,6 +4,7 @@
 #include <string>
 #include <jansson.h>
 #include <SDL.h>
+#include "SDL_image.h"
 
 int base64_encode(const unsigned char *data, size_t input_length, char *encoded_data, size_t buf_size);
 int base64_decode(const char *data, size_t input_length, char *decoded_data, size_t buf_size);
@@ -18,5 +19,7 @@ json_t * dia_get_resource_json(const char * folder_name, const char * resource_n
 
 void DrawPixel(SDL_Surface* surface, int x, int y, Uint32 pixel);
 Uint32 ReadPixel(SDL_Surface* surface, int x, int y);
+
+SDL_Surface* dia_SurfaceFromBase64(std::string img);
 
 #endif
