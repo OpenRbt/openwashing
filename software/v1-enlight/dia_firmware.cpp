@@ -62,8 +62,11 @@ int _start_listening_key_press = 0;
 
 int _CurrentBalance = 0;
 int _CurrentProgram = -1;
+int _CurrentProgram2 = -1;
 int _CurrentProgramID = 0;
+int _CurrentProgramID2 = 0;
 int _OldProgram = -1;
+int _OldProgram2 = -1;
 int _IsPreflight = 0;
 int _IsServerRelayBoard = 0;
 int _IntervalsCountProgram = 0;
@@ -155,6 +158,26 @@ int turn_program(void *object, int program) {
             _CurrentProgramID = config->GetProgramID(program);
             _IntervalsCountPreflight = config->GetPreflightSec(program)*10;
             printf("TURN PROGRAM %d intervals count preflight %d\n", _CurrentProgramID, _IntervalsCountPreflight);
+        }
+    }
+    _IsPreflight = (_IntervalsCountPreflight>0);
+    return 0;
+}
+
+int turn_2program(void *object, int program1, int program2) {
+    if (program1 != _CurrentProgram || program2 != _CurrentProgram2) {
+        printf("\nTURN PROGRAM %d, %d intervals count preflight %d\n", _CurrentProgramID, _CurrentProgramID2, _IntervalsCountPreflight);
+        _IntervalsCountProgram = 0;
+        _CurrentProgram = program1;
+        _CurrentProgram2 = program2;
+        _CurrentProgramID = 0;
+        _CurrentProgramID2 = 0;
+        _IntervalsCountPreflight = 0;
+        if ((config) && (program1>0 || program2>0)){
+            _CurrentProgramID = config->GetProgramID(program1);
+            _CurrentProgramID2 = config->GetProgramID(program2);
+            _IntervalsCountPreflight = config->GetPreflightSec(program1)*10;
+            printf("\nTURN PROGRAM %d intervals count preflight %d\n", _CurrentProgramID, _IntervalsCountPreflight);
         }
     }
     _IsPreflight = (_IntervalsCountPreflight>0);
@@ -395,24 +418,33 @@ int RunProgram() {
         _IntervalsCountPreflight --;
         
     }
-    if (_CurrentProgram != _OldProgram) {
+    if (_CurrentProgram != _OldProgram || _CurrentProgram2 != _OldProgram2) {
         if (_IsPreflight) {
+            printf("\n\n_IsServerRelayBoard: %d\n\n", _IsServerRelayBoard);
             if (_IsServerRelayBoard) {
                 int count = 0;
                 int err = 1;
                 while ((err) && (count<4))
                 {
                     count++;
-                    printf("relay control server board: run program preflight programID=%d\n",_CurrentProgramID);
-                    err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
+                    if(_CurrentProgram2 > 0){
+                        printf("relay control server board: run program preflight programID1=%d programID1=%d\n",_CurrentProgramID, _CurrentProgramID2);
+                        err = network->Run2ProgramOnServer(_CurrentProgramID, _CurrentProgramID2, _IsPreflight);
+                    }
+                    else{
+                        printf("relay control server board: run program preflight programID=%d\n",_CurrentProgramID);
+                        err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
+                    }
+                    
                     if (err != 0) {
                         fprintf(stderr,"relay control server board: run program error\n");
                         delay(500);
                     }
                 }
-            } 
+            }
         }
         _OldProgram = _CurrentProgram;
+        _OldProgram2 = _CurrentProgram2;
     }
     if ((_IntervalsCountPreflight == 0) && (_IsPreflight)) {
         _IsPreflight = 0;
@@ -424,11 +456,12 @@ int RunProgram() {
     if (_IsServerRelayBoard == 0) {
     #ifdef USE_GPIO
     DiaGpio * gpio = config->GetGpio();
-    if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
+    if (_CurrentProgram >= MAX_PROGRAMS_COUNT || _CurrentProgram2 >= MAX_PROGRAMS_COUNT) {
         return 1;
     }
     if(gpio!=0) {
         gpio->CurrentProgram = _CurrentProgram;
+        gpio->CurrentProgram2 = _CurrentProgram2;
         gpio->CurrentProgramIsPreflight = _IsPreflight;
     } else {
         printf("ERROR: trying to run program with null gpio object\n");
@@ -439,17 +472,27 @@ int RunProgram() {
     if(_IntervalsCountProgram > 20) {
         int count = 0;
         int err = 1;
-        while ((err) && (count<4) && (_CurrentProgramID>=0))
+        while ((err) && (count<4) && (_CurrentProgramID>=0 || _CurrentProgramID2>=0))
         {
             count++;
-            printf("relay control server board: run program programID=%d\n",_CurrentProgramID);
-            err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
+            if(_CurrentProgram2 > 0){
+                printf("relay control server board: run program programID1=%d programID2=%d\n",_CurrentProgramID, _CurrentProgram2);
+                err = network->Run2ProgramOnServer(_CurrentProgramID, _CurrentProgramID2, _IsPreflight);
+            }
+            else{
+                printf("relay control server board: run program programID=%d\n",_CurrentProgramID);
+                err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
+            }
+            
             if (err != 0) {
                 fprintf(stderr,"relay control server board: run program error\n");
                 delay(500);
             }
             if ((err == 0) && (_CurrentProgramID==0)) {
                 _CurrentProgramID = -1;
+            }
+            if ((err == 0) && (_CurrentProgramID2==0)) {
+                _CurrentProgramID2 = -1;
             }
         }
         _IntervalsCountProgram = 0;
@@ -1046,6 +1089,7 @@ int main(int argc, char ** argv) {
 
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
+    hardware->turn_2program_function = turn_2program;
 
     hardware->send_receipt_function = send_receipt;
     hardware->increment_cars_function = increment_cars;
@@ -1093,7 +1137,6 @@ int main(int argc, char ** argv) {
     } else {
         printf("no additional coin handler\n");
     }
-
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
     

@@ -375,6 +375,22 @@ public:
         return 0;
     }
 
+    // Run2ProgramOnServer request to specified URL with method POST. 
+    // Returns 0, if request was OK, other value - in case of failure.
+    int Run2ProgramOnServer(int programID1, int programID2, int preflight) {
+	    std::string url = _Host+ _Port + "/run-2program";
+        std::string answer;
+
+        int result;
+        std::string json_run_program_request = json_create_run_2program(programID1, programID2, preflight);
+        result = SendRequest(&json_run_program_request, &answer, url);
+        if ((result) || (answer !="")) {
+            printf("\nRunProgramOnServer answer: %s\n", answer.c_str());
+            return 1;
+        }
+        return 0;
+    }
+
     // GetVolume request to specified URL with method POST. 
     int GetVolume(std::string *status) {
 	    std::string url = _Host+ _Port + "/volume-dispenser";
@@ -995,12 +1011,12 @@ private:
     }
 
     // Encodes _PublicKey to JSON string.
-    std::string json_create_ping_report(int balance, int program) {
+    std::string json_create_ping_report(int balance, int program1) {
         json_t *object = json_object();
 
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "CurrentBalance", json_integer(balance));
-        json_object_set_new(object, "CurrentProgram", json_integer(program));
+        json_object_set_new(object, "CurrentProgram", json_integer(program1));
         char *str = json_dumps(object, 0);
         std::string res = str;
 
@@ -1028,6 +1044,22 @@ private:
 
         json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "programID", json_integer(programID));
+        json_object_set_new(object, "preflight", json_boolean(preflight));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_run_2program(int programID1, int programID2, int preflight) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "programID", json_integer(programID1));
+        json_object_set_new(object, "programID2", json_integer(programID2));
         json_object_set_new(object, "preflight", json_boolean(preflight));
         char *str = json_dumps(object, 0);
         std::string res = str;

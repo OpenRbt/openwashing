@@ -79,6 +79,7 @@ DiaGpio::DiaGpio(int maxButtons, int maxRelays, storage_interface_t * storage) {
     MaxButtons = maxButtons;
     MaxRelays = maxRelays;
     CurrentProgram = -1;
+    CurrentProgram2 = -1;
     CurrentProgramIsPreflight = 0;
     AllTurnedOff = 0;
     if(maxButtons>=PIN_COUNT) {
@@ -200,12 +201,13 @@ void DiaGpio_SetProgram(DiaGpio * gpio, int programNumber, int relayNumber,  int
 
 void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
     assert(gpio);
-    if(gpio->CurrentProgram>(int)sizeof(gpio->Programs)) {
-        printf("Disabling programs as current program is out of range %d...\n", gpio->CurrentProgram);
+    if(gpio->CurrentProgram > (int)sizeof(gpio->Programs) || gpio->CurrentProgram2 > (int)sizeof(gpio->Programs)) {
+        printf("Disabling programs as current program is out of range %d, %d...\n", gpio->CurrentProgram, gpio->CurrentProgram2);
         gpio->CurrentProgram = -1;
+        gpio->CurrentProgram2 = -1;
     }
 
-    if(gpio->CurrentProgram<0) {
+    if(gpio->CurrentProgram<0 || gpio->CurrentProgram2<0) {
         if(!gpio->AllTurnedOff) {
             gpio->AllTurnedOff = 1;
             printf("turning all off\n");
@@ -214,40 +216,53 @@ void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
     } else {
         gpio->AllTurnedOff = 0;
         DiaRelayConfig * config;
+        DiaRelayConfig * config2;
         if (gpio->CurrentProgramIsPreflight) {
             config = &gpio->PreflightPrograms[gpio->CurrentProgram];
+            config2 = &gpio->PreflightPrograms[gpio->CurrentProgram2];
         } else {
             config = &gpio->Programs[gpio->CurrentProgram];
+            config2 = &gpio->Programs[gpio->CurrentProgram2];
         }
-        //printf("cur_prog:%d\n", gpio->CurrentProgram);
-        for(int i=0;i<PIN_COUNT;i++) {
-            if(gpio->RelayPin[i]<0) {
+
+        for(int i = 0; i < PIN_COUNT; i++) {
+            if(gpio->RelayPin[i] < 0) {
                 //printf("skipping %d\n",i);
                 continue;
             }
 
             //printf("cur config: on:%ld, off:%ld\n",config->OnTime[i], config->OffTime[i] );
-            if(config->OnTime[i]<=0) {
+            if(config->OnTime[i] <= 0 && config2->OnTime[i] <= 0) {
                 if(gpio->RelayPinStatus[i]) {
                     printf("-%d; ontime:%ld status:%d\n", i, config->OnTime[i], gpio->RelayPinStatus[i]);
                     DiaGpio_WriteRelay(gpio, i, 0);
                 }
-            } else if(config->OffTime[i]<=0) {
+            }
+            else if(config->OffTime[i]<=0 || config2->OffTime[i]<=0) {
                 if(!gpio->RelayPinStatus[i]) {
                     DiaGpio_WriteRelay(gpio, i, 1);
                     //printf("+%d\n", i);
                 }
             } else {
+                int value = 0;
                 //printf("curTime %ld,  nextSwitch %ld \n", curTime, config->NextSwitchTime[i] );
-                if(curTime>=config->NextSwitchTime[i]) {
+                if(curTime >= config->NextSwitchTime[i]) {
                     if(gpio->RelayPinStatus[i]) {
-                        DiaGpio_WriteRelay(gpio, i, 0);
                         config->NextSwitchTime[i] = curTime + config->OffTime[i];
                     } else  {
-                        DiaGpio_WriteRelay(gpio, i,1);
+                        value++;
                         config->NextSwitchTime[i] = curTime + config->OnTime[i];
                     }
                 }
+                if(curTime >= config2->NextSwitchTime[i]) {
+                    if(gpio->RelayPinStatus[i]) {
+                        config2->NextSwitchTime[i] = curTime + config2->OffTime[i];
+                    } else  {
+                        value++;
+                        config2->NextSwitchTime[i] = curTime + config2->OnTime[i];
+                    }
+                }
+                DiaGpio_WriteRelay(gpio, i, value);
             }
         }
     }

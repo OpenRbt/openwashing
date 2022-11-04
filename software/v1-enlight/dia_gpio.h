@@ -113,6 +113,7 @@ public:
     PulseHandler * AdditionalHandler;
 
     int CurrentProgram;
+    int CurrentProgram2;
     int CurrentProgramIsPreflight;
     int AllTurnedOff;
 

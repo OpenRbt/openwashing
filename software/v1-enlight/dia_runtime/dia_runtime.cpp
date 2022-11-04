@@ -88,6 +88,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
     .addConstructor<void(*)()>()
     .addFunction("TurnLight", &DiaRuntimeHardware::TurnLight)
     .addFunction("TurnProgram", &DiaRuntimeHardware::TurnProgram)
+    .addFunction("Turn2Program", &DiaRuntimeHardware::Turn2Program)
     .addFunction("GetCoins", &DiaRuntimeHardware::GetCoins)
     .addFunction("GetBanknotes", &DiaRuntimeHardware::GetBanknotes)
     .addFunction("GetService", &DiaRuntimeHardware::GetService)

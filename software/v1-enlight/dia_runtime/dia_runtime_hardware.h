@@ -45,6 +45,16 @@ public:
         return 0;
     }
 
+    int (*turn_2program_function)(void * object, int program1, int program2);
+    int Turn2Program(int ProgramNum1, int ProgramNum2) {
+        if(/*program_object && */turn_2program_function) {
+            turn_2program_function(program_object, ProgramNum1, ProgramNum2);
+        } else {
+            printf("error: NIL object or function TurnActivator\n");
+        }
+        return 0;
+    }
+
     int (*send_receipt_function)(int postPosition, int cash, int electronical);
     
     int SendReceipt(int postPosition, int cash, int electronical) {
@@ -250,6 +260,7 @@ public:
 
         program_object = 0;
         turn_program_function = 0;
+        turn_2program_function = 0;
 
 	    send_receipt_function = 0;
 
