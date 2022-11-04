@@ -202,7 +202,7 @@ public:
     // Central server searching, if it's IP address is unknown.
     // Gets local machine's IP and starts pinging every address in block.
     // Modifies IP address.
-    int SearchCentralServer(std::string &ip) {
+    int SearchCentralServer(std::string &ip, int &stop) {
         printf("Checking localhost...\n");
         int err = this->SendPingRequestGet("localhost");
         if (!err) {
@@ -273,7 +273,11 @@ public:
                 // We found it!
                 ip = reqIP + std::to_string(i);
                 return 0;
-            }         	
+            }
+
+            if (stop) {
+                break;
+            }
         }   	
 
         return SERVER_UNAVAILABLE;
@@ -324,12 +328,12 @@ public:
     }
 
     // Returns Central Server IP address.
-    std::string GetCentralServerAddress() {
+    std::string GetCentralServerAddress(int &stop) {
         std::string serverIP = "";
         int res = -1;
 
 	    printf("Looking for Central Wash server ...\n");
-        res = this->SearchCentralServer(serverIP);
+        res = this->SearchCentralServer(serverIP, stop);
         
         if (res == 0) {
             printf("Server located on: %s\n", serverIP.c_str());
