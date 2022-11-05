@@ -571,13 +571,11 @@ int CentralServerDialog() {
     if (_QrData != qrData){
         _QrData = qrData;
         
-        int width = 0;
-        int height = 0;
-        int err = network->GetQr(qrData, width, height);
+        int err = network->GetQr(qrData);
 
         std::map<std::string, DiaScreenConfig *>::iterator it;
         for (it=config->ScreenConfigs.begin(); it!=config->ScreenConfigs.end(); it++) {
-            it->second->SetQr(qrData, width, height);
+            it->second->SetQr(qrData);
         }
     }
     
