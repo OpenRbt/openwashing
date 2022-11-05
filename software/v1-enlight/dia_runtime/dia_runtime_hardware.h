@@ -192,30 +192,39 @@ public:
         return false;
     }
 
-    bool (*bonus_system_get_client_function)();
-    bool BonusSystemGetClient(){
-        if(bonus_system_get_client_function){
-            return bonus_system_get_client_function();
+    int (*bonus_system_refresh_active_qr_function)();
+    int BonusSystemRefreshActiveQR(){
+        if(bonus_system_refresh_active_qr_function){
+            return bonus_system_refresh_active_qr_function();
         }
-        printf("error: NIL object or function BonusSystemGetClient\n");
+        printf("error: NIL object or function BonusSystemRefreshActiveQR\n");
         return false;
     }
 
-    int (*bonus_system_get_balance_function)();
-    int BonusSystemGetBalance(){
-        if(bonus_system_get_balance_function){
-            return bonus_system_get_balance_function();
+    int (*bonus_system_start_session_function)();
+    int BonusSystemStartSession(){
+        if(bonus_system_start_session_function){
+            return bonus_system_start_session_function();
         }
-        printf("error: NIL object or function BonusSystemGetBalance\n");
+        printf("error: NIL object or function BonusSystemStartSession\n");
         return 0;
     }
 
-    int (*bonus_system_set_balance_function)(int balance);
-    int BonusSystemSetBalance(int balance){
-        if(bonus_system_set_balance_function){
-            return bonus_system_set_balance_function(balance);
+    int (*bonus_system_confirm_session_function)();
+    int BonusSystemConfirmSession(){
+        if(bonus_system_confirm_session_function){
+            return bonus_system_confirm_session_function();
         }
-        printf("error: NIL object or function BonusSystemSetBalance\n");
+        printf("error: NIL object or function BonusSystemConfirmSession\n");
+        return 0;
+    }
+
+    int (*bonus_system_finish_session_unction)();
+    int BonusSystemFinishSession(){
+        if(bonus_system_finish_session_unction){
+            return bonus_system_finish_session_unction();
+        }
+        printf("error: NIL object or function BonusSystemFinishSession\n");
         return 0;
     }
 
