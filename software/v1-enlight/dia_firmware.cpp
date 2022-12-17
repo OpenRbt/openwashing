@@ -1044,7 +1044,7 @@ int main(int argc, char ** argv) {
         config->GetRuntime()->AddScreen(screen);
     }
     
-    printf("animations init...\n")
+    printf("animations init...\n");
     config->GetRuntime()->AddAnimations();
   
     printf("Card reader initialization...\n");
