@@ -589,7 +589,7 @@ void * get_volume_func(void * ptr) {
     return 0;
 }
 
-int KeyPress(){
+void KeyPress(){
     SDL_Event event;
     while (SDL_PollEvent(&event)){
         if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
@@ -870,6 +870,7 @@ int main(int argc, char ** argv) {
     }
     StartScreenMessage(STARTUP_MESSAGE::POST, "POST: " + std::to_string(stationID));
 
+    printf("Card reader initialization...\n");
     StartScreenMessage(STARTUP_MESSAGE::CARD_READER, "Card Reader initialization...");
     // Runtime and firmware initialization
     DiaDeviceManager *manager = new DiaDeviceManager;
@@ -924,6 +925,7 @@ int main(int argc, char ** argv) {
         }
     }
 
+    printf("Config initialization...\n");
     StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Configuration initialization...");
     config = new DiaConfiguration(folder, network);
     int err = config->Init();
@@ -965,6 +967,7 @@ int main(int argc, char ** argv) {
         break;
     }
     
+    printf("Loading server settings...\n");
     err = 1;
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Loading settings from server");
     while (err != 0) {
@@ -979,6 +982,8 @@ int main(int argc, char ** argv) {
             return 1;
         }
     }
+
+    printf("Loading discounts...\n");
     err = 1;
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Loading discounts campagins from server");
     while (err != 0) {
@@ -993,6 +998,8 @@ int main(int argc, char ** argv) {
             return 1;
         }
     }
+
+    printf("Settings loaded...\n");
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Settings from server loaded");
     _IsServerRelayBoard = config->GetServerRelayBoard();
     if (config->GetServerRelayBoard()) {
@@ -1014,6 +1021,7 @@ int main(int argc, char ** argv) {
         StartScreenMessage(STARTUP_MESSAGE::RELAY_CONTROL_BOARD, "Relay control server board found");
     }
     
+    printf("Recovering the data from the server...\n");
     // Get working data from server: money, relays, prices
     RecoverData();
  
@@ -1022,6 +1030,7 @@ int main(int argc, char ** argv) {
     StartScreenShutdown();
 
 
+    printf("Shut down of the start screen complete..., loading screens\n");
     // Screen load
     std::map<std::string, DiaScreenConfig *>::iterator it;
     for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
@@ -1035,27 +1044,35 @@ int main(int argc, char ** argv) {
         config->GetRuntime()->AddScreen(screen);
     }
     
+    printf("animations init...\n");
     config->GetRuntime()->AddAnimations();
   
+    printf("Card reader initialization...\n");
     DiaRuntimeHardware * hardware = new DiaRuntimeHardware();
     hardware->keys_object = config->GetGpio();
     hardware->get_keys_function = get_key;
 
+    printf("HW init 1...\n");
     hardware->light_object = config->GetGpio();
     hardware->turn_light_function = turn_light;
 
+    printf("HW init 2...\n");
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
 
+    printf("HW init 3...\n");
     hardware->send_receipt_function = send_receipt;
     hardware->increment_cars_function = increment_cars;
 
+    printf("HW init 4...\n");
     hardware->coin_object = manager;
     hardware->get_coins_function = get_coins;
 
+    printf("HW init 5...\n");
     hardware->banknote_object = manager;
     hardware->get_banknotes_function = get_banknotes;
 
+    printf("HW init 6...\n");
     hardware->electronical_object = manager;
     hardware->get_service_function = get_service;
     hardware->get_is_preflight_function = get_is_preflight;
@@ -1068,23 +1085,35 @@ int main(int argc, char ** argv) {
     hardware->start_fluid_flow_sensor_function = start_fluid_flow_sensor;
     hardware->abort_transaction_function = abort_transaction;
     hardware->set_current_state_function = set_current_state;
+    printf("HW init 7...\n");
 
     hardware->delay_object = &stored_time;
     hardware->smart_delay_function = smart_delay_function;
+    printf("HW init 8...\n");
 
     hardware->has_card_reader = manager->_Vendotek || manager->_CardReader;
 
+    printf("HW init 9...\n");
     config->GetRuntime()->AddHardware(hardware);
+    printf("HW init 10...\n");
     config->GetRuntime()->AddRegistry(config->GetRuntime()->Registry);
+    printf("HW init 11...\n");
     config->GetRuntime()->AddSvcWeather(config->GetSvcWeather());
+    printf("HW init 12...\n");
     config->GetRuntime()->Registry->SetPostID(stationID);
+    printf("HW init 13...\n");
     config->GetRuntime()->Registry->get_price_function = get_price;
+    printf("HW init 14...\n");
     config->GetRuntime()->Registry->get_discount_function = get_discount;
+    printf("HW init 15...\n");
     config->GetRuntime()->Registry->get_is_finishing_program_function = get_is_finishing_program;
+    printf("HW init 16...\n");
 
+    printf("Lua script starting...\n");
     // Call Lua setup function
     config->GetRuntime()->Setup();
-
+    
+    printf("Pulse init...\n");
     // using button as pulse is a crap obviously
     if (config->UseLastButtonAsPulse() && config->GetGpio()) {
         printf("enabling additional coin handler\n");
@@ -1094,7 +1123,9 @@ int main(int argc, char ** argv) {
         printf("no additional coin handler\n");
     }
 
+    printf("run_program_func start...\n");
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
+    printf("get_volume_func start...\n");
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
     
     _start_listening_key_press = 1;
