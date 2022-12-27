@@ -36,7 +36,6 @@ using std::uint8_t;
 using std::size_t;
 using std::vector;
 
-
 namespace qrcodegen {
 
 /*---- Class QrSegment ----*/
@@ -235,10 +234,10 @@ const char *QrSegment::ALPHANUMERIC_CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVW
 
 int QrCode::getFormatBits(Ecc ecl) {
 	switch (ecl) {
-		case Ecc::LOW     :  return 1;
-		case Ecc::MEDIUM  :  return 0;
-		case Ecc::QUARTILE:  return 3;
-		case Ecc::HIGH    :  return 2;
+		case Ecc::LOWERR     :  return 1;
+		case Ecc::MEDIUMERR  :  return 0;
+		case Ecc::QUARTILEERR:  return 3;
+		case Ecc::HIGHERR    :  return 2;
 		default:  throw std::logic_error("Unreachable");
 	}
 }
@@ -282,7 +281,7 @@ QrCode QrCode::encodeSegments(const vector<QrSegment> &segs, Ecc ecl,
 	assert(dataUsedBits != -1);
 	
 	// Increase the error correction level while the data still fits in the current version number
-	for (Ecc newEcl : {Ecc::MEDIUM, Ecc::QUARTILE, Ecc::HIGH}) {  // From low to high
+	for (Ecc newEcl : {Ecc::MEDIUMERR, Ecc::QUARTILEERR, Ecc::HIGHERR}) {  // From low to high
 		if (boostEcl && dataUsedBits <= getNumDataCodewords(version, newEcl) * 8)
 			ecl = newEcl;
 	}
