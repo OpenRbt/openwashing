@@ -20,6 +20,8 @@ using namespace luabridge;
 using std::uint8_t;
 using qrcodegen::QrCode;
 using qrcodegen::QrSegment;
+using EasyBMP::Image;
+using EasyBMP::RGBColor;
 
 class DiaRuntimeScreen {
 public:
@@ -49,16 +51,16 @@ public:
 
     void GenerateQR(std::string address){
         const char *text = address.c_str();              // User-supplied text
-        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGH;  // Error correction level
+        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
         const QrCode qr = QrCode::encodeText(text, errCorLvl);
 
-        EasyBMP::RGBColor white(255, 255, 255);  
-        EasyBMP::Image img(qr.getSize(), qr.getSize(), "../samples/wash/pic/qr.bmp", white);
+        RGBColor white(255, 255, 255);  
+        Image img(qr.getSize(), qr.getSize(), "samples/wash/pic/qr.bmp", white);
 
         for (int y = 0; y < qr.getSize(); ++y) {
             for (int x = 0; x < qr.getSize(); ++x) {
                 if(qr.getModule(x, y)){
-                    img.SetPixel(x, y, EasyBMP::RGBColor(0, 0, 0));
+                    img.SetPixel(x, y, RGBColor(0, 0, 0), false);
                 }
             }
         }

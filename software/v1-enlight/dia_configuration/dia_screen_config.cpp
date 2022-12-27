@@ -133,7 +133,6 @@ int DiaScreenConfig::SetQr(std::string qrData){
         if (it->second->isQr) {
             DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
             currentItemImage->Picture = dia_SurfaceFromBase64(qrData);
-            printf();
         }
     }
     return 0;
