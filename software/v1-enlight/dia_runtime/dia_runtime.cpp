@@ -81,6 +81,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
     .addConstructor<void(*)()>()
     .addFunction("Display", &DiaRuntimeScreen::Display)
     .addFunction("Set", &DiaRuntimeScreen::SetValue)
+    .addFunction("GenerateQR",  &DiaRuntimeScreen::GenerateQR)
     .endClass();
 
     getGlobalNamespace(Lua)
