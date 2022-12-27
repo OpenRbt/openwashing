@@ -9,12 +9,17 @@ extern "C" {
 #include "lualib.h"
 }
 
+#include "../QR/qrcodegen.hpp"
+#include "../QR/EasyBMP.hpp"
 #include "LuaBridge.h"
 #include <string>
 #include <jansson.h>
 #include <list>
 
 using namespace luabridge;
+using std::uint8_t;
+using qrcodegen::QrCode;
+using qrcodegen::QrSegment;
 
 class DiaRuntimeScreen {
 public:
@@ -41,6 +46,25 @@ public:
 
         return 0;
     }
+
+    void GenerateQR(std::string address){
+        const char *text = address.c_str();              // User-supplied text
+        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGH;  // Error correction level
+        const QrCode qr = QrCode::encodeText(text, errCorLvl);
+
+        EasyBMP::RGBColor white(255, 255, 255);  
+        EasyBMP::Image img(qr.getSize(), qr.getSize(), "../samples/wash/pic/qr.bmp", white);
+
+        for (int y = 0; y < qr.getSize(); ++y) {
+            for (int x = 0; x < qr.getSize(); ++x) {
+                if(qr.getModule(x, y)){
+                    img.SetPixel(x, y, EasyBMP::RGBColor(0, 0, 0));
+                }
+            }
+        }
+        img.Write();
+    }
+
     std::string GetValue(std::string key) {
         return "hello";
     }

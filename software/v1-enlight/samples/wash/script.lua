@@ -21,17 +21,19 @@ setup = function()
     last_program_id = 0
 
     -- constants
-    welcome_mode_seconds = 3
-    thanks_mode_seconds = 120
-    free_pause_seconds = 120
+    welcome_mode_seconds = 3 --?
+    thanks_mode_seconds = 120 --продолжиьтеьность благодарности на экране
+    free_pause_seconds = 120 --продолжительность паузы, которую может вызвать пользователь
     wait_card_mode_seconds = 40
     max_money_wait_seconds = 90
     
+    is_paused = false
+    is_authorized = false
     is_transaction_started = false
     is_waiting_receipt = false
     is_money_added = false
 
-    price_p = {}
+    price_p = {} --массив с ценами на услуги?
     
     price_p[0] = 0
     price_p[1] = 0
@@ -41,7 +43,7 @@ setup = function()
     price_p[5] = 0
     price_p[6] = 0
     
-    discount_p = {}
+    discount_p = {} --массив с?
     
     discount_p[0] = 0
     discount_p[1] = 0
@@ -51,8 +53,8 @@ setup = function()
     discount_p[5] = 0
     discount_p[6] = 0
 
-    init_prices()
-    init_discounts()
+    init_prices() --инициализация цен
+    init_discounts() --инициализация скидок
 
     mode_welcome = 0
     mode_choose_method = 10
@@ -61,7 +63,7 @@ setup = function()
     mode_ask_for_money = 40
     
     -- all these modes MUST follow each other
-    mode_work = 50
+    mode_work = 50 --Продолжительность работы?
     mode_pause = 60
     -- end of modes which MUST follow each other
     
@@ -76,14 +78,15 @@ setup = function()
     -- external constants
     init_constants();
     update_post();
-    welcome:Set("post_number.value", post_position)
+    welcome:Set("post_number.value", post_position) --рвзобраться с этой конструкцией. Скорее всео вызов функции в С
+    welcome:GenerateQR("https://diae.ru/");
     forget_pressed_key();
     return 0
 end
 
 -- loop is being executed
 loop = function()
-    update_post()
+    update_post() --зачем постоянно получать ИД поста?
 
     if balance < 0.1 and money_wait_seconds > 0 then
         money_wait_seconds = money_wait_seconds - 1
@@ -99,11 +102,11 @@ loop = function()
     return 0
 end
 
-update_post = function() 
+update_post = function() --вызывает ф-ию в С, чтобы аолучит ИД поста
     post_position = registry:GetPostID();
 end
 
-init_prices = function()
+init_prices = function() -- почему услуг 5, а позиций в массиве 6?
     price_p[1] = get_price(1)
     price_p[2] = get_price(2)
     price_p[3] = get_price(3)
@@ -135,7 +138,7 @@ run_mode = function(new_mode)
     if new_mode == mode_thanks then return thanks_mode() end
 end
 
-welcome_mode = function()
+welcome_mode = function() --Зачем второй раз инициализировать скидки и цены?
     show_welcome()
     run_stop()
     turn_light(0, animation.idle)
@@ -156,15 +159,15 @@ choose_method_mode = function()
     -- check animation
     turn_light(0, animation.idle)
 
-    init_prices()
+    init_prices() --Зачем второй раз инициализировать скидки и цены?
     init_discounts()
     
     pressed_key = get_key()
     if pressed_key == 4 or pressed_key == 5 or pressed_key == 6 then
-        return mode_select_price
+        return mode_select_price -- метод для карты
     end
     if pressed_key == 1 or pressed_key == 2 or pressed_key == 3 then
-        return mode_ask_for_money
+        return mode_ask_for_money -- метод для налички
     end
     
     -- if someone put some money let's switch the mode.
@@ -177,7 +180,7 @@ choose_method_mode = function()
     return mode_choose_method
 end
 
-select_price_mode = function()
+select_price_mode = function() --экран с безналом
     show_select_price(electron_balance)
     run_stop()
 
@@ -284,6 +287,7 @@ ask_for_money_mode = function()
 end
 
 program_mode = function(working_mode)
+    is_paused = false
   sub_mode = working_mode - mode_work
   cur_price = price_p[sub_mode]
   show_working(sub_mode, balance, cur_price)
@@ -315,6 +319,7 @@ end
 
 pause_mode = function()
     
+    is_paused = true
     run_pause()
     turn_light(6, animation.one_button)
     update_balance()
@@ -346,7 +351,11 @@ thanks_mode = function()
         waiting_loops = thanks_mode_seconds * 10;
         is_waiting_receipt = true
     end
- 
+    
+    if is_authorized then
+        
+    end
+
     if waiting_loops > 0 then
         show_thanks(waiting_loops/10)
         pressed_key = get_key()
@@ -440,6 +449,7 @@ end
 get_mode_by_pressed_key = function()
     pressed_key = get_key()
     if pressed_key >= 1 and pressed_key<=5 then return mode_work + pressed_key end
+    if pressed_key == 6 and is_paused and is_authorized then return mode_thanks end
     if pressed_key == 6 then return mode_pause end
     return -1
 end
