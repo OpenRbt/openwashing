@@ -5,6 +5,9 @@
 #include <jansson.h>
 #include <SDL.h>
 #include "SDL_image.h"
+#include "./QR/qrcodegen.hpp"
+
+using qrcodegen::QrCode;
 
 int base64_encode(const unsigned char *data, size_t input_length, char *encoded_data, size_t buf_size);
 int base64_decode(const char *data, size_t input_length, char *decoded_data, size_t buf_size);
@@ -21,5 +24,7 @@ void DrawPixel(SDL_Surface* surface, int x, int y, Uint32 pixel);
 Uint32 ReadPixel(SDL_Surface* surface, int x, int y);
 
 SDL_Surface* dia_SurfaceFromBase64(std::string img);
+
+SDL_Surface* dia_QRToSurface(QrCode code);
 
 #endif

@@ -23,8 +23,8 @@
         "position": "750;795",
         "size":"150;150",
         "src":"pic/qr.bmp",
-        "visible":"true",
-        "click_id":"0"
+        "is_qr": true,
+        "visible":"true"
       },
       {
         "id":"card",

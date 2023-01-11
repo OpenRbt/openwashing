@@ -5,6 +5,9 @@
 #include "string.h"
 #include <unistd.h>
 #include <cmath>
+#include "./QR/qrcodegen.hpp"
+
+using qrcodegen::QrCode;
 
 static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -380,3 +383,44 @@ SDL_Surface* dia_SurfaceFromBase64(std::string img){
     delete[]decodeImg;
     return IMG_LoadTyped_RW(rw, 1, "PNG");
 }
+
+SDL_Surface* dia_QRToSurface(QrCode code){
+
+    SDL_Surface * qr = SDL_CreateRGBSurface(0, code.getSize(), code.getSize(), 2, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+    for (int i = 0; i < code.getSize(); i++) {
+        for (int j = 0; j < code.getSize(); j++) {
+            if (code.getModule(j, i)) 
+                DrawPixel(qr, j, i, 0xffffffff);
+        }
+    }
+    return qr;
+}
+
+/*
+int DiaScreenConfig::SetQr(std::string qrData, int width, int height){
+    std::map<std::string, DiaScreenItem *>::iterator it;
+    for (it=items_map.begin(); it!=items_map.end(); it++) {
+        if (it->second->isQr) {
+            DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
+
+            SDL_Surface * qr = SDL_CreateRGBSurface(currentItemImage->Picture->flags, width, height, currentItemImage->Picture->format->BitsPerPixel,
+                currentItemImage->Picture->format->Rmask, currentItemImage->Picture->format->Gmask, currentItemImage->Picture->format->Bmask, currentItemImage->Picture->format->Amask);
+            
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    if (qrData[i * height + j] == 1) {
+                        DrawPixel(qr, i, j, 0xffffffff);
+                    } else{
+                        DrawPixel(qr, i, j, 0x000000ff);
+                    }
+                }
+            }
+
+            dia_ScaleSurface(qr, currentItemImage->Picture->w, currentItemImage->Picture->h);
+            currentItemImage->SetPicture(qr);
+        }
+    }
+    return 0;
+}
+
+*/

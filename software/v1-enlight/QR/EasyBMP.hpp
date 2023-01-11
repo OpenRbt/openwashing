@@ -63,6 +63,7 @@ namespace EasyBMP
         void DrawLineHigh(int64_t x0, int64_t y0, int64_t x1, int64_t y1, const RGBColor& color);
         void OpenSetup(const string& _inFileName);
 
+        byte* bytes;
         int64_t width;
         int64_t height;
         ofstream outFile;

@@ -127,12 +127,15 @@ int DiaScreenConfig::AddItem(DiaScreenItem * item) {
     return 0;
 }
 
-int DiaScreenConfig::SetQr(std::string qrData){
+int DiaScreenConfig::SetQr(SDL_Surface * qr){
+    SDL_Surface * scaledQR;
     std::map<std::string, DiaScreenItem *>::iterator it;
     for (it=items_map.begin(); it!=items_map.end(); it++) {
         if (it->second->isQr) {
             DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
-            currentItemImage->Picture = dia_SurfaceFromBase64(qrData);
+            scaledQR = dia_ScaleSurface(qr, currentItemImage->Picture->w, currentItemImage->Picture->h);
+            currentItemImage->SetPicture(scaledQR);
+            
         }
     }
     return 0;
@@ -189,6 +192,7 @@ int dia_screen_config_set_value_function (void * object, const char *element,
     }
     return foundItem->SetValue(key, value);
 }
+
 
 int dia_screen_display_screen (void * screen_object, void * screen_config) {
     DiaScreenConfig * screenConfig = (DiaScreenConfig *)screen_config;
