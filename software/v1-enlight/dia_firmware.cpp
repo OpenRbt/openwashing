@@ -113,6 +113,14 @@ int set_current_state(int balance) {
     return 0;
 }
 
+int set_QR(SDL_Surface * qrSurface){
+    std::map<std::string, DiaScreenConfig *>::iterator it;
+        for (it=config->ScreenConfigs.begin(); it!=config->ScreenConfigs.end(); it++) {
+            it->second->SetQr(qrSurface);
+        }
+    return 0;
+}
+
 // Saves new income money and creates money report to Central Server.
 void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total) {
         network->SendMoneyReport(cars_total,
@@ -566,17 +574,6 @@ int CentralServerDialog() {
     if (bonusSystemActive != _BonusSystemIsActive){
         _BonusSystemIsActive = bonusSystemActive;
         printf("Bonus system activated: %d\n", bonusSystemActive);
-    }
-
-    if (_QrData != qrData){
-        _QrData = qrData;
-        
-        int err = network->GetQr(qrData);
-
-        std::map<std::string, DiaScreenConfig *>::iterator it;
-        for (it=config->ScreenConfigs.begin(); it!=config->ScreenConfigs.end(); it++) {
-            it->second->SetQr(qrData);
-        }
     }
     
     if (buttonID != 0) {
@@ -1090,6 +1087,7 @@ int main(int argc, char ** argv) {
         screen->object = (void *)it->second;
         screen->set_value_function = dia_screen_config_set_value_function;
         screen->screen_object = config->GetScreen();
+        screen->set_QR_function = set_QR;
         screen->display_screen = dia_screen_display_screen;
         config->GetRuntime()->AddScreen(screen);
     }
