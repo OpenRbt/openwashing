@@ -5,34 +5,74 @@
         "type":"image",
         "position": "0;0",
         "size":"1920;1080",
-        "src":"pic/2/background_choose_method.png",
+        "src":"pic/background.png",
+        "visible":"true"
+      },
+      {
+        "id":"cash_pic",
+        "type":"image",
+        "position": "150;700",
+        "size":"260;210",
+        "src":"pic/cash.png",
         "visible":"true"
       },
       {
         "id":"cash",
         "type":"image",
-        "position": "0;0",
-        "size":"960;1080",
+        "position": "225;950",
+        "size":"70;40",
         "src":"pic/arrow.png",
-        "visible":"false",
+        "visible":"true",
         "click_id":"2"
+      },
+      {
+        "id":"bonus_pic",
+        "type":"image",
+        "position": "550;700",
+        "size":"316;36",
+        "src":"pic/bonus.png",
+        "visible":"true"
       },
       {
       	"id":"qr",
         "type":"image",
-        "position": "750;795",
+        "position": "620;760",
         "size":"150;150",
         "src":"pic/qr.bmp",
         "is_qr": true,
         "visible":"true"
       },
       {
+        "id":"bonus",
+        "type":"image",
+        "position": "660;950",
+        "size":"70;40",
+        "src":"pic/arrow.png",
+        "visible":"true"
+      },
+      {
+        "id":"SBP_pic",
+        "type":"image",
+        "position": "1100;680",
+        "size":"132;70",
+        "src":"pic/SBP.png",
+        "visible":"true"
+      },
+      {
+        "id":"card_pic",
+        "type":"image",
+        "position": "1500;700",
+        "size":"264;180",
+        "src":"pic/non-cash.png",
+        "visible":"true"
+      },
+      {
         "id":"card",
         "type":"image",
-        "position": "960;0",
-        "size":"960;1080",
+        "position": "1600;950",
+        "size":"70;40",
         "src":"pic/arrow.png",
-        "visible":"false",
+        "visible":"true",
         "click_id":"5"
       },
       {
