@@ -38,7 +38,7 @@
         "type":"image",
         "position": "620;760",
         "size":"150;150",
-        "src":"pic/qr.bmp",
+        "src":"pic/qr.png",
         "is_qr": true,
         "visible":"true"
       },

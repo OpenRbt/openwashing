@@ -112,7 +112,6 @@ int dia_screen_item_image_display(DiaScreenItem * base_item, void * image_ptr, D
 }
 
 int dia_screen_item_image_notify(DiaScreenItem * base_item, void * image_ptr, std::string key) {
-    //printf("notification recieved for '%s' key\n", key.c_str());
     int error = 0;
     std::string value = base_item->GetValue(key, &error);
     if (error!=0) {
