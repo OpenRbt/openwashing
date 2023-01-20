@@ -3,6 +3,7 @@
 -- setup is running at the start just once
 setup = function()
     -- global variables
+
     balance = 0.0
 
     -- program to turn on when user paid money but has not selected a program
@@ -16,14 +17,15 @@ setup = function()
     balance_seconds = 0
     cash_balance = 0.0
     electronical_balance = 0.0
+    bonuses_balance = 0.0
     post_position = 1
     money_wait_seconds = 0
     last_program_id = 0
 
     -- constants
-    welcome_mode_seconds = 3 --?
-    thanks_mode_seconds = 120 --продолжиьтеьность благодарности на экране
-    free_pause_seconds = 120 --продолжительность паузы, которую может вызвать пользователь
+    welcome_mode_seconds = 3
+    thanks_mode_seconds = 120
+    free_pause_seconds = 120
     wait_card_mode_seconds = 40
     max_money_wait_seconds = 90
     
@@ -33,7 +35,7 @@ setup = function()
     is_waiting_receipt = false
     is_money_added = false
 
-    price_p = {} --массив с ценами на услуги?
+    price_p = {}
     
     price_p[0] = 0
     price_p[1] = 0
@@ -43,7 +45,7 @@ setup = function()
     price_p[5] = 0
     price_p[6] = 0
     
-    discount_p = {} --массив с?
+    discount_p = {}
     
     discount_p[0] = 0
     discount_p[1] = 0
@@ -78,20 +80,32 @@ setup = function()
     -- external constants
     init_constants();
     update_post();
-    welcome:Set("post_number.value", post_position) --рвзобраться с этой конструкцией. Скорее всео вызов функции в С
-    welcome:GenerateQR("https://diae.ru/");
+    welcome:Set("post_number.value", post_position) --разобраться с этой конструкцией. Скорее всео вызов функции в С
+    
+    hardware:CreateSession();
+
+    qr = hardware:GetQR();
+    session_id = hardware:GetSessionID();
+
+    printMessage("\n " .. session_id)
+    
+    welcome:GenerateQR(qr);
     forget_pressed_key();
     return 0
 end
 
 -- loop is being executed
 loop = function()
-    update_post() --зачем постоянно получать ИД поста?
+    update_post()
 
     if balance < 0.1 and money_wait_seconds > 0 then
         money_wait_seconds = money_wait_seconds - 1
     end
     if is_money_added and money_wait_seconds <= 0 and get_is_finishing_programm(last_program_id) then
+        hardware:CreateSession();
+
+        qr = hardware:GetQR();
+        session_id = hardware:GetSessionID();
         increment_cars()
         is_money_added = false
         last_program_id = 0
@@ -106,7 +120,7 @@ update_post = function() --вызывает ф-ию в С, чтобы аолуч
     post_position = registry:GetPostID();
 end
 
-init_prices = function() -- почему услуг 5, а позиций в массиве 6?
+init_prices = function()
     price_p[1] = get_price(1)
     price_p[2] = get_price(2)
     price_p[3] = get_price(3)
@@ -533,8 +547,9 @@ update_balance = function()
     new_banknotes = hardware:GetBanknotes()
     new_electronical = hardware:GetElectronical()
     new_service = hardware:GetService()
+    new_bonuses = hardware:GetBonuses()
 
-    if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 then
+    if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 or new_bonuses > 0 then
         is_money_added = true
         money_wait_seconds = max_money_wait_seconds * 10
     end
@@ -542,10 +557,12 @@ update_balance = function()
     cash_balance = cash_balance + new_coins
     cash_balance = cash_balance + new_banknotes
     electronical_balance = electronical_balance + new_electronical
+    bonuses_balance = bonuses_balance + new_bonuses
     balance = balance + new_coins
     balance = balance + new_banknotes
     balance = balance + new_electronical
     balance = balance + new_service
+    balance = balance + new_bonuses
 end
 
 charge_balance = function(price)

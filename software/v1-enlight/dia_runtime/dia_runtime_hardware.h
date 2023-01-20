@@ -56,6 +56,25 @@ public:
 	    return 0;
     }
 
+    int (*CreateSession_function)();
+    int CreateSession(){
+        int ans = CreateSession_function();
+        std::cout<<"\n "<< ans;
+        return ans;
+    }
+
+    std::string (*getQR_function)();
+    std::string GetQR(){
+        std::string QR = getQR_function();
+        return QR;
+    }
+
+    std::string (*getSessionID_function)();
+    std::string GetSessionID(){
+        std::string sessionID = getSessionID_function();
+        return sessionID;
+    }
+
     int (*set_current_state_function)(int balance);
     int SetCurrentState(int balance) {
         if(set_current_state_function) {
@@ -106,6 +125,16 @@ public:
             return get_service_function();
         } else {
             printf("error: NIL object or function GetService\n");
+        }
+        return 0;
+    }
+
+    int (*get_bonuses_function)();
+    int GetBonuses() {
+        if(get_bonuses_function) {
+            return get_bonuses_function();
+        } else {
+            printf("error: NIL object or function GetBonuses\n");
         }
         return 0;
     }

@@ -10,7 +10,6 @@ extern "C" {
 }
 
 #include "../QR/qrcodegen.hpp"
-#include "../QR/EasyBMP.hpp"
 #include "LuaBridge.h"
 #include "dia_screen_item_image.h"
 #include <string>
@@ -21,8 +20,6 @@ using namespace luabridge;
 using std::uint8_t;
 using qrcodegen::QrCode;
 using qrcodegen::QrSegment;
-using EasyBMP::Image;
-using EasyBMP::RGBColor;
 
 class DiaRuntimeScreen {
 public:
@@ -52,29 +49,11 @@ public:
         return 0;
     }
 
-    int (*set_QR_function)(SDL_Surface * qrSurface);
+    int (*set_QR_function)(std::string address);
 
     void GenerateQR(std::string address){
-
-        const char *text = address.c_str();              // User-supplied text
-        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
-        const QrCode qr = QrCode::encodeText(text, errCorLvl);
-
-        RGBColor white(255, 255, 255);  
-        Image img(qr.getSize(), qr.getSize(), "samples/wash/pic/qr.bmp", white);
-
-        SDL_Surface * qrSurface = dia_QRToSurface(qr);
-
-        set_QR_function(qrSurface);
-        /*
-        std::map<std::string, DiaScreenConfig *>::iterator it;
-        for (it=config->ScreenConfigs.begin(); it!=config->ScreenConfigs.end(); it++) {
-            it->second->SetQr(qrSurface);
-        }
-        */
-        //Перенести код в новую функцию, которая будет олбъявлена в диа_фирмваре. Объявить анонимную функцию и передать сюда
+        set_QR_function(address);
     }
-
     
 
     std::string GetValue(std::string key) {

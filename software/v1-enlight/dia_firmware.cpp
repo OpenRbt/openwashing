@@ -55,6 +55,7 @@ int _DebugKey = 0;
 // For instance, service money from Central Server can be transfered inside.
 int _Balance = 0;
 int _OpenLid = 0;
+int _BalanceBonuses = 0;
 int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
 
@@ -79,7 +80,9 @@ bool _SensorActivate = false;
 bool _BonusSystemIsActive = false;
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
-std::string _QrData = "";
+
+std::string _Qr = "";
+std::string _SessionID = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
@@ -113,21 +116,47 @@ int set_current_state(int balance) {
     return 0;
 }
 
-int set_QR(SDL_Surface * qrSurface){
+int set_QR(std::string address){
+    const char *text = address.c_str();              // User-supplied text
+    const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
+    const QrCode qr = QrCode::encodeText(text, errCorLvl);
+    SDL_Surface * qrSurface = dia_QRToSurface(qr);
+
     std::map<std::string, DiaScreenConfig *>::iterator it;
         for (it=config->ScreenConfigs.begin(); it!=config->ScreenConfigs.end(); it++) {
+            printf("\n %s", it->second->id.c_str());
             it->second->SetQr(qrSurface);
         }
     return 0;
 }
 
+int CreateSession(){
+    std::string QR;
+    std::string sessionID;
+    int answer = network->CreateSession(sessionID, QR);
+    if(!answer){
+        _Qr = QR;
+        _SessionID = sessionID;
+    }
+    return answer;
+}
+
+std::string getQR(){
+    return _Qr;
+}
+
+std::string getSessionID(){
+    return _SessionID;
+}
+
 // Saves new income money and creates money report to Central Server.
-void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total) {
+void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total) {
         network->SendMoneyReport(cars_total,
         coins_total,
         banknotes_total,
         cashless_total,
-        service_total);
+        service_total,
+        bonuses_total);
 }
 
 ////// Runtime functions ///////
@@ -154,7 +183,7 @@ int send_receipt(int postPosition, int cash, int electronical) {
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1,0,0,0,0);
+    SaveIncome(1, 0, 0, 0, 0, 0);
     return 0;
 }
 
@@ -219,7 +248,18 @@ int get_service() {
         
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0,0,0,0,curMoney);
+        SaveIncome(0,0,0,0,curMoney,0);
+    }
+    return curMoney;
+}
+
+int get_bonuses() {
+    int curMoney = _BalanceBonuses;
+    _BalanceBonuses = 0;
+        
+    if (curMoney > 0) {
+        printf("bonus %d\n", curMoney);
+        SaveIncome(0,0,0,0,0,curMoney);
     }
     return curMoney;
 }
@@ -291,7 +331,7 @@ int get_coins(void *object) {
 
   int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
   if (totalMoney>0) {
-      SaveIncome(0,totalMoney,0,0,0);
+      SaveIncome(0,totalMoney,0,0,0,0);
   }
 
   return totalMoney;
@@ -320,7 +360,7 @@ int get_banknotes(void *object) {
   if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
   int totalMoney = curMoney + gpioBanknote;
   if (totalMoney > 0) {
-    SaveIncome(0,0,totalMoney,0,0);
+    SaveIncome(0,0,totalMoney,0,0,0);
   }
   return totalMoney;
 }
@@ -330,7 +370,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney>0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0,0,0,curMoney,0);
+        SaveIncome(0,0,0,curMoney,0,0);
         manager->ElectronMoney  = 0;
     }
     return curMoney;
@@ -1104,7 +1144,12 @@ int main(int argc, char ** argv) {
     hardware->light_object = config->GetGpio();
     hardware->turn_light_function = turn_light;
 
-    printf("HW init 2...\n");
+    hardware->CreateSession_function = CreateSession;
+
+    hardware->getSessionID_function = getSessionID;
+    hardware->getQR_function = getQR;
+
+
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
 
@@ -1123,6 +1168,7 @@ int main(int argc, char ** argv) {
     printf("HW init 6...\n");
     hardware->electronical_object = manager;
     hardware->get_service_function = get_service;
+    hardware->get_bonuses_function = get_bonuses;
     hardware->get_is_preflight_function = get_is_preflight;
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;    

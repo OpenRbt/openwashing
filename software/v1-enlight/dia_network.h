@@ -66,6 +66,7 @@ typedef struct money_report {
     int banknotes_total;
     int cashless_total;
     int service_total;
+    int bonuses_total;
 } money_report_t;
 
 typedef struct RelayStat {
@@ -343,6 +344,38 @@ public:
 	    }
         
         return serverIP;
+    }
+
+    int CreateSession (std::string& sessionID, std::string& QR){
+        std::string url = _Host+ _Port + "/create-session";
+        
+        int result;
+        std::string json_create_session_request = json_create_get_volue();
+        std::string answer;
+        result = SendRequest(&json_create_session_request, &answer, url);
+
+        if (result || answer == "") return 1;
+
+        json_error_t error;
+        json_t *json = json_loads(answer.c_str(), 0, &error);
+
+        if(!json_is_object(json)){
+            json_decref(json);
+            return 1;
+        }
+
+        json_t *id_json = json_object_get(json, "ID");
+        json_t *qr_json = json_object_get(json, "QR");
+
+        if(!(json_is_string(id_json) && json_is_string(qr_json))){
+            json_decref(json);
+            return 1;
+        }
+
+        sessionID = json_string_value(id_json);
+        QR = json_string_value(qr_json);
+        json_decref(json);
+        return 0;
     }
 
     // GetStationConig request to specified URL with method POST. 
@@ -648,14 +681,15 @@ public:
     }
 
     // Encodes money report data and sends it to Central Server via SAVE request.
-    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total) {
-        money_report_t money_report_data = {0,0,0,0,0};
+    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total) {
+        money_report_t money_report_data = {0,0,0,0,0,0};
         
         money_report_data.cars_total = cars_total;
         money_report_data.coins_total = coins_total;
         money_report_data.banknotes_total = banknotes_total;
         money_report_data.cashless_total = cashless_total;
         money_report_data.service_total = service_total;
+        money_report_data.bonuses_total = bonuses_total;
 
 	    printf("Sending money report...\n");
         // Encode data to JSON
@@ -663,6 +697,28 @@ public:
 	    printf("JSON:\n%s\n", json_money_report_request.c_str());
         // Send a request
         CreateAndPushEntry(json_money_report_request, "/save-money");
+        return 0;
+    }
+
+    int StationReportDates(int id, int startDate, int endDate, std::string& answer) {
+        std::string url = _Host + _Port + "/station-report-dates";
+        int result;
+        std::string json_create_station_reports_dates_request = json_create_station_reports_dates(id, startDate, endDate);
+        result = SendRequest(&json_create_station_reports_dates_request, &answer, url);
+        if (result) {
+            return 1;
+        }
+        return 0;
+    }
+
+    int StationReportCurrentMoney(int id, std::string& answer) {
+        std::string url = _Host + _Port + "/station-report-current-money";
+        int result;
+        std::string json_create_station_reports_current_money_request = json_create_station_reports_current_money(id);
+        result = SendRequest(&json_create_station_reports_current_money_request, &answer, url);
+        if (result) {
+            return 1;
+        }
         return 0;
     }
 
@@ -674,7 +730,7 @@ public:
         std::string json_get_last_money_report_request = json_get_last_money_report();
 
         // Send request to Central Server
-	std::string url = _Host + _Port + "/load-money";
+	    std::string url = _Host + _Port + "/load-money";
         int res = SendRequest(&json_get_last_money_report_request, &answer, url);
         
         if (res > 0) {
@@ -687,7 +743,7 @@ public:
         object = json_loads(answer.c_str(), 0, &error);
         int err = 0;
 
-	printf("Server returned for Get Last Money: \n%s\n", answer.c_str());
+	    printf("Server returned for Get Last Money: \n%s\n", answer.c_str());
         do {
             if (!object) {
                 printf("Error in get_last_money_report on line %d: %s\n", error.line, error.text );
@@ -729,6 +785,11 @@ public:
                 money_report_data->service_total = 0;
             } else
             	money_report_data->service_total = json_integer_value(obj_var);
+            obj_var = json_object_get(object, "bonuses");
+            if(!json_is_integer(obj_var)) {
+                money_report_data->bonuses_total = 0;
+            } else
+                money_report_data->bonuses_total = json_integer_value(obj_var);
         } while(0);
         json_decref(object);
         return err;
@@ -742,7 +803,7 @@ public:
         std::string json_get_last_relay_report_request = json_get_last_relay_report();
 
         // Send request to Central Server
-	std::string url = _Host + _Port + "/load-relay";
+	    std::string url = _Host + _Port + "/load-relay";
         int res = SendRequest(&json_get_last_relay_report_request, &answer, url);
         
         if (res > 0) {
@@ -1096,6 +1157,34 @@ private:
         return res;
     }
 
+    std::string json_create_station_reports_dates(int id, int startDate, int endDate) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "id", json_integer(id));
+        json_object_set_new(object, "startDate", json_integer(startDate));
+        json_object_set_new(object, "endDate", json_integer(endDate));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_station_reports_current_money(int id) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "id", json_integer(id));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
     std::string json_create_get_qr() {
         return json_create_get_volue();
     }
@@ -1124,6 +1213,7 @@ private:
         json_object_set_new(object, "Coins", json_integer(s->coins_total));
         json_object_set_new(object, "Electronical",json_integer(s->cashless_total));
         json_object_set_new(object, "Service",json_integer(s->service_total));
+        json_object_set_new(object, "Bonus",json_integer(s->bonuses_total));
     
         char *str = json_dumps(object, 0);
         std::string res = str;

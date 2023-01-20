@@ -132,10 +132,17 @@ int DiaScreenConfig::SetQr(SDL_Surface * qr){
     std::map<std::string, DiaScreenItem *>::iterator it;
     for (it=items_map.begin(); it!=items_map.end(); it++) {
         if (it->second->isQr) {
+            printf("\n \t %s", it->second->id.c_str());
             DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
-            scaledQR = dia_ScaleSurface(qr, currentItemImage->Picture->w, currentItemImage->Picture->h);
-            currentItemImage->SetPicture(scaledQR);
             
+            scaledQR = SDL_DisplayFormat(dia_ScaleSurface(qr, currentItemImage->size.x, currentItemImage->size.y));
+
+            if (currentItemImage->Picture != 0) {
+                SDL_FreeSurface(currentItemImage->Picture);
+                currentItemImage->Picture = 0;
+            }
+            currentItemImage->Picture = scaledQR;
+            currentItemImage->ScaledPicture = scaledQR;
         }
     }
     return 0;

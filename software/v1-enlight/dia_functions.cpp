@@ -386,11 +386,16 @@ SDL_Surface* dia_SurfaceFromBase64(std::string img){
 
 SDL_Surface* dia_QRToSurface(QrCode code){
 
-    SDL_Surface * qr = SDL_CreateRGBSurface(0, code.getSize(), code.getSize(), 2, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+    SDL_Surface * qr = SDL_CreateRGBSurface(0, code.getSize(), code.getSize(), 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+    printf("\n");
     for (int i = 0; i < code.getSize(); i++) {
         for (int j = 0; j < code.getSize(); j++) {
-            if (code.getModule(j, i)) 
+            if (!code.getModule(j, i)){
                 DrawPixel(qr, j, i, 0xffffffff);
+            }
+            else{
+            }
+            
         }
     }
     return qr;
