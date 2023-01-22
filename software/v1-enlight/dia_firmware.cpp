@@ -148,13 +148,14 @@ std::string getSessionID(){
 }
 
 // Saves new income money and creates money report to Central Server.
-void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total) {
+void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
         network->SendMoneyReport(cars_total,
         coins_total,
         banknotes_total,
         cashless_total,
         service_total,
-        bonuses_total);
+        bonuses_total,
+        session_id);
 }
 
 ////// Runtime functions ///////
@@ -181,7 +182,7 @@ int send_receipt(int postPosition, int cash, int electronical) {
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1, 0, 0, 0, 0, 0);
+    SaveIncome(1, 0, 0, 0, 0, 0, getSessionID());
     return 0;
 }
 
@@ -246,7 +247,7 @@ int get_service() {
         
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0,0,0,0,curMoney,0);
+        SaveIncome(0,0,0,0,curMoney,0, getSessionID());
     }
     return curMoney;
 }
@@ -257,7 +258,7 @@ int get_bonuses() {
         
     if (curMoney > 0) {
         printf("bonus %d\n", curMoney);
-        SaveIncome(0,0,0,0,0,curMoney);
+        SaveIncome(0,0,0,0,0,curMoney, getSessionID());
     }
     return curMoney;
 }
@@ -329,7 +330,7 @@ int get_coins(void *object) {
 
   int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
   if (totalMoney>0) {
-      SaveIncome(0,totalMoney,0,0,0,0);
+      SaveIncome(0,totalMoney,0,0,0,0, getSessionID());
   }
 
   return totalMoney;
@@ -358,7 +359,7 @@ int get_banknotes(void *object) {
   if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
   int totalMoney = curMoney + gpioBanknote;
   if (totalMoney > 0) {
-    SaveIncome(0,0,totalMoney,0,0,0);
+    SaveIncome(0,0,totalMoney,0,0,0, getSessionID());
   }
   return totalMoney;
 }
@@ -368,7 +369,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney>0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0,0,0,curMoney,0,0);
+        SaveIncome(0,0,0,curMoney,0,0, getSessionID());
         manager->ElectronMoney  = 0;
     }
     return curMoney;
