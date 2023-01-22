@@ -55,8 +55,8 @@ setup = function()
     discount_p[5] = 0
     discount_p[6] = 0
 
-    init_prices() --инициализация цен
-    init_discounts() --инициализация скидок
+    init_prices()
+    init_discounts()
 
     mode_welcome = 0
     mode_choose_method = 10
@@ -80,7 +80,7 @@ setup = function()
     -- external constants
     init_constants();
     update_post();
-    welcome:Set("post_number.value", post_position) --разобраться с этой конструкцией. Скорее всео вызов функции в С
+    welcome:Set("post_number.value", post_position)
     
     hardware:CreateSession();
 
@@ -103,7 +103,6 @@ loop = function()
     end
     if is_money_added and money_wait_seconds <= 0 and get_is_finishing_programm(last_program_id) then
         hardware:CreateSession();
-
         qr = hardware:GetQR();
         session_id = hardware:GetSessionID();
         increment_cars()
@@ -152,7 +151,7 @@ run_mode = function(new_mode)
     if new_mode == mode_thanks then return thanks_mode() end
 end
 
-welcome_mode = function() --Зачем второй раз инициализировать скидки и цены?
+welcome_mode = function()
     show_welcome()
     run_stop()
     turn_light(0, animation.idle)
@@ -173,15 +172,15 @@ choose_method_mode = function()
     -- check animation
     turn_light(0, animation.idle)
 
-    init_prices() --Зачем второй раз инициализировать скидки и цены?
+    init_prices()
     init_discounts()
     
     pressed_key = get_key()
     if pressed_key == 4 or pressed_key == 5 or pressed_key == 6 then
-        return mode_select_price -- метод для карты
+        return mode_select_price
     end
     if pressed_key == 1 or pressed_key == 2 or pressed_key == 3 then
-        return mode_ask_for_money -- метод для налички
+        return mode_ask_for_money
     end
     
     -- if someone put some money let's switch the mode.
@@ -194,7 +193,7 @@ choose_method_mode = function()
     return mode_choose_method
 end
 
-select_price_mode = function() --экран с безналом
+select_price_mode = function()
     show_select_price(electron_balance)
     run_stop()
 

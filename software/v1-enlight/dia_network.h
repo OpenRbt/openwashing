@@ -67,6 +67,7 @@ typedef struct money_report {
     int cashless_total;
     int service_total;
     int bonuses_total;
+    std::string session_id;
 } money_report_t;
 
 typedef struct RelayStat {
@@ -681,8 +682,8 @@ public:
     }
 
     // Encodes money report data and sends it to Central Server via SAVE request.
-    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total) {
-        money_report_t money_report_data = {0,0,0,0,0,0};
+    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
+        money_report_t money_report_data = {0,0,0,0,0,0,""};
         
         money_report_data.cars_total = cars_total;
         money_report_data.coins_total = coins_total;
@@ -690,6 +691,7 @@ public:
         money_report_data.cashless_total = cashless_total;
         money_report_data.service_total = service_total;
         money_report_data.bonuses_total = bonuses_total;
+        money_report_data.session_id = session_id;
 
 	    printf("Sending money report...\n");
         // Encode data to JSON
@@ -697,28 +699,6 @@ public:
 	    printf("JSON:\n%s\n", json_money_report_request.c_str());
         // Send a request
         CreateAndPushEntry(json_money_report_request, "/save-money");
-        return 0;
-    }
-
-    int StationReportDates(int id, int startDate, int endDate, std::string& answer) {
-        std::string url = _Host + _Port + "/station-report-dates";
-        int result;
-        std::string json_create_station_reports_dates_request = json_create_station_reports_dates(id, startDate, endDate);
-        result = SendRequest(&json_create_station_reports_dates_request, &answer, url);
-        if (result) {
-            return 1;
-        }
-        return 0;
-    }
-
-    int StationReportCurrentMoney(int id, std::string& answer) {
-        std::string url = _Host + _Port + "/station-report-current-money";
-        int result;
-        std::string json_create_station_reports_current_money_request = json_create_station_reports_current_money(id);
-        result = SendRequest(&json_create_station_reports_current_money_request, &answer, url);
-        if (result) {
-            return 1;
-        }
         return 0;
     }
 
@@ -1214,7 +1194,8 @@ private:
         json_object_set_new(object, "Electronical",json_integer(s->cashless_total));
         json_object_set_new(object, "Service",json_integer(s->service_total));
         json_object_set_new(object, "Bonus",json_integer(s->bonuses_total));
-    
+        json_object_set_new(object, "Session_ID",json_string(s->session_id.c_str()));
+        
         char *str = json_dumps(object, 0);
         std::string res = str;
         free(str);
