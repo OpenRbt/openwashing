@@ -84,12 +84,9 @@ setup = function()
     
     hardware:CreateSession();
 
-    qr = hardware:GetQR();
-    session_id = hardware:GetSessionID();
-
-    printMessage("\n " .. session_id)
+    qr = "";
+    session_id = "";
     
-    welcome:GenerateQR(qr);
     forget_pressed_key();
     return 0
 end
@@ -97,14 +94,10 @@ end
 -- loop is being executed
 loop = function()
     update_post()
-
     if balance < 0.1 and money_wait_seconds > 0 then
         money_wait_seconds = money_wait_seconds - 1
     end
     if is_money_added and money_wait_seconds <= 0 and get_is_finishing_programm(last_program_id) then
-        hardware:CreateSession();
-        qr = hardware:GetQR();
-        session_id = hardware:GetSessionID();
         increment_cars()
         is_money_added = false
         last_program_id = 0
@@ -115,7 +108,7 @@ loop = function()
     return 0
 end
 
-update_post = function() --вызывает ф-ию в С, чтобы аолучит ИД поста
+update_post = function()
     post_position = registry:GetPostID();
 end
 
@@ -140,7 +133,10 @@ end
 
 run_mode = function(new_mode)   
     if new_mode == mode_welcome then return welcome_mode() end
-    if new_mode == mode_choose_method then return choose_method_mode() end
+    if new_mode == mode_choose_method then
+        create_session()
+        return choose_method_mode() 
+    end
     if new_mode == mode_select_price then return select_price_mode() end
     if new_mode == mode_wait_for_card then return wait_for_card_mode() end
     if new_mode == mode_ask_for_money then return ask_for_money_mode() end
@@ -159,6 +155,7 @@ welcome_mode = function()
     init_discounts()
     smart_delay(1000 * welcome_mode_seconds)
     forget_pressed_key()
+    
     if hascardreader() then
         return mode_choose_method
     end
@@ -356,6 +353,7 @@ end
 
 thanks_mode = function()
     set_current_state(0)
+
     if is_waiting_receipt == false then
         balance = 0
         show_thanks(thanks_mode_seconds)
@@ -363,10 +361,6 @@ thanks_mode = function()
         run_pause()
         waiting_loops = thanks_mode_seconds * 10;
         is_waiting_receipt = true
-    end
-    
-    if is_authorized then
-        
     end
 
     if waiting_loops > 0 then
@@ -462,7 +456,11 @@ end
 get_mode_by_pressed_key = function()
     pressed_key = get_key()
     if pressed_key >= 1 and pressed_key<=5 then return mode_work + pressed_key end
-    if pressed_key == 6 and is_paused and is_authorized then return mode_thanks end
+    if pressed_key == 6 and is_paused and is_authorized then
+            hardware:SetBonuses(math.floor(balance))
+            money_wait_seconds = 0
+            return mode_thanks 
+        end
     if pressed_key == 6 then return mode_pause end
     return -1
 end
@@ -580,4 +578,11 @@ end
 
 hascardreader = function()
   return hardware:HasCardReader()
+end
+
+create_session = function()
+    hardware:CreateSession();
+    qr = hardware:GetQR();
+    welcome:GenerateQR(qr);
+    session_id = hardware:GetSessionID();
 end

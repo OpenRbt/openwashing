@@ -158,6 +158,11 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
         session_id);
 }
 
+int SetBonuses(int bonuses){
+    std::cout<<"\n bonuses: "<<bonuses<<"\n";
+    return network->SetBonuses(bonuses);
+}
+
 ////// Runtime functions ///////
 int get_key(void *object) {
     return GetKey((DiaGpio *)object);
@@ -1089,7 +1094,7 @@ int main(int argc, char ** argv) {
 
     hardware->getSessionID_function = getSessionID;
     hardware->getQR_function = getQR;
-
+    hardware->SetBonuses_function = SetBonuses;
 
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
