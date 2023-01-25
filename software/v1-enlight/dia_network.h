@@ -626,6 +626,22 @@ public:
         return 1;
     }
 
+    int SetBonuses(int bonuses){
+        std::string url = _Host+ _Port + "/set-bonuses";
+        std::string answer;
+        std::string json_set_bonuses_request = json_create_set_bonuses(bonuses);
+        int result;
+        
+        result = SendRequest(&json_set_bonuses_request, &answer, url);
+
+        if (result == 0 && answer != "") {
+            json_error_t error;
+            return 0;
+        }
+        printf("SetBonuses answer %s\n", answer.c_str());
+        return 1;
+    }
+
     // GetStationDiscounts request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     int GetDiscounts(std::string &answer) {
@@ -1167,6 +1183,20 @@ private:
 
     std::string json_create_get_qr() {
         return json_create_get_volue();
+    }
+
+    std::string json_create_set_bonuses(int bonuses) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "bonuses", json_integer(bonuses));
+        
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
     }
 
     std::string json_create_start_fluid_flow_sensor(int volume) {

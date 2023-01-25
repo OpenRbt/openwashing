@@ -63,6 +63,13 @@ public:
         return ans;
     }
 
+    int (*SetBonuses_function)(int bonuses);
+    int SetBonuses(int bonuses){
+        int ans = SetBonuses_function(bonuses);
+        std::cout<<"\n "<< ans;
+        return ans;
+    }
+
     std::string (*getQR_function)();
     std::string GetQR(){
         std::string QR = getQR_function();
