@@ -65,7 +65,7 @@ setup = function()
     mode_ask_for_money = 40
     
     -- all these modes MUST follow each other
-    mode_work = 50 --Продолжительность работы?
+    mode_work = 50
     mode_pause = 60
     -- end of modes which MUST follow each other
     
