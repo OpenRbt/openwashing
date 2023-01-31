@@ -116,18 +116,9 @@
       "is_vertical": "true"
     },
     {
-      "id":"button_cash",
-      "type":"image",
-      "position": "1360;57",
-      "size":"120;966",
-      "src":"pic/buttons/cash.png",
-      "visible":"true",
-      "click_id":"100"
-    },
-    {
       "id":"button_cashless",
       "type":"image",
-      "position": "1500;57",
+      "position": "1360;57",
       "size":"120;966",
       "src":"pic/buttons/cashless.png",
       "visible":"true",
