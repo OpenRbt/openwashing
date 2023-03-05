@@ -160,7 +160,7 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
 
 int SetBonuses(int bonuses){
     std::cout<<"\n bonuses: "<<bonuses<<"\n";
-    return network->SetBonuses(bonuses);
+    return network->SetBonuses(bonuses, getSessionID());
 }
 
 ////// Runtime functions ///////

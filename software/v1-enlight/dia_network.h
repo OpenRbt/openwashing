@@ -622,10 +622,10 @@ public:
         return 1;
     }
 
-    int SetBonuses(int bonuses){
+    int SetBonuses(int bonuses, std::string sessionID){
         std::string url = _Host+ _Port + "/set-bonuses";
         std::string answer;
-        std::string json_set_bonuses_request = json_create_set_bonuses(bonuses);
+        std::string json_set_bonuses_request = json_create_set_bonuses(bonuses, sessionID);
         int result;
         
         result = SendRequest(&json_set_bonuses_request, &answer, url);
@@ -1181,11 +1181,12 @@ private:
         return json_create_get_volue();
     }
 
-    std::string json_create_set_bonuses(int bonuses) {
+    std::string json_create_set_bonuses(int bonuses, std::string sessionID) {
         json_t *object = json_object();
 
         json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "bonuses", json_integer(bonuses));
+        json_object_set_new(object, "Session_ID", json_string(sessionID.c_str()));
         
         char *str = json_dumps(object, 0);
         std::string res = str;
