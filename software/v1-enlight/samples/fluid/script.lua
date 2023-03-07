@@ -3,6 +3,11 @@
 -- setup is running at the start just once
 setup = function()
     -- global variables
+
+    test_volume = 0
+
+    is_paused = false
+
     balance = 0.0
     start_balance = 0
 
@@ -32,6 +37,8 @@ setup = function()
     button_cashless = 101
     button_begin = 102
     button_cancel = 103
+    button_pause = 201
+    button_play = 202
 
     price_p = {}
     
@@ -227,24 +234,33 @@ start_filling_mode = function()
 end
 
 filling_mode = function()
-    run_fillin()
-    show_filling(balance)
-    check_open_lid()
-    
-    turn_light(0, animation.one_button)
-    
-    balance = price_p[1] * (volume - get_volume() / 1000)
 
+    pressed_key = get_key()
+
+    if pressed_key == button_pause then
+        is_paused = not is_paused
+        run_stop()
+    end
+
+    if is_paused == false then 
+        
+        run_fillin()
+        show_filling(balance)
+        turn_light(0, animation.one_button)
+        balance = price_p[1] * (volume - get_volume() / 1000)
+
+    end
+    
     if balance <= 0.01 then
         balance = 0
         return mode_thanks
     end
-
-    if get_sensor_active() == false then
-        balance = 0
-        waiting_loops = 0
-        return mode_apology
-    end
+    
+    --if get_sensor_active() == false then
+        --balance = 0
+        --waiting_loops = 0
+        --return mode_apology
+    --end
 
     return mode_filling
 end
@@ -343,6 +359,15 @@ show_start_filling = function(balance_rur, volume_rur)
 end
 
 show_filling = function(balance_rur)
+
+    if is_paused == true then
+        filling:Set("play.visible", "true")
+        filling:Set("pause.visible", "false")
+    else
+        filling:Set("play.visible", "false")
+        filling:Set("pause.visible", "true")
+    end
+
     balance_int = math.ceil(balance_rur)
     filling:Set("balance.value", balance_int)
     set_progressbar(balance_rur / start_balance)
@@ -586,7 +611,9 @@ get_time_minutes = function()
 end
 
 get_volume = function()
-    return hardware:GetVolume()
+    --return hardware:GetVolume()
+    test_volume = test_volume + 1
+    return test_volume
 end
 
 start_fluid_flow_sensor = function(volume_rur)
