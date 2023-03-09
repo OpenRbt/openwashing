@@ -4,8 +4,6 @@
 setup = function()
     -- global variables
 
-    test_volume = 0
-
     is_paused = false
 
     balance = 0.0
@@ -250,11 +248,11 @@ filling_mode = function()
         return mode_thanks
     end
     
-    --if get_sensor_active() == false then
-        --balance = 0
-        --waiting_loops = 0
-        --return mode_apology
-    --end
+    if get_sensor_active() == false then
+        balance = 0
+        waiting_loops = 0
+        return mode_apology
+    end
 
     return mode_filling
 end
@@ -603,9 +601,7 @@ get_time_minutes = function()
 end
 
 get_volume = function()
-    --return hardware:GetVolume()
-    test_volume = test_volume + 1
-    return test_volume
+    return hardware:GetVolume()
 end
 
 start_fluid_flow_sensor = function(volume_rur)
