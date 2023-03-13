@@ -15,6 +15,12 @@ int DiaScreenItemDigits::Init(DiaScreenItem *base_item, json_t * item_json) {
     json_t * symbol_size_j = json_object_get(item_json,"symbol_size");
     if (base_item->SetValue("symbol_size",symbol_size_j)) return 1;
 
+    json_t * min_length_j = json_object_get(item_json,"min_length");
+    if (base_item->SetValue("min_length",min_length_j)) {
+        printf("digits: default min_length set to 0\n");
+        base_item->SetValue("min_length", "0");
+    }
+
     json_t * padding_j = json_object_get(item_json,"padding");
     if (base_item->SetValue("padding",padding_j)) return 1;
 
@@ -123,6 +129,9 @@ int dia_screen_item_digits_display(DiaScreenItem * base_item, void * digits_ptr,
 
     int nums_to_output = digits->length.value;
     if (first_not_null_index + 1 < nums_to_output) nums_to_output = first_not_null_index + 1;
+    if (nums_to_output<digits->min_length.value) {
+        nums_to_output = digits->min_length.value;
+    }
 
     for(int i = 0; i<nums_to_output; i++) {
         SDL_BlitSurface(fontImage,
@@ -152,6 +161,9 @@ int dia_screen_item_digits_notify(DiaScreenItem * base_item, void * digits_ptr, 
     } else
     if (key.compare("symbol_size")==0) {
         obj->symbol_size.Init(value);
+    } else
+    if (key.compare("min_length")==0) {
+        obj->min_length.Init(value);
     } else
     if (key.compare("padding")==0) {
         obj->padding.Init(value);

@@ -16,6 +16,7 @@ public:
     DiaFont font;
     DiaIntPair symbol_size;
     DiaNumber padding;
+    DiaNumber min_length;
     DiaNumber length;
     DiaNumber value;
     DiaNumber is_vertical;
