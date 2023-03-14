@@ -100,6 +100,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
     .addFunction("GetKey", &DiaRuntimeHardware::GetKey)
     .addFunction("CreateSession",  &DiaRuntimeHardware::CreateSession)
     .addFunction("GetQR",  &DiaRuntimeHardware::GetQR)
+    .addFunction("SendPause",  &DiaRuntimeHardware::SendPause)
     .addFunction("GetSessionID",  &DiaRuntimeHardware::GetSessionID)
     .addFunction("SendReceipt", &DiaRuntimeHardware::SendReceipt)
     .addFunction("IncrementCars", &DiaRuntimeHardware::IncrementCars)

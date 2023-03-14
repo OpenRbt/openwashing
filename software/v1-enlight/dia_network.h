@@ -622,6 +622,27 @@ public:
         return 1;
     }
 
+    std::string sendPause() {
+        std::string answer;
+        std::string result = "";
+
+        std::string get_public_key = json_get_public_key();
+	    printf("Send pause:\n%s\n", get_public_key.c_str());
+
+        // Send request to Central Server
+	    std::string url = _Host + _Port + "/stop-dispenser";
+            int res = SendRequest(&get_public_key, &answer, url);
+        
+	    printf("Server answer: %s\n", answer.c_str());
+
+        if (res > 0) {
+            printf("No connection to server\n");
+        } else {
+	        if (answer != "") result = answer;
+	    }
+        return result;
+    }
+
     int SetBonuses(int bonuses, std::string sessionID){
         std::string url = _Host+ _Port + "/set-bonuses";
         std::string answer;

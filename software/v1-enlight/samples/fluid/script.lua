@@ -4,6 +4,8 @@
 setup = function()
     -- global variables
 
+    --test_volume = 0
+
     is_paused = false
 
     balance = 0.0
@@ -231,6 +233,11 @@ filling_mode = function()
 
     if pressed_key == button_pause then
         is_paused = not is_paused
+        
+    end
+
+    if is_paused == true then
+        hardware:SendPause()
         run_stop()
     end
 

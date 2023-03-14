@@ -76,6 +76,13 @@ public:
         return QR;
     }
 
+    std::string (*sendPause_function)();
+    std::string SendPause(){
+        std::string answer = sendPause_function();
+        return answer;
+    }
+    
+
     std::string (*getSessionID_function)();
     std::string GetSessionID(){
         std::string sessionID = getSessionID_function();
