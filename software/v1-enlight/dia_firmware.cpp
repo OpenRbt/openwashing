@@ -165,6 +165,10 @@ int SetBonuses(int bonuses){
     return network->SetBonuses(bonuses, getSessionID());
 }
 
+std::string sendPause() {
+    return network->sendPause();
+}
+
 ////// Runtime functions ///////
 int get_key(void *object) {
     return GetKey((DiaGpio *)object);
@@ -1155,6 +1159,8 @@ int main(int argc, char ** argv) {
     hardware->getSessionID_function = getSessionID;
     hardware->getQR_function = getQR;
     hardware->SetBonuses_function = SetBonuses;
+
+    hardware->sendPause_function = sendPause;
 
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
