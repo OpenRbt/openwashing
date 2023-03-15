@@ -165,8 +165,8 @@ int SetBonuses(int bonuses){
     return network->SetBonuses(bonuses, getSessionID());
 }
 
-std::string sendPause() {
-    return network->sendPause();
+int sendPause() {
+    return network->StopProgramOnServer();
 }
 
 ////// Runtime functions ///////
@@ -544,6 +544,7 @@ int RunProgram() {
 }
 
 int GetVolume() {
+    /**/
     if (_SensorActivate){
         _SensorActivate = false;
         for (int i = 0; i < 4; i++){

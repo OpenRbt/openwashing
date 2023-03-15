@@ -76,9 +76,9 @@ public:
         return QR;
     }
 
-    std::string (*sendPause_function)();
-    std::string SendPause(){
-        std::string answer = sendPause_function();
+    int (*sendPause_function)();
+    int SendPause(){
+        int answer = sendPause_function();
         return answer;
     }
     
@@ -196,7 +196,7 @@ public:
 
     int (*get_volume_function)();
     int GetVolume() {
-        if(get_is_preflight_function) {
+        if(get_volume_function) {
             return get_volume_function();
         } else {
             printf("error: NIL object or function GetVolume\n");
@@ -223,6 +223,8 @@ public:
         }
         return 0;
     }
+
+    //StopProgramOnServer
 
     // Bonus system
 
