@@ -405,6 +405,20 @@ public:
         return 0;
     }
 
+    int StopProgramOnServer() {
+	    std::string url = _Host+ _Port + "/stop-program";
+        std::string answer;
+
+        int result;
+        std::string json_stop_program_request = json_create_get_volue();
+        result = SendRequest(&json_stop_program_request, &answer, url);
+        if ((result) || (answer !="")) {
+            fprintf(stderr, "StopProgramOnServer answer %s\n", answer.c_str());
+            return 1;
+        }
+        return 0;
+    }
+
     // GetVolume request to specified URL with method POST. 
     int GetVolume(std::string *status) {
 	    std::string url = _Host+ _Port + "/volume-dispenser";

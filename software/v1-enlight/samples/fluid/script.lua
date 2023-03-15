@@ -219,6 +219,7 @@ start_filling_mode = function()
     if pressed_key == button_begin then
         start_balance = balance
         start_fluid_flow_sensor(volume * 1000)
+        set_current_state(balance)
         return mode_filling
     end
 
@@ -233,20 +234,22 @@ filling_mode = function()
 
     if pressed_key == button_pause then
         is_paused = not is_paused
-        
+        if is_paused == false then 
+            start_fluid_flow_sensor(volume - get_volume() / 1000)
+        end
     end
 
     if is_paused == true then
+        --Вызов функции с методом /stop-program
         hardware:SendPause()
-        run_stop()
+        --run_stop()
     end
 
     if is_paused == false then 
-        
-        run_fillin()
         show_filling(balance)
         turn_light(0, animation.one_button)
         balance = price_p[1] * (volume - get_volume() / 1000)
+        --(volume - get_volume() / 1000) - сколько осталось налить
 
     end
     
@@ -530,12 +533,12 @@ increment_cars = function()
 end
 
 run_fillin = function()
-    set_current_state(balance, 1)
+    set_current_state(balance)
     run_program(1)
 end
 
 run_stop = function()
-    set_current_state(balance, 0)
+    set_current_state(balance)
     run_program(0)
 end
 
@@ -555,8 +558,8 @@ abort_transaction = function()
     return hardware:AbortTransaction()
 end
 
-set_current_state = function(current_balance, current_program)
-    return hardware:SetCurrentState(math.floor(current_balance), current_program)
+set_current_state = function(current_balance)
+    return hardware:SetCurrentState(math.floor(current_balance))
 end
 
 update_balance = function()
@@ -608,7 +611,10 @@ get_time_minutes = function()
 end
 
 get_volume = function()
-    return hardware:GetVolume()
+    --test_volume = test_volume + 1
+    --return test_volume
+    return hardware:GetVolume() 
+    -- Сколько было налито на данный момент
 end
 
 start_fluid_flow_sensor = function(volume_rur)
