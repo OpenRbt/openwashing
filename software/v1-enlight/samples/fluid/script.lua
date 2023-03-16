@@ -4,8 +4,6 @@
 setup = function()
     -- global variables
 
-    --test_volume = 0
-
     is_paused = false
 
     balance = 0.0
@@ -15,6 +13,7 @@ setup = function()
     max_electron_balance = 900
     electron_balance = 0
     volume = 0
+    tmp_volume = 0
     
     balance_seconds = 0
     cash_balance = 0.0
@@ -235,22 +234,18 @@ filling_mode = function()
     if pressed_key == button_pause then
         is_paused = not is_paused
         if is_paused == false then 
-            start_fluid_flow_sensor(volume - get_volume() / 1000)
+            start_fluid_flow_sensor(volume * 1000)
+        else
+            volume = volume - get_volume() / 1000
+            hardware:SendPause()
         end
-    end
 
-    if is_paused == true then
-        --Вызов функции с методом /stop-program
-        hardware:SendPause()
-        --run_stop()
     end
 
     if is_paused == false then 
         show_filling(balance)
         turn_light(0, animation.one_button)
         balance = price_p[1] * (volume - get_volume() / 1000)
-        --(volume - get_volume() / 1000) - сколько осталось налить
-
     end
     
     if balance <= 0.01 then
@@ -611,10 +606,7 @@ get_time_minutes = function()
 end
 
 get_volume = function()
-    --test_volume = test_volume + 1
-    --return test_volume
     return hardware:GetVolume() 
-    -- Сколько было налито на данный момент
 end
 
 start_fluid_flow_sensor = function(volume_rur)
