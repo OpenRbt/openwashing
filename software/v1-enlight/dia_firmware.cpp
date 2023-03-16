@@ -166,7 +166,7 @@ int SetBonuses(int bonuses){
 }
 
 int sendPause() {
-    return network->StopProgramOnServer();
+    return network->sendPause(0);
 }
 
 ////// Runtime functions ///////
@@ -548,7 +548,7 @@ int GetVolume() {
     if (_SensorActivate){
         _SensorActivate = false;
         for (int i = 0; i < 4; i++){
-            int err = network->StartFluidFlowSensor(_SensorVolume);
+            int err = network->StartFluidFlowSensor(_SensorVolume, 1, 0);
             if (err == 0){
                 _SensorActive = true;
                 break;

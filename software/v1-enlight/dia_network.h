@@ -459,10 +459,10 @@ public:
         return -1;
     }
 
-    int StartFluidFlowSensor(int volume){
+    int StartFluidFlowSensor(int volume, int startProgramID, int stopProgramID){
         std::string url = _Host+ _Port + "/run-dispenser";
         std::string answer;
-        std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume);
+        std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume, startProgramID, stopProgramID);
         int result;
 
         result = SendRequest(&json_start_fluid_flow_sensor_request, &answer, url);
@@ -640,26 +640,22 @@ public:
         return 1;
     }
 
-    std::string sendPause() {
+    int sendPause(int stopProgramID){
+        std::string url = _Host+ _Port + "/stop-dispenser";
         std::string answer;
-        std::string result = "";
-
-        std::string get_public_key = json_get_public_key();
-	    printf("Send pause:\n%s\n", get_public_key.c_str());
-
-        // Send request to Central Server
-	    std::string url = _Host + _Port + "/stop-dispenser";
-            int res = SendRequest(&get_public_key, &answer, url);
+        std::string json_stop_dispenser_request = json_create_stop_dispenser(stopProgramID);
+        int result;
         
-	    printf("Server answer: %s\n", answer.c_str());
+        result = SendRequest(&json_stop_dispenser_request, &answer, url);
 
-        if (res > 0) {
-            printf("No connection to server\n");
-        } else {
-	        if (answer != "") result = answer;
-	    }
-        return result;
+        if (result == 0 && answer != "") {
+            json_error_t error;
+            return 0;
+        }
+        printf("sendPause answer %s\n", answer.c_str());
+        return 1;
     }
+
 
     int SetBonuses(int bonuses, std::string sessionID){
         std::string url = _Host+ _Port + "/set-bonuses";
@@ -1220,6 +1216,20 @@ private:
         return json_create_get_volue();
     }
 
+    std::string json_create_stop_dispenser(int stopProgramID){
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "stopProgramID", json_integer(stopProgramID));
+        
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
     std::string json_create_set_bonuses(int bonuses, std::string sessionID) {
         json_t *object = json_object();
 
@@ -1235,11 +1245,13 @@ private:
         return res;
     }
 
-    std::string json_create_start_fluid_flow_sensor(int volume) {
+    std::string json_create_start_fluid_flow_sensor(int volume, int startProgramID, int stopProgramID) {
         json_t *object = json_object();
 
         json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "volume", json_integer(volume));
+        json_object_set_new(object, "startProgramID", json_integer(startProgramID));
+        json_object_set_new(object, "stopProgramID", json_integer(stopProgramID));
         char *str = json_dumps(object, 0);
         std::string res = str;
 
