@@ -3,7 +3,7 @@
 #define SENDING_FINISH 3
 
 volatile int number_of_pulses = 0;
-float vol = 0.0;
+float vol = 0.0, coef_litr = 1000.0, coef_impuls = 500.0;
 int stat = IDL;
 unsigned char flowsensor = 2;  // Sensor Input
 unsigned long currentTime, cloopTime;
@@ -53,7 +53,7 @@ void loop() {
     if (milliliters_from_pulses > number_of_pulses) {
       if (currentTime >= (cloopTime + timer)) {
         cloopTime = currentTime;
-        Serial.println("P" + (String)(int)(number_of_pulses / 500.0 * 1000) + ";");
+        Serial.println("P" + (String)(int)(number_of_pulses / coef_impuls * coef_litr) + ";");
       }
     } else {
       stat = SENDING_FINISH;
@@ -77,7 +77,7 @@ void loop() {
       number_of_pulses = 0;
       status = 0;
       number_of_milliliters = (float)str.toInt();
-      milliliters_from_pulses = number_of_milliliters / 500;
+      milliliters_from_pulses = number_of_milliliters / coef_litr * coef_impuls;
     } else {
       if (str == "UID;") {
         Serial.print("YF-S201;");
