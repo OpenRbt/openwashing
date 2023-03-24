@@ -235,6 +235,8 @@ end
 
 filling_mode = function()
 
+    check_open_lid()
+
     pressed_key = get_key()
 
     if pressed_key == button_pause then
