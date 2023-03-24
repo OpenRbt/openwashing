@@ -99,6 +99,7 @@ end
 welcome_mode = function()
     show_welcome()
     run_stop()
+    check_open_lid()
     turn_light(0, animation.idle)
     smart_delay(1000 * welcome_mode_seconds)
     forget_pressed_key()
@@ -108,6 +109,7 @@ end
 choose_mode = function()
     show_choose(price_p[1])
     run_stop()
+    check_open_lid()
 
     turn_light(0, animation.idle)
 
@@ -125,6 +127,7 @@ keyboard_mode = function()
     if keyboard_pressed then show_keyboard(electron_balance)
     else show_keyboard(min_electron_balance) end
     run_stop()
+    check_open_lid()
 
     turn_light(0, animation.idle)
 
@@ -152,6 +155,7 @@ end
 wait_mode = function()
     show_wait(electron_balance)
     run_stop()
+    check_open_lid()
 
     turn_light(0, animation.idle)
 
@@ -196,6 +200,7 @@ end
 fundraising_mode = function()
     show_fundraising(balance)
     run_stop()
+    check_open_lid()
     turn_light(0, animation.idle)
     init_prices()
     
@@ -212,6 +217,7 @@ start_filling_mode = function()
     volume = balance / price_p[1]
     show_start_filling(balance, volume)
     run_stop()
+    check_open_lid()
     turn_light(0, animation.idle)
     
     pressed_key = get_key()
@@ -228,6 +234,8 @@ start_filling_mode = function()
 end
 
 filling_mode = function()
+
+    check_open_lid()
 
     pressed_key = get_key()
 
@@ -263,6 +271,7 @@ filling_mode = function()
 end
 
 thanks_mode = function()
+    check_open_lid()
     run_stop()
     show_thanks()
 
@@ -299,6 +308,7 @@ end
 apology_mode = function()
     run_stop()
     show_apology()
+    check_open_lid()
 
     if waiting_loops <= 0 then waiting_loops = apology_mode_seconds * 10 end
     waiting_loops = waiting_loops - 1
@@ -615,4 +625,21 @@ end
 
 get_sensor_active = function()
     return hardware:GetSensorActive()
+end
+
+need_to_open_lid = function()
+    val = hardware:GetOpenLid()
+    if val>0 then return true end
+    return false
+end
+
+check_open_lid = function()
+    if need_to_open_lid() then
+        printMessage("LID OPENED ...")
+        run_program(11)
+        printMessage("LID OPENED :(")
+        smart_delay(9500)
+        run_program(0)
+        printMessage("LID CLOSED :)")
+    end
 end
