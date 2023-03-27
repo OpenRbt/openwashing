@@ -99,6 +99,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
     .addFunction("SmartDelay", &DiaRuntimeHardware::SmartDelay)
     .addFunction("GetKey", &DiaRuntimeHardware::GetKey)
     .addFunction("CreateSession",  &DiaRuntimeHardware::CreateSession)
+    .addFunction("EndSession",  &DiaRuntimeHardware::EndSession)
     .addFunction("GetQR",  &DiaRuntimeHardware::GetQR)
     .addFunction("SendPause",  &DiaRuntimeHardware::SendPause)
     .addFunction("GetSessionID",  &DiaRuntimeHardware::GetSessionID)
