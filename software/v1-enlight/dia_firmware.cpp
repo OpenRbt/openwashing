@@ -141,6 +141,10 @@ int CreateSession(){
     return answer;
 }
 
+int EndSession(){
+    return network->EndSession(_SessionID);
+}
+
 std::string getQR(){
     return _Qr;
 }
@@ -1156,6 +1160,7 @@ int main(int argc, char ** argv) {
     hardware->turn_light_function = turn_light;
 
     hardware->CreateSession_function = CreateSession;
+    hardware->EndSession_function = EndSession;
 
     hardware->getSessionID_function = getSessionID;
     hardware->getQR_function = getQR;

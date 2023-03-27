@@ -82,7 +82,7 @@ setup = function()
     update_post();
     welcome:Set("post_number.value", post_position)
     
-    hardware:CreateSession();
+    create_session()
 
     qr = "";
     session_id = "";
@@ -361,6 +361,7 @@ thanks_mode = function()
         run_pause()
         waiting_loops = thanks_mode_seconds * 10;
         is_waiting_receipt = true
+        hardware:EndSession();
     end
 
     if waiting_loops > 0 then

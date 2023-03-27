@@ -265,6 +265,7 @@ int DiaConfiguration::LoadConfig() {
     }
     for (unsigned int i=0;i< json_array_size(programs_json); i++) {
         //printf("programs reading loop\n");
+        //printf("\n\n\nprogram number: %d", i);
         json_t * program_json = json_array_get(programs_json, i);
         if(!json_is_object(program_json)) {
             fprintf(stderr, "error: program %d is not an object\n", i + 1);
