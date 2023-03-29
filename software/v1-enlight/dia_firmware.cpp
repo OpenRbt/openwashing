@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include <wiringPi.h>
@@ -10,6 +12,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <filesystem>
 
 #include "dia_configuration.h"
 #include "dia_devicemanager.h"
@@ -37,6 +40,8 @@
 
 #define BILLION 1000000000
 #define MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC 1000000
+
+namespace fs = std::filesystem;
 
 DiaConfiguration *config;
 
@@ -80,6 +85,12 @@ int _CanPlayVideoTimer = 0;
 bool _BonusSystemIsActive = false;
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
+
+bool _IsDirExist = false;
+int _MaxAfkTime = 30;
+std::string _UserName = getlogin();
+std::string _FlashName = "Flash";
+std::string _FileName;
 
 std::string _Qr = "";
 std::string _SessionID = "";
@@ -148,18 +159,18 @@ bool getIsPlayingVideo() {
 
 void *play_video_func(void *ptr) {
     while (!_to_be_destroyed) {
-        printf("play_video_func");
-        if (_CanPlayVideo && !_IsPlayingVideo) {
-            usleep(1 * 1000 * 1000);
+        usleep(1 * 1000 * 1000);
+        if (_CanPlayVideo) {
             _CanPlayVideoTimer++;
-            if (_CanPlayVideoTimer == 30) {
-                _IsPlayingVideo = true;
-                _CanPlayVideo = false;
-                _CanPlayVideoTimer = 0;
-                printf("\n\n\n PlayVideo \n\n\n");
-                system("./video/play.sh");
-            }
         }
+        if (_CanPlayVideoTimer >= _MaxAfkTime) {
+            _IsPlayingVideo = true;
+            _CanPlayVideo = false;
+            _CanPlayVideoTimer = 0;
+            int pid = system(("ffplay -loop 0 -exitonkeydown -exitonmousedown -fs "+_FileName).c_str());
+            printf("\n\n\n PlayVideo result: %d \n\n\n", pid);
+        }
+        _IsPlayingVideo = false;
         delay(100);
     }
     pthread_exit(0);
@@ -187,6 +198,17 @@ std::string getQR() {
 
 std::string getSessionID() {
     return _SessionID;
+}
+
+int dirExists(const char *path) {
+    struct stat info;
+
+    if (stat(path, &info) != 0)
+        return 0;
+    else if (info.st_mode & S_IFDIR)
+        return 1;
+    else
+        return 0;
 }
 
 // Saves new income money and creates money report to Central Server.
@@ -1207,9 +1229,17 @@ int main(int argc, char **argv) {
         printf("no additional coin handler\n");
     }
 
+    printf(" \n\n\n username: %s \n\n\n", _UserName);
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
-    pthread_create(&play_video_thread, NULL, play_video_func, NULL);
+    
+    _IsDirExist = dirExists(("/media/"+_UserName+"/"+_FlashName+"/openrbt_video").c_str());
+    if (_IsDirExist) {
+        for (const auto & entry : fs::directory_iterator(("/media/"+_UserName+"/"+_FlashName+"/openrbt_video").c_str()))
+            _FileName = entry.path();
+
+        pthread_create(&play_video_thread, NULL, play_video_func, NULL);
+    }
 
     while (!keypress) {
         // Call Lua loop function

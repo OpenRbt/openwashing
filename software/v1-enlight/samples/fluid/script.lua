@@ -51,6 +51,7 @@ setup = function()
     
     mode_welcome = 10
     mode_choose = 20
+    mode_play_video = 25
     mode_fundraising = 30
     mode_keyboard = 40
     mode_wait = 50
@@ -90,6 +91,7 @@ end
 run_mode = function(new_mode)   
     if new_mode == mode_welcome then return welcome_mode() end
     if new_mode == mode_choose then return choose_mode() end
+    if new_mode == mode_play_video then return play_video_mode() end
     if new_mode == mode_fundraising then return fundraising_mode() end
     if new_mode == mode_keyboard then return keyboard_mode() end
     if new_mode == mode_wait then return wait_mode() end
@@ -114,12 +116,11 @@ choose_mode = function()
     run_stop()
     check_open_lid()
 
-    if not get_can_play_video() then
-        if get_is_playing_video() then
+    can_play_video = true
+    set_can_play_video(can_play_video)
 
-        end
-        can_play_video = true
-        set_can_play_video(can_play_video)
+    if get_is_playing_video() then
+        return mode_play_video
     end
 
     turn_light(0, animation.idle)
@@ -144,6 +145,15 @@ choose_mode = function()
     end
 
     return mode_choose
+end
+
+play_video_mode = function()
+
+    if not get_is_playing_video() then
+        return mode_choose
+    end
+
+    return mode_play_video
 end
 
 keyboard_mode = function()
