@@ -6,6 +6,9 @@ setup = function()
 
     is_paused = false
 
+    can_play_video = false
+    is_playing_video = false
+
     balance = 0.0
     start_balance = 0
 
@@ -111,14 +114,34 @@ choose_mode = function()
     run_stop()
     check_open_lid()
 
+    if not get_can_play_video() then
+        if get_is_playing_video() then
+
+        end
+        can_play_video = true
+        set_can_play_video(can_play_video)
+    end
+
     turn_light(0, animation.idle)
 
     pressed_key = get_key()
-    if pressed_key == button_cash then return mode_fundraising end
-    if pressed_key == button_cashless then return mode_keyboard end
+    if pressed_key == button_cash then
+        can_play_video = false
+        set_can_play_video(can_play_video)
+        return mode_fundraising 
+    end
+    if pressed_key == button_cashless then
+        can_play_video = false
+        set_can_play_video(can_play_video)
+        return mode_keyboard
+    end
     
     update_balance()
-    if balance > 0.99 then return mode_fundraising end
+    if balance > 0.99 then 
+        can_play_video = false
+        set_can_play_video(can_play_video)
+        return mode_fundraising 
+    end
 
     return mode_choose
 end
@@ -625,6 +648,22 @@ end
 
 get_sensor_active = function()
     return hardware:GetSensorActive()
+end
+
+get_can_play_video = function()
+    return hardware:GetCanPlayVideo()
+end
+
+set_can_play_video = function(canPlayVideo)
+    hardware:SetCanPlayVideo(canPlayVideo)
+end
+
+get_is_playing_video = function()
+    return hardware:GetIsPlayingVideo()
+end
+
+set_is_playing_video = function(isPlayingVideo)
+    hardware:SetIsPlayingVideo(isPlayingVideo)
 end
 
 need_to_open_lid = function()
