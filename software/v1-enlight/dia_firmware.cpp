@@ -9,10 +9,11 @@
 #include <unistd.h>
 #include <wiringPi.h>
 
+#include <filesystem>
 #include <iostream>
+#include <list>
 #include <map>
 #include <string>
-#include <filesystem>
 
 #include "dia_configuration.h"
 #include "dia_devicemanager.h"
@@ -167,7 +168,7 @@ void *play_video_func(void *ptr) {
             _IsPlayingVideo = true;
             _CanPlayVideo = false;
             _CanPlayVideoTimer = 0;
-            int pid = system(("ffplay -loop 0 -exitonkeydown -exitonmousedown -fs "+_FileName).c_str());
+            int pid = system(("ffplay -loop 0 -exitonkeydown -exitonmousedown -fs " + _FileName).c_str());
             printf("\n\n\n PlayVideo result: %d \n\n\n", pid);
         }
         _IsPlayingVideo = false;
@@ -1229,13 +1230,24 @@ int main(int argc, char **argv) {
         printf("no additional coin handler\n");
     }
 
-    printf(" \n\n\n username: %s \n\n\n", _UserName);
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
-    
-    _IsDirExist = dirExists(("/media/"+_UserName+"/"+_FlashName+"/openrbt_video").c_str());
+
+    std::list<std::string> directories;
+    std::string directory;
+    for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
+        directories.push_back(entry.path());
+
+    for (auto const &i : directories) {
+        _IsDirExist = dirExists((i + "/openrbt_video").c_str());
+        if (_IsDirExist) {
+            directory = (i + "/openrbt_video").c_str();
+            break;
+        }
+    }
+
     if (_IsDirExist) {
-        for (const auto & entry : fs::directory_iterator(("/media/"+_UserName+"/"+_FlashName+"/openrbt_video").c_str()))
+        for (const auto &entry : fs::directory_iterator(directory))
             _FileName = entry.path();
 
         pthread_create(&play_video_thread, NULL, play_video_func, NULL);
