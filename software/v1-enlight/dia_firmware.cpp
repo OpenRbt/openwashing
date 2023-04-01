@@ -42,8 +42,6 @@
 #define BILLION 1000000000
 #define MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC 1000000
 
-namespace fs = std::filesystem;
-
 DiaConfiguration *config;
 
 int _IntervalsCount;
@@ -1235,7 +1233,7 @@ int main(int argc, char **argv) {
 
     std::list<std::string> directories;
     std::string directory;
-    for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
+    for (const auto &entry : std::filesystem::directory_iterator(("/media/" + _UserName).c_str()))
         directories.push_back(entry.path());
 
     for (auto const &i : directories) {
@@ -1247,7 +1245,7 @@ int main(int argc, char **argv) {
     }
 
     if (_IsDirExist) {
-        for (const auto &entry : fs::directory_iterator(directory))
+        for (const auto &entry : std::filesystem::directory_iterator(directory))
             _FileName = entry.path();
 
         pthread_create(&play_video_thread, NULL, play_video_func, NULL);
