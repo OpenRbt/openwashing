@@ -544,7 +544,7 @@ class DiaNetwork {
     // PING request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData) {
+    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, bool &isAuthorized, int &bonusAmount) {
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 
@@ -600,6 +600,12 @@ class DiaNetwork {
             json_t *obj_bonus_system;
             obj_bonus_system = json_object_get(object, "bonus_system_active");
             bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
+
+            //bonusAmount
+
+            json_t *obj_is_authorized;
+            obj_is_authorized = json_object_get(object, "IsAuthorized");
+            isAuthorized = (bool)json_boolean_value(obj_is_authorized);
 
             json_t *obj_qr_data;
             obj_qr_data = json_object_get(object, "qr_data");
