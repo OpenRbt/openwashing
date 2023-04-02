@@ -285,6 +285,15 @@ class DiaRuntimeHardware {
         return false;
     }
 
+    bool (*is_athorized_function)();
+    bool IsAuthorized() {
+        if (is_athorized_function) {
+            return is_athorized_function();
+        }
+        printf("error: NIL object or function IsAuthorized\n");
+        return false;
+    }
+
     int (*bonus_system_refresh_active_qr_function)();
     int BonusSystemRefreshActiveQR() {
         if (bonus_system_refresh_active_qr_function) {
