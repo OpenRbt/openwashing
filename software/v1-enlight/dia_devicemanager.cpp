@@ -1,51 +1,51 @@
 #include "dia_devicemanager.h"
 
-#include <pthread.h>
-#include <string.h>
-#include <string>
 #include <dirent.h>
+#include <pthread.h>
 #include <stdio.h>
-#include "dia_nv9usb.h"
-#include "dia_microcoinsp.h"
-#include "dia_cardreader.h"
-#include "dia_vendotek.h"
-#include "dia_ccnet.h"
-#include <wiringPi.h>
-#include <stdexcept>
-#include "money_types.h"
 #include <stdlib.h>
+#include <string.h>
+#include <wiringPi.h>
 
-void DiaDeviceManager_AddCardReader(DiaDeviceManager * manager) {
+#include <stdexcept>
+#include <string>
+
+#include "dia_cardreader.h"
+#include "dia_ccnet.h"
+#include "dia_microcoinsp.h"
+#include "dia_nv9usb.h"
+#include "dia_vendotek.h"
+#include "money_types.h"
+
+void DiaDeviceManager_AddCardReader(DiaDeviceManager *manager) {
     printf("Abstract card reader added to the Device Manager\n");
     manager->_CardReader = new DiaCardReader(manager, DiaDeviceManager_ReportMoney);
 }
 
-int DiaDeviceManager_AddVendotek(DiaDeviceManager * manager, std::string host, std::string port) {
+int DiaDeviceManager_AddVendotek(DiaDeviceManager *manager, std::string host, std::string port) {
     printf("Vendotek card reader added to the Device Manager\n");
     manager->_Vendotek = new DiaVendotek(manager, DiaDeviceManager_ReportMoney, host, port);
     return DiaVendotek_StartPing(manager->_Vendotek);
-    //return 0;
+    // return 0;
 }
 
-void DiaDeviceManager_StartDeviceScan(DiaDeviceManager * manager)
-{
-    for (auto it = manager->_Devices.begin(); it != manager->_Devices.end(); ++it)
-    {
+void DiaDeviceManager_StartDeviceScan(DiaDeviceManager *manager) {
+    for (auto it = manager->_Devices.begin(); it != manager->_Devices.end(); ++it) {
         (*it)->_CheckStatus = DIAE_DEVICE_STATUS_INITIAL;
     }
 }
 
-std::string DiaDeviceManager_ExecBashCommand(const char* cmd, int* error) {
+std::string DiaDeviceManager_ExecBashCommand(const char *cmd, int *error) {
     char buffer[128];
     std::string result = "";
     *error = 0;
 
-    FILE* pipe = popen(cmd, "r");
+    FILE *pipe = popen(cmd, "r");
     if (!pipe) {
         *error = 1;
         return result;
-    } 
-        
+    }
+
     while (fgets(buffer, sizeof buffer, pipe) != NULL) {
         result += buffer;
     }
@@ -53,7 +53,7 @@ std::string DiaDeviceManager_ExecBashCommand(const char* cmd, int* error) {
     return result;
 }
 
-int DiaDeviceManager_CheckNV9(char* PortName) {
+int DiaDeviceManager_CheckNV9(char *PortName) {
     printf("\nChecking port %s for NV9 device...\n", PortName);
 
     int error = 0;
@@ -83,16 +83,16 @@ int DiaDeviceManager_CheckNV9(char* PortName) {
         size_t deviceNamePosition = bashOutput.find("NV9USB");
 
         // Compare distance between positions with maxDiff const
-        if (deviceNamePosition != std::string::npos && 
+        if (deviceNamePosition != std::string::npos &&
             devicePortPosition - deviceNamePosition < maxDiff) {
-                return 1;
-            } 
+            return 1;
+        }
     }
 
     return 0;
 }
 
-int DiaDeviceManager_CheckUIC(char* PortName) {
+int DiaDeviceManager_CheckUIC(char *PortName) {
     printf("\nChecking port %s for UIC device...\n", PortName);
 
     int error = 0;
@@ -122,50 +122,47 @@ int DiaDeviceManager_CheckUIC(char* PortName) {
         size_t deviceNamePosition = bashOutput.find("UIC");
 
         // Compare distance between positions with maxDiff const
-        if (deviceNamePosition != std::string::npos && 
+        if (deviceNamePosition != std::string::npos &&
             devicePortPosition - deviceNamePosition < maxDiff) {
-                return 1;
-            } 
+            return 1;
+        }
     }
 
     return 0;
 }
 
-void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortName, int isACM) {
+void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char *PortName, int isACM) {
     int devInList = 0;
 
-    for (auto it = manager->_Devices.begin(); it != manager->_Devices.end(); ++it)
-    {
-        if(strcmp(PortName, (*it)->_PortName ) == 0)
-        {
+    for (auto it = manager->_Devices.begin(); it != manager->_Devices.end(); ++it) {
+        if (strcmp(PortName, (*it)->_PortName) == 0) {
             devInList = 1;
             (*it)->_CheckStatus = DIAE_DEVICE_STATUS_IN_LIST;
         }
     }
-    if(!devInList)
-    {
+    if (!devInList) {
         if (isACM) {
             if (DiaDeviceManager_CheckUIC(PortName)) {
                 printf("\nFound UIC on port %s\n\n", PortName);
                 printf("Ignoring this port...\n");
-                DiaDevice * dev = new DiaDevice(PortName);
+                DiaDevice *dev = new DiaDevice(PortName);
                 manager->_Devices.push_back(dev);
 
             } else if (DiaDeviceManager_CheckNV9(PortName)) {
                 printf("\nFound NV9 on port %s\n\n", PortName);
-                DiaDevice * dev = new DiaDevice(PortName);
+                DiaDevice *dev = new DiaDevice(PortName);
 
                 dev->Manager = manager;
                 dev->_CheckStatus = DIAE_DEVICE_STATUS_JUST_ADDED;
                 dev->Open();
-                DiaNv9Usb * newNv9 = new DiaNv9Usb(dev, DiaDeviceManager_ReportMoney);
+                DiaNv9Usb *newNv9 = new DiaNv9Usb(dev, DiaDeviceManager_ReportMoney);
                 DiaNv9Usb_StartDriver(newNv9);
                 manager->_Devices.push_back(dev);
             }
         }
-        if (!isACM) { 
+        if (!isACM) {
             printf("\nChecking port %s for MicroCoinSp...\n", PortName);
-            DiaDevice * dev = new DiaDevice(PortName);
+            DiaDevice *dev = new DiaDevice(PortName);
 
             dev->Manager = manager;
             dev->_CheckStatus = DIAE_DEVICE_STATUS_JUST_ADDED;
@@ -174,14 +171,14 @@ void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortNam
             int res = DiaMicroCoinSp_Detect(dev);
             if (res) {
                 printf("\nFound MicroCoinSp on port %s\n\n", PortName);
-                DiaMicroCoinSp * newMicroCoinSp = new DiaMicroCoinSp(dev, DiaDeviceManager_ReportMoney);
+                DiaMicroCoinSp *newMicroCoinSp = new DiaMicroCoinSp(dev, DiaDeviceManager_ReportMoney);
                 DiaMicroCoinSp_StartDriver(newMicroCoinSp);
                 manager->_Devices.push_back(dev);
             } else {
                 res = DiaCcnet_Detect(dev);
                 if (res) {
                     printf("\nFound CCNET device on port %s\n\n", PortName);
-                    DiaCcnet * newCcnet = new DiaCcnet(dev, DiaDeviceManager_ReportMoney);
+                    DiaCcnet *newCcnet = new DiaCcnet(dev, DiaDeviceManager_ReportMoney);
                     DiaCcnet_StartDriver(newCcnet);
                     manager->_Devices.push_back(dev);
                 } else {
@@ -193,26 +190,20 @@ void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortNam
     }
 }
 
-void DiaDeviceManager_ScanDevices(DiaDeviceManager * manager)
-{
-    if (manager == NULL)
-    {
+void DiaDeviceManager_ScanDevices(DiaDeviceManager *manager) {
+    if (manager == NULL) {
         return;
     }
     struct dirent *entry;
-	DIR * dir;
+    DIR *dir;
     DiaDeviceManager_StartDeviceScan(manager);
-    if((dir = opendir("/dev"))!=NULL)
-	{
-        while((entry = readdir(dir))!=NULL)
-		{
-            if(strstr(entry->d_name,"ttyACM"))
-            {
+    if ((dir = opendir("/dev")) != NULL) {
+        while ((entry = readdir(dir)) != NULL) {
+            if (strstr(entry->d_name, "ttyACM")) {
                 char buf[1024];
                 snprintf(buf, 1023, "/dev/%s", entry->d_name);
                 DiaDeviceManager_CheckOrAddDevice(manager, buf, 1);
-            } else if (strstr(entry->d_name,"ttyUSB"))
-            {
+            } else if (strstr(entry->d_name, "ttyUSB")) {
                 char buf[1024];
                 snprintf(buf, 1023, "/dev/%s", entry->d_name);
                 DiaDeviceManager_CheckOrAddDevice(manager, buf, 0);
@@ -222,16 +213,15 @@ void DiaDeviceManager_ScanDevices(DiaDeviceManager * manager)
     }
 }
 
-DiaDeviceManager::DiaDeviceManager()
-{
+DiaDeviceManager::DiaDeviceManager() {
     NeedWorking = 1;
     CoinMoney = 0;
     BanknoteMoney = 0;
     ElectronMoney = 0;
     ServiceMoney = 0;
-    #ifdef SCAN_DEVICES
+#ifdef SCAN_DEVICES
     pthread_create(&WorkingThread, NULL, DiaDeviceManager_WorkingThread, this);
-    #endif
+#endif
 }
 
 DiaDeviceManager::~DiaDeviceManager() {
@@ -239,7 +229,7 @@ DiaDeviceManager::~DiaDeviceManager() {
 
 void DiaDeviceManager_ReportMoney(void *manager, int moneyType, int money) {
     printf("Entered report money\n");
-    DiaDeviceManager * Manager = (DiaDeviceManager *) manager;
+    DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
     if (moneyType == DIA_BANKNOTES) {
         Manager->BanknoteMoney += money;
     } else if (moneyType == DIA_COINS) {
@@ -254,12 +244,10 @@ void DiaDeviceManager_ReportMoney(void *manager, int moneyType, int money) {
     printf("Money: %d\n", money);
 }
 
-void * DiaDeviceManager_WorkingThread(void * manager)
-{
-    DiaDeviceManager * Manager = (DiaDeviceManager *) manager;
+void *DiaDeviceManager_WorkingThread(void *manager) {
+    DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
 
-    while(Manager->NeedWorking)
-    {
+    while (Manager->NeedWorking) {
         DiaDeviceManager_ScanDevices(Manager);
         delay(100);
     }
@@ -267,24 +255,24 @@ void * DiaDeviceManager_WorkingThread(void * manager)
 }
 
 void DiaDeviceManager_PerformTransaction(void *manager, int money) {
-    if (manager == NULL)
-    {
+    if (manager == NULL) {
         printf("DiaDeviceManager Perform Transaction got NULL driver\n");
-	    return;
+        return;
     }
-    DiaDeviceManager * Manager = (DiaDeviceManager *) manager;
+    DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
     printf("DiaDeviceManager got Perform Transaction, money = %d\n", money);
     if (Manager->_CardReader) {
-       DiaCardReader_PerformTransaction(Manager->_CardReader, money);
+        printf("DiaDeviceManager Perform Transaction CardReader\n");
+        DiaCardReader_PerformTransaction(Manager->_CardReader, money);
     } else if (Manager->_Vendotek) {
+        printf("DiaDeviceManager Perform Transaction Vendotek\n");
         DiaVendotek_PerformTransaction(Manager->_Vendotek, money);
     }
 }
 
 void DiaDeviceManager_AbortTransaction(void *manager) {
-    DiaDeviceManager * Manager = (DiaDeviceManager *) manager;
-    if(manager == NULL)
-    {
+    DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
+    if (manager == NULL) {
         printf("DiaDeviceManager Abort Transaction got NULL driver\n");
         return;
     }
@@ -296,9 +284,8 @@ void DiaDeviceManager_AbortTransaction(void *manager) {
 }
 
 int DiaDeviceManager_GetTransactionStatus(void *manager) {
-    DiaDeviceManager * Manager = (DiaDeviceManager *) manager;
-    if(manager == NULL)
-    {
+    DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
+    if (manager == NULL) {
         printf("DiaDeviceManager Get Transaction Status got NULL driver\n");
         return -1;
     }
@@ -312,9 +299,8 @@ int DiaDeviceManager_GetTransactionStatus(void *manager) {
 }
 
 int DiaDeviceManager_GetCardReaderStatus(void *manager) {
-    DiaDeviceManager * Manager = (DiaDeviceManager *) manager;
-    if(manager == NULL)
-    {
+    DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
+    if (manager == NULL) {
         printf("DiaDeviceManager Get Transaction Status got NULL driver\n");
         return -1;
     }

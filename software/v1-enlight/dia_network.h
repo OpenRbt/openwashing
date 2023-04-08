@@ -601,7 +601,9 @@ class DiaNetwork {
             obj_bonus_system = json_object_get(object, "bonus_system_active");
             bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
 
-            //bonusAmount
+            json_t *obj_bonus_amount;
+            obj_bonus_amount = json_object_get(object, "bonusAmount");
+            bonusAmount = (int)json_integer_value(obj_bonus_amount);
 
             json_t *obj_is_authorized;
             obj_is_authorized = json_object_get(object, "IsAuthorized");
