@@ -134,6 +134,7 @@ choose_mode = function()
     if pressed_key == button_cashless then
         can_play_video = false
         set_can_play_video(can_play_video)
+        electron_balance = 0
         return mode_keyboard
     end
     
@@ -196,7 +197,6 @@ wait_mode = function()
         waiting_loops = wait_mode_seconds * 10;
 
         request_transaction(electron_balance)
-        electron_balance = min_electron_balance
         is_transaction_started = true
     end
 

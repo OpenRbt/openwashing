@@ -457,7 +457,7 @@ end
 get_mode_by_pressed_key = function()
     pressed_key = get_key()
     if pressed_key >= 1 and pressed_key<=5 then return mode_work + pressed_key end
-    if pressed_key == 6 and is_paused and is_authorized() then
+    if pressed_key == 6 and is_paused and is_authorized_function() then
             hardware:SetBonuses(math.floor(balance))
             money_wait_seconds = 0
             return mode_thanks 
@@ -581,7 +581,7 @@ hascardreader = function()
   return hardware:HasCardReader()
 end
 
-is_authorized = function ()
+is_authorized_function = function ()
     return hardware:IsAuthorized()
 end
 

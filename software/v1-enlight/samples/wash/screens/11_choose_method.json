@@ -42,23 +42,6 @@
         "is_qr": true,
         "visible":"true"
       },
-      {
-        "id":"bonus",
-        "type":"image",
-        "position": "660;950",
-        "size":"70;40",
-        "src":"pic/arrow.png",
-        "visible":"true"
-      },
-      {
-        "id":"SBP_pic",
-        "type":"image",
-        "position": "1100;680",
-        "size":"132;70",
-        "src":"pic/SBP.png",
-        "visible":"true"
-      },
-      {
         "id":"card_pic",
         "type":"image",
         "position": "1500;700",
