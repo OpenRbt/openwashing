@@ -17,8 +17,8 @@ LIBS= -DCURL_STATICLIB -l:libevent.a -lwiringPi -lpthread `sdl-config --cflags` 
 LIBS+=-l:libjansson.a `curl-config --static-libs` ./3rd/lua53/src/liblua.a -ldl -Wall
 
 prod:
-	$(CC) -o firmware.exe $(SRC) $(FLGS) $(LIBS) -DUSE_GPIO -O3
+	$(CC) -o firmware.exe $(SRC) $(FLGS) $(LIBS) -lstdc++fs -DUSE_GPIO -O3 
 test:
-	$(CC) -o firmware.test.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS)
+	$(CC) -o firmware.test.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS) -lstdc++fs
 debug:
 	$(CC) -o firmware.debug.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS) -DDEBUG -DUSE_GPIO
