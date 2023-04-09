@@ -1,3 +1,18 @@
+#ifndef __has_include
+  static_assert(false, "__has_include not supported");
+#else
+#  if __cplusplus >= 201703L && __has_include(<filesystem>)
+#    include <filesystem>
+     namespace fs = std::filesystem;
+#  elif __has_include(<experimental/filesystem>)
+#    include <experimental/filesystem>
+     namespace fs = std::experimental::filesystem;
+#  elif __has_include(<boost/filesystem.hpp>)
+#    include <boost/filesystem.hpp>
+     namespace fs = boost::filesystem;
+#  endif
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +24,6 @@
 #include <unistd.h>
 #include <wiringPi.h>
 
-#include <filesystem>
 #include <iostream>
 #include <list>
 #include <map>
@@ -1252,7 +1266,7 @@ int main(int argc, char **argv) {
 
     std::list<std::string> directories;
     std::string directory;
-    for (const auto &entry : std::filesystem::directory_iterator(("/media/" + _UserName).c_str()))
+    for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
         directories.push_back(entry.path());
 
     for (auto const &i : directories) {
@@ -1264,7 +1278,7 @@ int main(int argc, char **argv) {
     }
 
     if (_IsDirExist) {
-        for (const auto &entry : std::filesystem::directory_iterator(directory))
+        for (const auto &entry : fs::directory_iterator(directory))
             _FileName = entry.path();
 
         pthread_create(&play_video_thread, NULL, play_video_func, NULL);
