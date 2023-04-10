@@ -347,6 +347,13 @@ pause_mode = function()
     if balance <= 0.01 then return mode_thanks end
     
     suggested_mode = get_mode_by_pressed_key()
+
+    if suggested_mode == 60 and is_authorized_function() then
+        hardware:SetBonuses(math.floor(balance))
+        money_wait_seconds = 0
+        return mode_thanks 
+    end
+
     if suggested_mode >=0 then return suggested_mode end
     return mode_pause
 end
@@ -428,7 +435,8 @@ show_working = function(sub_mode, balance_rur, price_rur)
     working:Set("pause_digits.visible", "false")
     working:Set("balance.value", balance_int)
     working:Set("price.value", price_rur)
-    
+    working:Set("p6_ico.visible", "true")
+    working:Set("p6_ico_stop.visible", "false")
     switch_submodes(sub_mode)
     working:Display()
 end
@@ -440,6 +448,12 @@ show_pause = function(balance_rur, balance_sec, price_rur)
     working:Set("pause_digits.value", sec_int)
     working:Set("balance.value", balance_int)
     working:Set("price.value", price_rur)
+
+    if is_authorized_function() then
+        working:Set("p6_ico.visible", "false")
+        working:Set("p6_ico_stop.visible", "true")
+    end
+
     switch_submodes(6)
     working:Display()
 end
@@ -457,11 +471,6 @@ end
 get_mode_by_pressed_key = function()
     pressed_key = get_key()
     if pressed_key >= 1 and pressed_key<=5 then return mode_work + pressed_key end
-    if pressed_key == 6 and is_paused and is_authorized_function() then
-            hardware:SetBonuses(math.floor(balance))
-            money_wait_seconds = 0
-            return mode_thanks 
-        end
     if pressed_key == 6 then return mode_pause end
     return -1
 end
