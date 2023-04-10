@@ -28,7 +28,7 @@
       {
         "id":"bonus_pic",
         "type":"image",
-        "position": "550;700",
+        "position": "790;700",
         "size":"316;36",
         "src":"pic/bonus.png",
         "visible":"true"
@@ -36,12 +36,13 @@
       {
       	"id":"qr",
         "type":"image",
-        "position": "620;760",
+        "position": "860;760",
         "size":"150;150",
         "src":"pic/qr.png",
         "is_qr": true,
         "visible":"true"
       },
+      {
         "id":"card_pic",
         "type":"image",
         "position": "1500;700",
