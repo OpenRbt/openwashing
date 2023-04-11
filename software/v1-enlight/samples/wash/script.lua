@@ -67,8 +67,9 @@ setup = function()
     -- all these modes MUST follow each other
     mode_work = 50
     mode_pause = 60
-    -- end of modes which MUST follow each other
     
+    -- end of modes which MUST follow each other
+    mode_confirm_end = 110
     mode_thanks = 120
     real_ms_per_loop = 100
     
@@ -143,6 +144,8 @@ run_mode = function(new_mode)
     
     if is_working_mode (new_mode) then return program_mode(new_mode) end
     if new_mode == mode_pause then return pause_mode() end
+    if new_mode == mode_confirm_end then return confirm_end_mode() end
+    
     
     if new_mode == mode_thanks then return thanks_mode() end
 end
@@ -349,13 +352,28 @@ pause_mode = function()
     suggested_mode = get_mode_by_pressed_key()
 
     if suggested_mode == 60 and is_authorized_function() then
-        hardware:SetBonuses(math.floor(balance))
-        money_wait_seconds = 0
-        return mode_thanks 
+        return mode_confirm_end 
     end
 
     if suggested_mode >=0 then return suggested_mode end
     return mode_pause
+end
+
+confirm_end_mode = function ()
+    show_confirm_end()
+    
+    pressed_key = get_key()
+    if pressed_key == 1 then
+        return mode_pause
+    end
+
+    if pressed_key == 6 then
+        hardware:SetBonuses(math.ceil(balance))
+        money_wait_seconds = 0
+        return mode_thanks
+    end
+
+    return mode_confirm_end
 end
 
 thanks_mode = function()
@@ -462,7 +480,11 @@ switch_submodes = function(sub_mode)
     working:Set("cur_p.index", sub_mode-1)  
 end
 
-show_thanks =  function(seconds_float)
+show_confirm_end = function()
+    confirm_end:Display()
+end
+
+show_thanks = function(seconds_float)
     seconds_int = math.ceil(seconds_float)
     thanks:Set("delay_seconds.value", seconds_int)
     thanks:Display()
