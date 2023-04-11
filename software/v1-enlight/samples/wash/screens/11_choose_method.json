@@ -28,16 +28,16 @@
       {
         "id":"bonus_pic",
         "type":"image",
-        "position": "790;700",
-        "size":"316;36",
+        "position": "1307;120",
+        "size":"440;40",
         "src":"pic/bonus.png",
         "visible":"true"
       },
       {
       	"id":"qr",
         "type":"image",
-        "position": "860;760",
-        "size":"150;150",
+        "position": "1298;177",
+        "size":"460;460",
         "src":"pic/qr.png",
         "is_qr": true,
         "visible":"true"

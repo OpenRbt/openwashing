@@ -197,6 +197,7 @@ wait_mode = function()
         waiting_loops = wait_mode_seconds * 10;
 
         request_transaction(electron_balance)
+        print("\n\n\n electron_balance: ", electron_balance)
         is_transaction_started = true
     end
 
