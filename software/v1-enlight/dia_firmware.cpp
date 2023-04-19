@@ -142,15 +142,18 @@ int set_current_state(int balance) {
 }
 
 int set_QR(std::string address) {
-    const char *text = address.c_str();                  // User-supplied text
-    const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
-    const QrCode qr = QrCode::encodeText(text, errCorLvl);
-    SDL_Surface *qrSurface = dia_QRToSurface(qr);
+    std::cout<<"\n\n\naddress:"<<address<<"\n\n\n";
+    if(!address.empty()){
+        const char *text = address.c_str();                  // User-supplied text
+        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
+        const QrCode qr = QrCode::encodeText(text, errCorLvl);
+        SDL_Surface *qrSurface = dia_QRToSurface(qr);
 
-    std::map<std::string, DiaScreenConfig *>::iterator it;
-    for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
-        printf("\n %s", it->second->id.c_str());
-        it->second->SetQr(qrSurface);
+        std::map<std::string, DiaScreenConfig *>::iterator it;
+        for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
+            printf("\n %s", it->second->id.c_str());
+            it->second->SetQr(qrSurface);
+        }
     }
     return 0;
 }
@@ -238,7 +241,7 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
 
 int SetBonuses(int bonuses) {
     std::cout << "\n bonuses: " << bonuses << "\n";
-    return network->SetBonuses(bonuses, getSessionID());
+    return network->SetBonuses(bonuses);
 }
 
 int sendPause() {
