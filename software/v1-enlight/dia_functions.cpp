@@ -379,7 +379,6 @@ SDL_Surface* dia_SurfaceFromBase64(std::string img){
     
     int size = base64_decode(img.c_str(), img.size(), decodeImg, img.size());
     SDL_RWops *rw = SDL_RWFromConstMem(&decodeImg[0], size);
-    
     delete[]decodeImg;
     return IMG_LoadTyped_RW(rw, 1, "PNG");
 }
@@ -400,32 +399,3 @@ SDL_Surface* dia_QRToSurface(QrCode code){
     }
     return qr;
 }
-
-/*
-int DiaScreenConfig::SetQr(std::string qrData, int width, int height){
-    std::map<std::string, DiaScreenItem *>::iterator it;
-    for (it=items_map.begin(); it!=items_map.end(); it++) {
-        if (it->second->isQr) {
-            DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
-
-            SDL_Surface * qr = SDL_CreateRGBSurface(currentItemImage->Picture->flags, width, height, currentItemImage->Picture->format->BitsPerPixel,
-                currentItemImage->Picture->format->Rmask, currentItemImage->Picture->format->Gmask, currentItemImage->Picture->format->Bmask, currentItemImage->Picture->format->Amask);
-            
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    if (qrData[i * height + j] == 1) {
-                        DrawPixel(qr, i, j, 0xffffffff);
-                    } else{
-                        DrawPixel(qr, i, j, 0x000000ff);
-                    }
-                }
-            }
-
-            dia_ScaleSurface(qr, currentItemImage->Picture->w, currentItemImage->Picture->h);
-            currentItemImage->SetPicture(qr);
-        }
-    }
-    return 0;
-}
-
-*/
