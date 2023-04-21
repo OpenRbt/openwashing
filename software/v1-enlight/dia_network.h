@@ -663,7 +663,6 @@ class DiaNetwork {
         result = SendRequest(&json_stop_dispenser_request, &answer, url);
 
         if (result == 0 && answer != "") {
-            json_error_t error;
             return 0;
         }
         printf("sendPause answer %s\n", answer.c_str());
@@ -675,11 +674,9 @@ class DiaNetwork {
         std::string answer;
         std::string json_set_bonuses_request = json_create_set_bonuses(bonuses);
         int result;
-        std::cout<<"\n\n\nbonuses: "<<bonuses<<"\n\n\n";
         result = SendRequest(&json_set_bonuses_request, &answer, url);
 
         if (result == 0 && answer != "") {
-            json_error_t error;
             return 0;
         }
         printf("SetBonuses answer %s\n", answer.c_str());
