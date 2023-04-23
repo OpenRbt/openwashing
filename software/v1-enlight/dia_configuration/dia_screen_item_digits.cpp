@@ -75,6 +75,17 @@ int DiaScreenItemDigits::Init(DiaScreenItem *base_item, json_t * item_json) {
     return 0;
 }
 
+DiaIntPair DiaScreenItemDigits::getSize(){
+    return this->size;
+}
+
+void DiaScreenItemDigits::SetPicture(SDL_Surface * newPicture){
+
+}
+void DiaScreenItemDigits::SetScaledPicture(SDL_Surface * newPicture){
+    
+}
+
 DiaScreenItemDigits::DiaScreenItemDigits() {
     for (int i = 0; i < MAX_DIGITS; i++) {
         OutputRectangles[i] = 0;

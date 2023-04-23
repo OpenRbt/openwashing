@@ -128,23 +128,40 @@ int DiaScreenConfig::AddItem(DiaScreenItem * item) {
 }
 
 int DiaScreenConfig::SetQr(SDL_Surface * qr){
-    SDL_Surface * scaledQR;
+    //SDL_Surface * scaledQR;
+    //SpecificObjectPtr* currentItemImage;
+    //SpecificObjectPtr* currentItemImage;
     std::map<std::string, DiaScreenItem *>::iterator it;
     for (it=items_map.begin(); it!=items_map.end(); it++) {
         if (it->second->isQr) {
             printf("\n \t %s", it->second->id.c_str());
-            DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
-            
-            scaledQR = SDL_DisplayFormat(dia_ScaleSurface(qr, currentItemImage->size.x, currentItemImage->size.y));
+            //currentItemImage->SetPicture(((DiaScreenItemImage *)(it->second->specific_object_ptr))->Picture);
+            //currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
+            //scaledQR = SDL_DisplayFormat(dia_ScaleSurface(qr, it->second->specific_object_ptr->getSize().x, it->second->specific_object_ptr->getSize().y));
+            //scaledQR = SDL_DisplayFormat(dia_ScaleSurface(qr, ((DiaScreenItemImage *)(it->second->specific_object_ptr))->size.x, ((DiaScreenItemImage *)(it->second->specific_object_ptr))->size.y));
 
-            if (currentItemImage->Picture != 0) {
-                SDL_FreeSurface(currentItemImage->Picture);
-                currentItemImage->Picture = 0;
-            }
-            currentItemImage->Picture = scaledQR;
-            currentItemImage->ScaledPicture = scaledQR;
+            //((DiaScreenItemImage *)(it->second->specific_object_ptr))->SetPicture(scaledQR);
+            //((DiaScreenItemImage *)(it->second->specific_object_ptr))->SetScaledPicture(scaledQR);
+            SDL_Surface * scaledSurface = dia_ScaleSurface(qr, it->second->specific_object_ptr->getSize().x, it->second->specific_object_ptr->getSize().y);
+            SDL_Surface * scaledQR = SDL_DisplayFormat(scaledSurface);
+            it->second->specific_object_ptr->SetPicture(scaledQR);
+            it->second->specific_object_ptr->SetScaledPicture(scaledQR);
+            SDL_FreeSurface(scaledSurface);
+            SDL_FreeSurface(scaledQR);
+            //if (scaledQR!=0) {
+                //SDL_FreeSurface(scaledQR);
+            //}
+            
         }
     }
+    /*
+    if(x != -1 && y != -1){
+        //SDL_Surface * scaledQR = SDL_DisplayFormat(dia_ScaleSurface(qr, x, y));
+        SDL_Surface * scaledQR = SDL_DisplayFormat(qr);
+        SDL_FreeSurface(scaledQR);
+    }
+    */
+    //delete currentItemImage;
     return 0;
 }
 

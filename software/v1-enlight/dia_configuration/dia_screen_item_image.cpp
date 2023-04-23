@@ -44,12 +44,18 @@ DiaScreenItemImage::DiaScreenItemImage() {
     OutputRectangle = (SDL_Rect *)malloc(sizeof(SDL_Rect));
 }
 
+DiaIntPair DiaScreenItemImage::getSize(){
+    return this->size;
+}
+
 void DiaScreenItemImage::SetPicture(SDL_Surface * newPicture) {
     if (Picture!=0) {
         SDL_FreeSurface(Picture);
         Picture = 0;
     }
-    Picture = newPicture;
+    
+    //Picture = newPicture;
+    Picture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, 32, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
 }
 
 void DiaScreenItemImage::SetScaledPicture(SDL_Surface * newPicture) {
@@ -57,19 +63,23 @@ void DiaScreenItemImage::SetScaledPicture(SDL_Surface * newPicture) {
         SDL_FreeSurface(ScaledPicture);
         ScaledPicture = 0;
     }
-    ScaledPicture = newPicture;
+    //ScaledPicture = newPicture;
+    ScaledPicture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, 32, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
 }
 
 DiaScreenItemImage::~DiaScreenItemImage() {
     if (Picture!=0) {
+        printf("\nSDL_FreeSurface(Picture);\n");
         SDL_FreeSurface(Picture);
         Picture = 0;
     }
     if (ScaledPicture!=0) {
+        printf("\nSDL_FreeSurface(Picture);\n");
         SDL_FreeSurface(Picture);
         Picture = 0;
     }
     if(OutputRectangle!=0) {
+        printf("\nfree(OutputRectangle);\n");
         free(OutputRectangle);
         OutputRectangle = 0;
     }

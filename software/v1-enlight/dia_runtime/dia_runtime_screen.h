@@ -50,7 +50,6 @@ public:
     }
 
     int (*set_QR_function)(std::string address);
-
     void GenerateQR(std::string address){
         set_QR_function(address);
     }
