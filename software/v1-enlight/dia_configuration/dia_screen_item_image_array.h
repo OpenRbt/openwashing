@@ -9,7 +9,7 @@
 
 #define MAX_PICTURES 32
 
-class DiaScreenItemImageArray {
+class DiaScreenItemImageArray : public SpecificObjectPtr  {
 public:
     DiaIntPair position;
     DiaIntPair size;
@@ -23,9 +23,12 @@ public:
     int appendPos;
 
     int Init(DiaScreenItem * base_item, json_t * item_json);
+    
+    virtual DiaIntPair getSize();
+    virtual void SetPicture(SDL_Surface * newPicture);
+    virtual void SetScaledPicture(SDL_Surface * newPicture);
 
     void AppendPicture(SDL_Surface * newPicture);
-    void SetScaledPicture(SDL_Surface * newPicture);
     //void Rescale();
 
     ~DiaScreenItemImageArray();

@@ -7,7 +7,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-class DiaScreenItemImage {
+class DiaScreenItemImage : public SpecificObjectPtr {
 public:
     DiaIntPair position;
     DiaIntPair size;
@@ -18,8 +18,13 @@ public:
     SDL_Surface * Picture;
     SDL_Surface * ScaledPicture;
     int Init(DiaScreenItem * base_item,json_t * item_json);
-    void SetPicture(SDL_Surface * newPicture);
-    void SetScaledPicture(SDL_Surface * newPicture);
+
+    virtual DiaIntPair getSize();
+    virtual void SetPicture(SDL_Surface * newPicture);
+    virtual void SetScaledPicture(SDL_Surface * newPicture);
+
+    //void SetPicture(SDL_Surface * newPicture);
+    //void SetScaledPicture(SDL_Surface * newPicture);
     void Rescale();
     ~DiaScreenItemImage();
     DiaScreenItemImage();

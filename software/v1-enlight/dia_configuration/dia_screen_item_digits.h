@@ -9,7 +9,7 @@
 
 #define MAX_DIGITS 9
 
-class DiaScreenItemDigits {
+class DiaScreenItemDigits : public SpecificObjectPtr {
 public:
     DiaIntPair position;
     DiaIntPair size;
@@ -22,6 +22,11 @@ public:
     DiaNumber is_vertical;
 
     SDL_Rect * OutputRectangles[MAX_DIGITS];
+
+    virtual DiaIntPair getSize();
+    virtual void SetPicture(SDL_Surface * newPicture);
+    virtual void SetScaledPicture(SDL_Surface * newPicture);
+
     int Init(DiaScreenItem * base_item,json_t * item_json);
     ~DiaScreenItemDigits();
     DiaScreenItemDigits();

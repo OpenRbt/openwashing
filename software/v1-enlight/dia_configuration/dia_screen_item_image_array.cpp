@@ -64,6 +64,16 @@ void DiaScreenItemImageArray::AppendPicture(SDL_Surface * newPicture) {
     appendPos++;
 }
 
+DiaIntPair DiaScreenItemImageArray::getSize(){
+    return this->size;
+}
+void DiaScreenItemImageArray::SetPicture(SDL_Surface * newPicture){
+
+}
+void DiaScreenItemImageArray::SetScaledPicture(SDL_Surface * newPicture){
+
+}
+
 DiaScreenItemImageArray::~DiaScreenItemImageArray() {
     for (int i = 0; i < MAX_PICTURES; i++) {
         if (Pictures[i] != 0) {
