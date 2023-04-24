@@ -28,7 +28,7 @@ public:
     virtual void SetScaledPicture(SDL_Surface * newPicture);
 
     int Init(DiaScreenItem * base_item,json_t * item_json);
-    ~DiaScreenItemDigits();
+    virtual ~DiaScreenItemDigits();
     DiaScreenItemDigits();
 };
 #endif // _DIA_SCREEN_ITEM_DIGITS_H
