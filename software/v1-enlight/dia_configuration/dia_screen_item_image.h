@@ -26,7 +26,7 @@ public:
     //void SetPicture(SDL_Surface * newPicture);
     //void SetScaledPicture(SDL_Surface * newPicture);
     void Rescale();
-    ~DiaScreenItemImage();
+    virtual ~DiaScreenItemImage();
     DiaScreenItemImage();
 };
 #endif // _DIA_SCREEN_ITEM_IMAGE_H
