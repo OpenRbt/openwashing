@@ -61,21 +61,21 @@ class DiaRuntimeHardware {
     int (*CreateSession_function)();
     int CreateSession() {
         int ans = CreateSession_function();
-        std::cout << "\n " << ans;
+        //std::cout << "\n " << ans;
         return ans;
     }
 
     int (*EndSession_function)();
     int EndSession() {
         int ans = EndSession_function();
-        std::cout << "\n " << ans;
+        //std::cout << "\n " << ans;
         return ans;
     }
 
     int (*SetBonuses_function)(int bonuses);
     int SetBonuses(int bonuses) {
         int ans = SetBonuses_function(bonuses);
-        std::cout << "\n " << ans;
+        //std::cout << "\n " << ans;
         return ans;
     }
 

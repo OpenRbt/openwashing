@@ -365,12 +365,16 @@ class DiaNetwork {
 
         if (!(json_is_string(id_json) && json_is_string(qr_json))) {
             json_decref(json);
+            json_decref(id_json);
+            json_decref(qr_json);
             return 1;
         }
 
         sessionID = json_string_value(id_json);
         QR = json_string_value(qr_json);
         json_decref(json);
+        json_decref(id_json);
+        json_decref(qr_json);
         return 0;
     }
 
@@ -454,11 +458,15 @@ class DiaNetwork {
             if (!(json_is_integer(volume_json) && json_is_string(status_json))) {
                 printf("GetVolume answer %s\n", answer.c_str());
                 json_decref(json);
+                json_decref(volume_json);
+                json_decref(status_json);
                 return -1;
             }
             *status = json_string_value(status_json);
             int v = json_integer_value(volume_json);
             json_decref(json);
+            json_decref(volume_json);
+            json_decref(status_json);
             return v;
         }
         printf("GetVolume answer %s\n", answer.c_str());
@@ -612,8 +620,17 @@ class DiaNetwork {
             json_t *obj_qr_data;
             obj_qr_data = json_object_get(object, "qr_data");
             if (json_is_string(obj_qr_data)) {
-                qrData = json_string_value(obj_qr_data);
+                qrData = (std::string)json_string_value(obj_qr_data);
             }
+            json_decref(obj_service_amount);
+            json_decref(obj_open_station);
+            json_decref(obj_button_id);
+            json_decref(obj_last_update);
+            json_decref(obj_last_discount_update);
+            json_decref(obj_bonus_system);
+            json_decref(obj_bonus_amount);
+            json_decref(obj_is_authorized);
+            json_decref(obj_qr_data);
         } while (0);
         json_decref(object);
         return err;
@@ -645,9 +662,10 @@ class DiaNetwork {
                 return 1;
             }
 
-            qrData = json_string_value(qr_data_json);
+            qrData = (std::string)json_string_value(qr_data_json);
 
             json_decref(json);
+            json_decref(qr_data_json);
             return 0;
         }
         printf("GetVolume answer %s\n", answer.c_str());
@@ -797,36 +815,38 @@ class DiaNetwork {
             if (!json_is_integer(obj_var)) {
                 money_report_data->cars_total = 0;
             } else
-                money_report_data->cars_total = json_integer_value(obj_var);
+                money_report_data->cars_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "coins");
             if (!json_is_integer(obj_var)) {
                 money_report_data->coins_total = 0;
             } else
-                money_report_data->coins_total = json_integer_value(obj_var);
+                money_report_data->coins_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "banknotes");
             if (!json_is_integer(obj_var)) {
                 money_report_data->banknotes_total = 0;
             } else
-                money_report_data->banknotes_total = json_integer_value(obj_var);
+                money_report_data->banknotes_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "electronical");
             if (!json_is_integer(obj_var)) {
                 money_report_data->cashless_total = 0;
             } else
-                money_report_data->cashless_total = json_integer_value(obj_var);
+                money_report_data->cashless_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "service");
             if (!json_is_integer(obj_var)) {
                 money_report_data->service_total = 0;
             } else
-                money_report_data->service_total = json_integer_value(obj_var);
+                money_report_data->service_total = (int)json_integer_value(obj_var);
             obj_var = json_object_get(object, "bonuses");
             if (!json_is_integer(obj_var)) {
                 money_report_data->bonuses_total = 0;
             } else
-                money_report_data->bonuses_total = json_integer_value(obj_var);
+                money_report_data->bonuses_total = (int)json_integer_value(obj_var);
+
+            json_decref(obj_var);
         } while (0);
         json_decref(object);
         return err;
@@ -886,22 +906,24 @@ class DiaNetwork {
                     err = 1;
                     break;
                 }
-                relay_id = json_integer_value(obj_var);
+                relay_id = (int)json_integer_value(obj_var);
 
                 obj_var = json_object_get(element, "switchedCount");
                 if (!json_is_integer(obj_var)) {
                     switched_count = 0;
                 } else
-                    switched_count = json_integer_value(obj_var);
+                    switched_count = (int)json_integer_value(obj_var);
 
                 obj_var = json_object_get(element, "totalTimeOn");
                 if (!json_is_integer(obj_var)) {
                     total_time_on = 0;
                 } else
-                    total_time_on = json_integer_value(obj_var);
+                    total_time_on = (int)json_integer_value(obj_var);
                 relay_report_data->RelayStats[relay_id - 1].switched_count = switched_count;
                 relay_report_data->RelayStats[relay_id - 1].total_time_on = total_time_on;
             }
+            json_decref(element);
+            json_decref(obj_var);
         } while (0);
 
         json_decref(object);
