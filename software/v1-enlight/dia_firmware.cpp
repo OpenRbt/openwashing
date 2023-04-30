@@ -142,14 +142,13 @@ int set_current_state(int balance) {
 }
 
 int set_QR(std::string address) {
-    std::cout<<"\naddress:"<<address;
     if(!address.empty()){                  // User-supplied text
         const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
         const QrCode qr = QrCode::encodeText(address.c_str(), errCorLvl);
         SDL_Surface *qrSurface = dia_QRToSurface(qr);
         std::map<std::string, DiaScreenConfig *>::iterator it;
         for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
-            printf("\n %s", it->second->id.c_str());
+            //printf("\n %s", it->second->id.c_str());
             it->second->SetQr(qrSurface);
         }
 

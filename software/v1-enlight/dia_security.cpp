@@ -19,7 +19,7 @@ int dia_security_calculate_md5(const char * str,unsigned char * result, const ch
         return 1;
     }
     //MD5_CTX c;
-    EVP_MD_CTX *ctx;
+    EVP_MD_CTX *ctx = NULL;
     const EVP_MD *type = EVP_sha1();
     //ENGINE *impl;
     char buf[4];
