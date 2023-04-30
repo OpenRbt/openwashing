@@ -384,7 +384,7 @@ int smart_delay_function(void * arg, int ms) {
 /////// End of Runtime functions ///////
 
 int RunProgram() {
-    if ((_IsServerRelayBoard) && (_IsPreflight == 0)) {
+    if ((1 || _IsServerRelayBoard) && (_IsPreflight == 0)) {
         _IntervalsCountProgram++;
     }
     if(_IntervalsCountProgram < 0) {
@@ -393,14 +393,13 @@ int RunProgram() {
     }
     if (_IntervalsCountPreflight>0) {
         _IntervalsCountPreflight --;
-        
     }
     if (_CurrentProgram != _OldProgram) {
         if (_IsPreflight) {
-            if (_IsServerRelayBoard) {
+            if (1 || _IsServerRelayBoard) {
                 int count = 0;
                 int err = 1;
-                while ((err) && (count<4))
+                while ((err) && (count<10))
                 {
                     count++;
                     printf("relay control server board: run program preflight programID=%d\n",_CurrentProgramID);
@@ -410,18 +409,19 @@ int RunProgram() {
                         delay(500);
                     }
                 }
-            } 
+            }
         }
         _OldProgram = _CurrentProgram;
     }
     if ((_IntervalsCountPreflight == 0) && (_IsPreflight)) {
         _IsPreflight = 0;
-        if (_IsServerRelayBoard) {
+        if (1 || _IsServerRelayBoard) {
             _IntervalsCountProgram = 1000;
         } 
     }
     // printf("current program %d, preflight %d, count %d\n", _CurrentProgram,_IsPreflight,_IntervalsCountPreflight);
     if (_IsServerRelayBoard == 0) {
+        // here we run the code for GPIO only if no server board selected
     #ifdef USE_GPIO
     DiaGpio * gpio = config->GetGpio();
     if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
@@ -439,8 +439,7 @@ int RunProgram() {
     if(_IntervalsCountProgram > 20) {
         int count = 0;
         int err = 1;
-        while ((err) && (count<4) && (_CurrentProgramID>=0))
-        {
+        while ((err) && (count<10) && (_CurrentProgramID>=0)) {
             count++;
             printf("relay control server board: run program programID=%d\n",_CurrentProgramID);
             err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
@@ -453,7 +452,7 @@ int RunProgram() {
             }
         }
         _IntervalsCountProgram = 0;
-    } 
+    }
     return 0;
 }
 
