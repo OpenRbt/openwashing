@@ -101,7 +101,10 @@ int _BonusSystemBalance = 0;
 
 bool _IsDirExist = false;
 int _MaxAfkTime = 30;
-std::string _UserName = getlogin();
+//std::string str(s)
+std::string _UserName;
+char* login = getlogin();
+
 std::string _FlashName = "Flash";
 std::string _FileName;
 
@@ -949,6 +952,11 @@ int addCardReader(DiaDeviceManager *manager) {
 }
 
 int main(int argc, char **argv) {
+
+    if(login != NULL){
+        _UserName = login;
+    }
+
     config = 0;
     if (!onlyOneInstanceCheck()) {
         printf("sorry, just one instance of the application allowed\n");
@@ -1007,7 +1015,7 @@ int main(int argc, char **argv) {
     // Let's run a thread to ping server
     pthread_create(&pinging_thread, NULL, pinging_func, NULL);
 
-    std::string stationIDasString;
+    std::string stationIDasString = "";
     int stationID = 0;
     while (stationID == 0) {
         StartScreenMessage(STARTUP_MESSAGE::POST, "POST: check");
@@ -1266,6 +1274,7 @@ int main(int argc, char **argv) {
 
     std::list<std::string> directories;
     std::string directory;
+    std::cout<<"\n\n\n_UserName: "<<_UserName<<"\n\n\n";
     for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
         directories.push_back(entry.path());
 
