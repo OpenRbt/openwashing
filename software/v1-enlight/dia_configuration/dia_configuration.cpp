@@ -233,13 +233,15 @@ int DiaConfiguration::LoadConfig() {
     configuration_json = json_loads(answer.c_str(), 0, &error);
     if (!configuration_json) {
         printf("Error in LoadConfig: %d: %s\n", error.line, error.text );
+        json_decref(configuration_json);
         return 1;
     }
 
     if(!json_is_object(configuration_json)) {
 	    printf("LoadConfig not a JSON\n");
+        json_decref(configuration_json);
                 return 1;
-        }
+    }
 
     json_t *preflight_json = json_object_get(configuration_json, "preflightSec");
     if(json_is_integer(preflight_json)) {
@@ -261,6 +263,7 @@ int DiaConfiguration::LoadConfig() {
     json_t *programs_json = json_object_get(configuration_json, "programs");
     if(!json_is_array(programs_json)) {
         fprintf(stderr, "error: programs is not an array\n");
+        json_decref(configuration_json);
         return 1;
     }
     for (unsigned int i=0;i< json_array_size(programs_json); i++) {
@@ -269,12 +272,14 @@ int DiaConfiguration::LoadConfig() {
         json_t * program_json = json_array_get(programs_json, i);
         if(!json_is_object(program_json)) {
             fprintf(stderr, "error: program %d is not an object\n", i + 1);
+            json_decref(configuration_json);
             return 1;
         }
         // XXX rebuild
         DiaProgram * program = new DiaProgram(program_json);
         if(!program->_InitializedOk) {
             printf("Something's wrong with the program");
+            json_decref(configuration_json);
             return 1;
         }
         tmpPrograms[program->ButtonID] = program;
@@ -282,6 +287,7 @@ int DiaConfiguration::LoadConfig() {
     for (int i = 1;i <= GetProgramsNumber(); i++) {
         if (!tmpPrograms[i]) {
         fprintf(stderr, "error: LoadConfig, program # %d not found\n", i);
+        json_decref(configuration_json);
         return 1;
         }
     }
@@ -320,6 +326,11 @@ int DiaConfiguration::LoadConfig() {
         _LastUpdate = json_integer_value(last_update);
     }
 
+    json_decref(programs_json);
+    json_decref(relay_board_json);
+    json_decref(preflight_json);
+    json_decref(last_update);
+    json_decref(configuration_json);
     return 0;
 }
 
@@ -336,27 +347,32 @@ int DiaConfiguration::LoadDiscounts() {
 
     station_discounts_json = json_loads(answer.c_str(), 0, &error);
     if (!station_discounts_json) {
+        json_decref(station_discounts_json);
         return 1;
     }
 
     if (!json_is_array(station_discounts_json)) {
+        json_decref(station_discounts_json);
         printf("LoadConfig not a JSON\n");
         return 1;
     }
 
     this->_Discounts.clear();
 
+    json_t *button_discount_json;
+    json_t *button_id_json;
+    json_t *button_discount_value_json;
     for (unsigned int i = 0; i < json_array_size(station_discounts_json); i++) {
-        json_t *button_discount_json = json_array_get(station_discounts_json, i);
+        button_discount_json = json_array_get(station_discounts_json, i);
         if (json_is_object(button_discount_json)) {
             int button, dicount;
-            json_t *button_id_json = json_object_get(button_discount_json, "buttonID");
+            button_id_json = json_object_get(button_discount_json, "buttonID");
             if json_is_integer (button_id_json) {
                 button = json_integer_value(button_id_json);
             } else {
                 continue;
             }
-            json_t *button_discount_value_json = json_object_get(button_discount_json, "discount");
+            button_discount_value_json = json_object_get(button_discount_json, "discount");
             if json_is_integer (button_discount_value_json) {
                 dicount = json_integer_value(button_discount_value_json);
                 if (dicount > 0) {
@@ -365,6 +381,10 @@ int DiaConfiguration::LoadDiscounts() {
             }
         }
     }
+    json_decref(station_discounts_json);
+    json_decref(button_discount_json);
+    json_decref(button_id_json);
+    json_decref(button_discount_value_json);
     return 0;
 }
 
