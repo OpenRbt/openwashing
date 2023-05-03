@@ -58,7 +58,6 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         printf("\n\n\nERROR: Setup function is not defined\n\n\n");
         return 1;
     } else {
-        // printf("log: setup function is found\n");
     }
     SetupFunction = new LuaRef(Lua);
     *SetupFunction = setupFunction;
@@ -68,7 +67,6 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         printf("\n\n\nERROR: Loop function is not defined\n\n\n");
         return 1;
     } else {
-        // printf("log: loop function is found\n");
     }
 
     LoopFunction = new LuaRef(Lua);
@@ -155,7 +153,6 @@ int DiaRuntime::AddScreen(DiaRuntimeScreen *screen) {
     all_screens.push_back(screen);
     luabridge::push(Lua, screen);
     lua_setglobal(Lua, screen->Name.c_str());
-    // printf("added screen [%s]\n", screen->Name.c_str());
     return 0;
 }
 
