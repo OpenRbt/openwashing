@@ -14,11 +14,11 @@ FLGS=-I. -I/usr/include/SDL -I./dia_screen -I./3rd/LuaBridge -I./3rd/lua53/inclu
 FLGS+=-I./dia_configuration -I./dia_configuration/storage
 
 LIBS= -DCURL_STATICLIB -l:libevent.a -lwiringPi -lpthread `sdl-config --cflags` `sdl-config --libs` -lSDL -lSDL_image -lSDL_ttf -l:libcrypto.a
-LIBS+=-l:libjansson.a `curl-config --static-libs` ./3rd/lua53/src/liblua.a -ldl -Wall
+LIBS+=-l:libjansson.a `curl-config --static-libs` ./3rd/lua53/src/liblua.a -ldl -Wall -lstdc++fs
 
 prod:
-	$(CC) -o firmware.exe $(SRC) $(FLGS) $(LIBS) -lstdc++fs -DUSE_GPIO -O3 
+	$(CC) -o firmware.exe $(SRC) $(FLGS) $(LIBS) -DUSE_GPIO -O3 
 test:
-	$(CC) -o firmware.test.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS) -lstdc++fs
+	$(CC) -o firmware.test.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS)
 debug:
 	$(CC) -o firmware.debug.exe -O0 -ggdb3 $(SRC) $(FLGS) $(LIBS) -DDEBUG -DUSE_GPIO
