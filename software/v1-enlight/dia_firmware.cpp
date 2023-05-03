@@ -44,7 +44,6 @@
 
 #define DIA_VERSION "v1.8-enlight"
 
-// #define USE_GPIO
 #define USE_KEYBOARD
 
 // TODO: must be set via API
@@ -148,7 +147,6 @@ int set_QR(std::string address) {
         SDL_Surface *qrSurface = dia_QRToSurface(qr);
         std::map<std::string, DiaScreenConfig *>::iterator it;
         for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
-            //printf("\n %s", it->second->id.c_str());
             it->second->SetQr(qrSurface);
         }
 
@@ -501,7 +499,6 @@ inline int64_t micro_seconds_since(struct timespec *stored_time) {
     struct timespec current_time;
     clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
     int64_t delta_time_passed_since_last_smart_delay_us = (current_time.tv_sec - stored_time->tv_sec) * 1000000 + (current_time.tv_nsec - stored_time->tv_nsec) / 1000;
-    // printf("passed %d\n", (int)delta_time_passed_since_last_smart_delay_us);
     if (delta_time_passed_since_last_smart_delay_us > MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
         return MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC;
     }
@@ -588,7 +585,6 @@ int RunProgram() {
             _IntervalsCountProgram = 1000;
         }
     }
-    // printf("current program %d, preflight %d, count %d\n", _CurrentProgram,_IsPreflight,_IntervalsCountPreflight);
     if (_IsServerRelayBoard == 0) {
 #ifdef USE_GPIO
         DiaGpio *gpio = config->GetGpio();

@@ -48,10 +48,8 @@ public:
     int ReadPortBytes() {
         _Buf[0]=0;
         _Bytes_Read = 0;
-        //printf("reading from handler %d\n", _handler);
         int n = read(_handler, _Buf, sizeof(_Buf)-1);
         if(n <= 0) {
-            //printf("error reading serial %s\n", _PortName);
             return 0;
         }
         else {

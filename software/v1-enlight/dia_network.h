@@ -267,8 +267,6 @@ class DiaNetwork {
         for (int i = 1; i < 255; i++) {
             std::string reqUrl = reqIP + std::to_string(i);
 
-            // printf("%s\n", reqUrl.c_str());
-
             err = this->SendPingRequestGet(reqUrl);
 
             if (!err) {

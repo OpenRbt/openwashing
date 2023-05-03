@@ -34,7 +34,6 @@ void DiaScreenItemImage::Rescale() {
         if (x!=size.x || y!= size.y) {
             SDL_Surface * surfaceCur = dia_ScaleSurface(Picture, size.x, size.y);
             SetScaledPicture(surfaceCur);
-            //SDL_FreeSurface(surfaceCur);
         }
     }
 }
@@ -56,7 +55,6 @@ void DiaScreenItemImage::SetPicture(SDL_Surface * newPicture) {
     }
     
     Picture = newPicture;
-    //Picture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, 32, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
 }
 
 void DiaScreenItemImage::SetScaledPicture(SDL_Surface * newPicture) {
@@ -65,7 +63,6 @@ void DiaScreenItemImage::SetScaledPicture(SDL_Surface * newPicture) {
         ScaledPicture = 0;
     }
     ScaledPicture = newPicture;
-    //ScaledPicture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, newPicture->format->BitsPerPixel, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
 }
 
 DiaScreenItemImage::~DiaScreenItemImage() {

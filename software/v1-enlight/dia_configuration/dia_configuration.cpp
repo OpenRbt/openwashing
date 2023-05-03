@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 int DiaConfiguration::InitFromFile() {
-    //printf("loading config from resource: '%s' / '%s'\n", _Folder.c_str(), DIA_DEFAULT_FIRMWARE_FILENAME);
     std::string resource = dia_get_resource(_Folder.c_str(), DIA_DEFAULT_FIRMWARE_FILENAME);
     return InitFromString(resource.c_str());
 }
@@ -33,9 +32,7 @@ int DiaConfiguration::InitFromString(const char * configuration_json) {
         return CONFIGURATION_STATUS::ERROR_JSON;
     }
 
-    //printf("json parsed\n");
     int res = InitFromJson(root);
-    //printf("configuration parsed\n");
     json_decref(root);
     return res;
 }
@@ -107,8 +104,6 @@ int DiaConfiguration::InitFromJson(json_t * configuration_json) {
     }
 
     _Name = json_string_value(name_json);
-    //printf("Configuration's name is parsed: ");
-    //printf("%s\n", _Name.c_str());
 
     // Let's unpack Screens
     json_t * screens_json = json_object_get(configuration_json, "screens");
@@ -147,7 +142,6 @@ int DiaConfiguration::InitFromJson(json_t * configuration_json) {
             printf("resolution parsing error: [%s], must by like [848x480]\n", _Resolution.c_str());
         }
     }
-    //printf("resolution:[%s], parsed ad [%d]*[%d]\n", _Resolution.c_str(), _ResX, _ResY);
 
     _NeedToRotateTouchScreen = 0;
     json_t *touch_rotate_json = json_object_get(configuration_json, "touch_rotate");
@@ -192,7 +186,6 @@ int DiaConfiguration::InitFromJson(json_t * configuration_json) {
     _RelaysNumber = json_integer_value(relays_json);
 
     for(unsigned int i = 0; i < json_array_size(screens_json); i++) {
-        //printf("screen loop \n");
         json_t * screen_json = json_array_get(screens_json, i);
         if(!json_is_object(screen_json)) {
             fprintf(stderr, "error: screen %d is not an object\n", i + 1);
@@ -267,8 +260,6 @@ int DiaConfiguration::LoadConfig() {
         return 1;
     }
     for (unsigned int i=0;i< json_array_size(programs_json); i++) {
-        //printf("programs reading loop\n");
-        //printf("\n\n\nprogram number: %d", i);
         json_t * program_json = json_array_get(programs_json, i);
         if(!json_is_object(program_json)) {
             fprintf(stderr, "error: program %d is not an object\n", i + 1);
