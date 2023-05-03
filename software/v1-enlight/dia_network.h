@@ -894,8 +894,8 @@ class DiaNetwork {
                 break;
             }
 
-            json_t *element;
-            json_t *obj_var;
+            json_t *element = new json_t();
+            json_t *obj_var = new json_t();
             int i, relay_id, switched_count, total_time_on;
 
             json_array_foreach(obj_array, i, element) {
