@@ -96,7 +96,7 @@ std::string dia_read_file(const char * file_name) {
         return "";
     }
 
-    std::string result;
+    std::string result = "";
     FILE *fp;
     fp = fopen(file_name, "r");
     if (fp == 0) {
@@ -370,7 +370,14 @@ SDL_Surface* dia_SurfaceFromBase64(std::string img){
     int size = base64_decode(img.c_str(), img.size(), decodeImg, img.size());
     SDL_RWops *rw = SDL_RWFromConstMem(&decodeImg[0], size);
     delete[]decodeImg;
-    return IMG_LoadTyped_RW(rw, 1, "PNG");
+
+    std::string str = "PNG";
+    char *cstr = new char[str.length() + 1];
+    strcpy(cstr, str.c_str());
+
+    SDL_Surface* interface = IMG_LoadTyped_RW(rw, 1, cstr);
+    delete [] cstr;
+    return interface;
 }
 
 SDL_Surface* dia_QRToSurface(QrCode code){
