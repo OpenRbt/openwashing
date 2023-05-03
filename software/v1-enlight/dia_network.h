@@ -191,6 +191,7 @@ class DiaNetwork {
             printf("CURL code is wrong %d, http code %d\n", res, http_code);
             DestructCurlAnswer(&raw_answer);
             curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
             return 1;
         }
         *answer = raw_answer.data;
@@ -300,7 +301,7 @@ class DiaNetwork {
         // Convert MAC bytes to hexagonal with fixed width
         std::stringstream ss;
         for (int i = 0; i < outSize; ++i) {
-            ss << std::setw(2) << std::setfill('0') << std::hex << (int)abs(mac[i]);
+            ss << std::setw(2) << std::setfill('0') << std::hex << (int)abs(mac[i]); //Первое, на что ругается valgrind
         }
         return ss.str();
     }

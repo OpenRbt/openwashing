@@ -208,7 +208,7 @@ SDL_Surface *dia_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 
     double scaleX = static_cast<double>(Surface->w) / static_cast<double>(Width);
     double scaleY = static_cast<double>(Surface->h) / static_cast<double>(Height);
-    printf( "scale X: %.3g, scaleY: %.3g\n",scaleX, scaleY);
+    //printf( "scale X: %.3g, scaleY: %.3g\n",scaleX, scaleY);
     
     for(int x=0;x<Width;x++) {
         // we have choosen a column here

@@ -34,6 +34,7 @@ void DiaScreenItemImage::Rescale() {
         if (x!=size.x || y!= size.y) {
             SDL_Surface * surfaceCur = dia_ScaleSurface(Picture, size.x, size.y);
             SetScaledPicture(surfaceCur);
+            //SDL_FreeSurface(surfaceCur);
         }
     }
 }
@@ -54,8 +55,8 @@ void DiaScreenItemImage::SetPicture(SDL_Surface * newPicture) {
         Picture = 0;
     }
     
-    //Picture = newPicture;
-    Picture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, 32, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
+    Picture = newPicture;
+    //Picture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, 32, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
 }
 
 void DiaScreenItemImage::SetScaledPicture(SDL_Surface * newPicture) {
@@ -63,8 +64,8 @@ void DiaScreenItemImage::SetScaledPicture(SDL_Surface * newPicture) {
         SDL_FreeSurface(ScaledPicture);
         ScaledPicture = 0;
     }
-    //ScaledPicture = newPicture;
-    ScaledPicture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, 32, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
+    ScaledPicture = newPicture;
+    //ScaledPicture = SDL_CreateRGBSurfaceFrom(newPicture->pixels, newPicture->w, newPicture->h, newPicture->format->BitsPerPixel, newPicture->pitch, newPicture->format->Rmask, newPicture->format->Gmask, newPicture->format->Bmask, newPicture->format->Amask);
 }
 
 DiaScreenItemImage::~DiaScreenItemImage() {
@@ -162,9 +163,9 @@ int dia_screen_item_image_notify(DiaScreenItem * base_item, void * image_ptr, st
         } else {
             newImg = SDL_DisplayFormatAlpha(tmpImg);
         }
-        SDL_FreeSurface(tmpImg);
         obj->SetPicture(newImg);
         obj->Rescale();
+        SDL_FreeSurface(tmpImg);
 	} else {
         printf("unknown key for image object: '%s' \n", key.c_str());
         return 1;

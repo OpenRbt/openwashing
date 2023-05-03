@@ -2,6 +2,7 @@
 #include "dia_functions.h"
 #include "dia_screen_item_image.h"
 #include "dia_functions.h"
+#include <iostream>
 #include <chrono>
 
 int DiaScreenConfig::Display(DiaScreen * screen) {
@@ -131,15 +132,14 @@ int DiaScreenConfig::SetQr(SDL_Surface * qr){
     std::map<std::string, DiaScreenItem *>::iterator it;
     for (it=items_map.begin(); it!=items_map.end(); it++) {
         if (it->second->isQr) {
-            printf("\n \t %s", it->second->id.c_str());
             SDL_Surface * scaledSurface = dia_ScaleSurface(qr, it->second->specific_object_ptr->getSize().x, it->second->specific_object_ptr->getSize().y);
             SDL_Surface * scaledQR = SDL_DisplayFormat(scaledSurface);
-            it->second->specific_object_ptr->SetPicture(scaledQR);
             it->second->specific_object_ptr->SetScaledPicture(scaledQR);
+            //SDL_FreeSurface(scaledQR);
             SDL_FreeSurface(scaledSurface);
-            SDL_FreeSurface(scaledQR);
         }
     }
+    
     return 0;
 }
 
