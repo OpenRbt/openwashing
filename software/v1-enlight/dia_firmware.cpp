@@ -114,6 +114,8 @@ std::string _SessionID = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
+pthread_t key_press_thread;
+pthread_t play_video_thread;
 
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
@@ -1017,7 +1019,7 @@ int main(int argc, char **argv) {
     StartScreenMessage(STARTUP_MESSAGE::SERVER_IP, "Server IP: Searching...");
     while (need_to_find) {
         StartScreenUpdateIP();
-    	serverIP = network->GetCentralServerAddress();
+    	serverIP = network->GetCentralServerAddress(_to_be_destroyed);
     	if (serverIP.empty()) {
         	printf("Error: Center Server is unavailable. Next try...\n");
             StartScreenMessage(STARTUP_MESSAGE::SERVER_IP, "Server IP: Searching...");
@@ -1309,6 +1311,7 @@ int main(int argc, char **argv) {
     // Runtime start
     int keypress = 0;
     int mousepress = 0;
+    SDL_Event event;
 
     // Call Lua setup function
     config->GetRuntime()->Setup();

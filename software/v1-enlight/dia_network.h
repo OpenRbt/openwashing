@@ -329,7 +329,7 @@ class DiaNetwork {
         int res = -1;
 
 	    printf("Looking for Central Wash server ...\n");
-        res = this->SearchCentralServer(serverIP);
+        res = this->SearchCentralServer(serverIP, stop);
         
         if (res == 0) {
             printf("Server located on: %s\n", serverIP.c_str());
