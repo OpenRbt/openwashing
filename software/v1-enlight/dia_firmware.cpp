@@ -114,8 +114,8 @@ std::string _SessionID = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
-pthread_t key_press_thread;
-pthread_t play_video_thread;
+//pthread_t key_press_thread;
+//pthread_t play_video_thread;
 
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
@@ -1001,7 +1001,7 @@ int main(int argc, char **argv) {
     }
     StartScreenUpdate();
 
-    pthread_create(&key_press_thread, NULL, key_press_func, NULL);
+    //pthread_create(&key_press_thread, NULL, key_press_func, NULL);
 
     printf("Looking for firmware in [%s]\n", folder.c_str());
     printf("Version: %s\n", DIA_VERSION);
