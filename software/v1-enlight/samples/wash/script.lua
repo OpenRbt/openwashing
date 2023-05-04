@@ -619,6 +619,10 @@ end
 create_session = function()
     hardware:CreateSession();
     qr = hardware:GetQR();
-    welcome:GenerateQR(qr);
-    session_id = hardware:GetSessionID();
+    if qr == nil or qr == '' then
+        choose_method:Set("qr.visible", "false")
+    else
+        welcome:GenerateQR(qr);
+        session_id = hardware:GetSessionID();
+    end
 end

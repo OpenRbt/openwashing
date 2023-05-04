@@ -44,11 +44,16 @@ DiaScreenItemImage::DiaScreenItemImage() {
     OutputRectangle = (SDL_Rect *)malloc(sizeof(SDL_Rect));
 }
 
+DiaIntPair DiaScreenItemImage::getSize(){
+    return this->size;
+}
+
 void DiaScreenItemImage::SetPicture(SDL_Surface * newPicture) {
     if (Picture!=0) {
         SDL_FreeSurface(Picture);
         Picture = 0;
     }
+    
     Picture = newPicture;
 }
 
@@ -62,14 +67,17 @@ void DiaScreenItemImage::SetScaledPicture(SDL_Surface * newPicture) {
 
 DiaScreenItemImage::~DiaScreenItemImage() {
     if (Picture!=0) {
+        printf("\nSDL_FreeSurface(Picture);\n");
         SDL_FreeSurface(Picture);
         Picture = 0;
     }
     if (ScaledPicture!=0) {
+        printf("\nSDL_FreeSurface(Picture);\n");
         SDL_FreeSurface(Picture);
         Picture = 0;
     }
     if(OutputRectangle!=0) {
+        printf("\nfree(OutputRectangle);\n");
         free(OutputRectangle);
         OutputRectangle = 0;
     }
@@ -152,9 +160,9 @@ int dia_screen_item_image_notify(DiaScreenItem * base_item, void * image_ptr, st
         } else {
             newImg = SDL_DisplayFormatAlpha(tmpImg);
         }
-        SDL_FreeSurface(tmpImg);
         obj->SetPicture(newImg);
         obj->Rescale();
+        SDL_FreeSurface(tmpImg);
 	} else {
         printf("unknown key for image object: '%s' \n", key.c_str());
         return 1;

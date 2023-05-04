@@ -27,11 +27,9 @@ class DiaRuntimeHardware {
     void* light_object;
     int (*turn_light_function)(void* object, int pin, int animation_id);
     int TurnLight(int light_pin, int AnimationID) {
-        // printf("light pin:[%d]->animation:[%d];\n", light_pin, AnimationID);
         if (light_object && turn_light_function) {
             turn_light_function(light_object, light_pin, AnimationID);
         } else {
-            // printf("error: NIL object or function TurnLight\n");
         }
         return 0;
     }
@@ -42,7 +40,6 @@ class DiaRuntimeHardware {
         if (/*program_object && */ turn_program_function) {
             turn_program_function(program_object, ProgramNum);
         } else {
-            // printf("error: NIL object or function TurnActivator\n");
         }
         return 0;
     }
@@ -61,21 +58,18 @@ class DiaRuntimeHardware {
     int (*CreateSession_function)();
     int CreateSession() {
         int ans = CreateSession_function();
-        std::cout << "\n " << ans;
         return ans;
     }
 
     int (*EndSession_function)();
     int EndSession() {
         int ans = EndSession_function();
-        std::cout << "\n " << ans;
         return ans;
     }
 
     int (*SetBonuses_function)(int bonuses);
     int SetBonuses(int bonuses) {
         int ans = SetBonuses_function(bonuses);
-        std::cout << "\n " << ans;
         return ans;
     }
 
@@ -120,7 +114,6 @@ class DiaRuntimeHardware {
     void* coin_object;
     int (*get_coins_function)(void* object);
     int GetCoins() {
-        // printf("get coins;\n");
         if (coin_object && get_coins_function) {
             return get_coins_function(coin_object);
         } else {
@@ -132,7 +125,6 @@ class DiaRuntimeHardware {
     void* banknote_object;
     int (*get_banknotes_function)(void* object);
     int GetBanknotes() {
-        // printf("get banknotes;\n");
         if (banknote_object && get_banknotes_function) {
             return get_banknotes_function(banknote_object);
         } else {

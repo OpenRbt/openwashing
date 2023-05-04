@@ -29,7 +29,6 @@ public:
     int (*set_value_function)(void * object, const char *element, const char * key, const char * value);
 
     int SetValue(const char * key, const char * value) {
-        //printf("[%s]->[%s] = [%s];\n", Name.c_str(), key, value);
         if(object!=0 && set_value_function!=0) {
             char * buf = strdup(key);
             char * sub_key = buf;
@@ -50,7 +49,6 @@ public:
     }
 
     int (*set_QR_function)(std::string address);
-
     void GenerateQR(std::string address){
         set_QR_function(address);
     }

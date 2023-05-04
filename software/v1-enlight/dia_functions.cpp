@@ -89,16 +89,14 @@ void build_decoding_table() {
 }
 
 std::string dia_read_file(const char * file_name) {
-    //fprintf(stderr, "resource requested:[%s]\n", file_name);
     if (access(file_name, F_OK) != -1) {
         // file exists
-        //fprintf(stderr, "[%s] found\n", file_name);
     } else {
         fprintf(stderr, "[%s] not found\n", file_name);
         return "";
     }
 
-    std::string result;
+    std::string result = "";
     FILE *fp;
     fp = fopen(file_name, "r");
     if (fp == 0) {
@@ -208,20 +206,16 @@ SDL_Surface *dia_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 
     double scaleX = static_cast<double>(Surface->w) / static_cast<double>(Width);
     double scaleY = static_cast<double>(Surface->h) / static_cast<double>(Height);
-    printf( "scale X: %.3g, scaleY: %.3g\n",scaleX, scaleY);
     
     for(int x=0;x<Width;x++) {
         // we have choosen a column here
         double xNewLeft = x;
         double xNewRight = x+1;
         ScalerCoefs xCoefs(xNewLeft * scaleX, xNewRight * scaleX, Surface->w);
-        //xCoefs.Print();
         for (int y=0;y<Height;y++) {
             double yNewLeft = y;
             double yNewRight = y+1;
             ScalerCoefs yCoefs(yNewLeft * scaleY, yNewRight * scaleY, Surface->h);
-            //yCoefs.Print();
-            //exit(1);
             // let's loop original image
             double partsSum = 0;
             double Apart = 0;
@@ -244,7 +238,6 @@ SDL_Surface *dia_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
                     if (Xold>=Surface->w || Yold>=Surface->h) {
                         printf("READ: [%d:%d] of [%d,%d]\n", Xold, Yold, Surface->w, Surface->h);
                     }
-                    //printf("size: [%d:%d] of [%d,%d]\n", Width, Height, Surface->w, Surface->h);
                     Uint32 pixel = ReadPixel(Surface, Xold, Yold);
                                         
                     Apart = (pixel & 0xFF000000) >> 24;
@@ -252,19 +245,16 @@ SDL_Surface *dia_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
                     Cpart = (pixel & 0x0000FF00) >> 8;
                     Dpart = pixel & 0x000000ff;
                     
-                    //printf(" pixel: %x of %e:%e:%e:%e _ %d\n", pixel, Apart, Bpart, Cpart, Dpart);
                     ApartSum += Apart * part;
                     BpartSum += Bpart * part;
                     CpartSum += Cpart * part;
                     DpartSum += Dpart * part;
                     partsSum += part;
-                    //printf("part: %e\n", part);
                 }
             }
             if (partsSum <0.01 && partsSum>0.01) {
                 partsSum = 1;
             }
-            //printf("Apart:%e, sum:%e",ApartSum, partsSum);
             Uint32 newPixel = (int)(ApartSum / partsSum); 
             if (newPixel>255) {
                 newPixel = 255;
@@ -380,7 +370,14 @@ SDL_Surface* dia_SurfaceFromBase64(std::string img){
     int size = base64_decode(img.c_str(), img.size(), decodeImg, img.size());
     SDL_RWops *rw = SDL_RWFromConstMem(&decodeImg[0], size);
     delete[]decodeImg;
-    return IMG_LoadTyped_RW(rw, 1, "PNG");
+
+    std::string str = "PNG";
+    char *cstr = new char[str.length() + 1];
+    strcpy(cstr, str.c_str());
+
+    SDL_Surface* interface = IMG_LoadTyped_RW(rw, 1, cstr);
+    delete [] cstr;
+    return interface;
 }
 
 SDL_Surface* dia_QRToSurface(QrCode code){

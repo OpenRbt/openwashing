@@ -2,6 +2,7 @@
 #include "dia_functions.h"
 #include "dia_screen_item_image.h"
 #include "dia_functions.h"
+#include <iostream>
 #include <chrono>
 
 int DiaScreenConfig::Display(DiaScreen * screen) {
@@ -54,23 +55,19 @@ int DiaScreenConfig::Display(DiaScreen * screen) {
     return 0;
 }
 int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
-    //printf("trying to initialize a screen config\n");
     Folder = folder;
     if(screen_json == 0) {
         printf("screen json is null\n");
         return 1;
     }
 
-    //printf("1\n");
     json_t * id_json = json_object_get(screen_json, "id");
     if(!json_is_string(id_json)) {
         fprintf(stderr, "error: screen id is not a string\n");
         return 1;
     }
     std::string id_str=  json_string_value(id_json);
-    //printf("2\n");
     id = id_str;
-    //printf("screen id is found '%s' \n", id.c_str());
 
     json_t * src_json = json_object_get(screen_json, "src");
     if (src_json == 0) {
@@ -78,7 +75,6 @@ int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
         // parse screen from current file
         if(InitDetails(screen_json) != 0) return 1;
     } else {
-        //printf("src is found\n");
         // parse screen from external source
         if (!json_is_string(src_json)) {
             printf("src is not a string");
@@ -86,7 +82,6 @@ int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
         }
         
         const char * src_char = json_string_value(src_json);
-        //std::string src = src_char;
 
         json_t * screen_implementation = dia_get_resource_json(folder.c_str(), src_char);
         if (screen_implementation == 0) {
@@ -107,7 +102,6 @@ int DiaScreenConfig::Init(std::string folder, json_t * screen_json) {
         return 1;
     }
     src = json_string_value(src_json);
-    //printf("screen definition loaded: %s:%s\n", id.c_str(), src.c_str());
     return 0;
 }
 
@@ -128,23 +122,16 @@ int DiaScreenConfig::AddItem(DiaScreenItem * item) {
 }
 
 int DiaScreenConfig::SetQr(SDL_Surface * qr){
-    SDL_Surface * scaledQR;
     std::map<std::string, DiaScreenItem *>::iterator it;
     for (it=items_map.begin(); it!=items_map.end(); it++) {
         if (it->second->isQr) {
-            printf("\n \t %s", it->second->id.c_str());
-            DiaScreenItemImage * currentItemImage = (DiaScreenItemImage *)(it->second->specific_object_ptr);
-            
-            scaledQR = SDL_DisplayFormat(dia_ScaleSurface(qr, currentItemImage->size.x, currentItemImage->size.y));
-
-            if (currentItemImage->Picture != 0) {
-                SDL_FreeSurface(currentItemImage->Picture);
-                currentItemImage->Picture = 0;
-            }
-            currentItemImage->Picture = scaledQR;
-            currentItemImage->ScaledPicture = scaledQR;
+            SDL_Surface * scaledSurface = dia_ScaleSurface(qr, it->second->specific_object_ptr->getSize().x, it->second->specific_object_ptr->getSize().y);
+            SDL_Surface * scaledQR = SDL_DisplayFormat(scaledSurface);
+            it->second->specific_object_ptr->SetScaledPicture(scaledQR);
+            SDL_FreeSurface(scaledSurface);
         }
     }
+    
     return 0;
 }
 
@@ -172,7 +159,6 @@ int DiaScreenConfig::InitDetails(json_t *screen_json) {
         return 1;
     }
     for(unsigned int i = 0; i < json_array_size(items_json); i++) {
-        //printf("loop by screen items %d\n", i);
         json_t * item_json = json_array_get(items_json, i);
         if (!json_is_object(item_json)) {
             printf("error: can't initialize one of display items %d\n", i+1);
@@ -213,7 +199,6 @@ int dia_screen_display_screen (void * screen_object, void * screen_config) {
         // if everything is the same we do not need to do anything
         return 1;
     }
-    // else
     screen->LastDisplayed = screenConfig->id;
     screenConfig->Changed = 0;
     printf("real2:[%s]\n",screenConfig->id.c_str() );

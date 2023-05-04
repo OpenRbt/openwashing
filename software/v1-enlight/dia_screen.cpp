@@ -12,8 +12,6 @@
 #include "dia_screen.h"
 
 DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
-    //printf("SDLInitStart\n"); fflush(stdout);
-    //printf("SDLInit finished properly, SDLShowCursor started\n"); fflush(stdout);
     
     if (hideCursor) {
         SDL_Cursor* cursor;
@@ -21,10 +19,7 @@ DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
         cursor = SDL_CreateCursor((uint8_t *)cursorData, (uint8_t *)cursorData, 8, 8, 4, 4);
         SDL_SetCursor(cursor);
     }
-    //printf("SDLShowCursor_2\n"); fflush(stdout);
-	//printf("trying to set a video mode \n"); fflush(stdout);
 	delay(100);
-    //if (!(Canvas = SDL_SetVideoMode(resX, resY, DEPTH, SDL_HWSURFACE))) {  
     int additionalOption = 0;
     if (fullScreen) {
         additionalOption = SDL_FULLSCREEN;
@@ -44,10 +39,6 @@ DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
 
 void DiaScreen_DrawPage1(DiaScreen * screen, int num) {
     printf("src1_s\n");
-    //SDL_BlitSurface(screen->StationNumbers,
-    //            screen->StationNumRect[(num)%10],
-    //            screen->Canvas,
-    //            screen->Dest);
     printf("src2_b2\n");
     SDL_Flip(screen->Canvas);
     printf("src2_b3\n");

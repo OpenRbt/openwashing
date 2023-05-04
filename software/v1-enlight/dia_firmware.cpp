@@ -44,7 +44,6 @@
 
 #define DIA_VERSION "v1.8-enlight"
 
-// #define USE_GPIO
 #define USE_KEYBOARD
 
 // TODO: must be set via API
@@ -102,7 +101,10 @@ int _BonusSystemBalance = 0;
 
 bool _IsDirExist = false;
 int _MaxAfkTime = 30;
-std::string _UserName = getlogin();
+//std::string str(s)
+//std::string _UserName;
+//char* login = getlogin();
+
 std::string _FlashName = "Flash";
 std::string _FileName;
 
@@ -142,17 +144,17 @@ int set_current_state(int balance) {
 }
 
 int set_QR(std::string address) {
-    std::cout<<"\n\n\naddress:"<<address<<"\n\n\n";
-    if(!address.empty()){
-        const char *text = address.c_str();                  // User-supplied text
+    if(!address.empty()){                  // User-supplied text
         const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
-        const QrCode qr = QrCode::encodeText(text, errCorLvl);
+        const QrCode qr = QrCode::encodeText(address.c_str(), errCorLvl);
         SDL_Surface *qrSurface = dia_QRToSurface(qr);
-
         std::map<std::string, DiaScreenConfig *>::iterator it;
         for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
-            printf("\n %s", it->second->id.c_str());
             it->second->SetQr(qrSurface);
+        }
+
+        if (qrSurface!=0) {
+            SDL_FreeSurface(qrSurface);
         }
     }
     return 0;
@@ -500,7 +502,6 @@ inline int64_t micro_seconds_since(struct timespec *stored_time) {
     struct timespec current_time;
     clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
     int64_t delta_time_passed_since_last_smart_delay_us = (current_time.tv_sec - stored_time->tv_sec) * 1000000 + (current_time.tv_nsec - stored_time->tv_nsec) / 1000;
-    // printf("passed %d\n", (int)delta_time_passed_since_last_smart_delay_us);
     if (delta_time_passed_since_last_smart_delay_us > MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC) {
         return MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC;
     }
@@ -587,7 +588,6 @@ int RunProgram() {
             _IntervalsCountProgram = 1000;
         }
     }
-    // printf("current program %d, preflight %d, count %d\n", _CurrentProgram,_IsPreflight,_IntervalsCountPreflight);
     if (_IsServerRelayBoard == 0) {
 #ifdef USE_GPIO
         DiaGpio *gpio = config->GetGpio();
@@ -952,6 +952,7 @@ int addCardReader(DiaDeviceManager *manager) {
 }
 
 int main(int argc, char **argv) {
+
     config = 0;
     if (!onlyOneInstanceCheck()) {
         printf("sorry, just one instance of the application allowed\n");
@@ -1010,7 +1011,7 @@ int main(int argc, char **argv) {
     // Let's run a thread to ping server
     pthread_create(&pinging_thread, NULL, pinging_func, NULL);
 
-    std::string stationIDasString;
+    std::string stationIDasString = "";
     int stationID = 0;
     while (stationID == 0) {
         StartScreenMessage(STARTUP_MESSAGE::POST, "POST: check");
@@ -1267,6 +1268,7 @@ int main(int argc, char **argv) {
     pthread_create(&run_program_thread, NULL, run_program_func, NULL);
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
 
+/*
     std::list<std::string> directories;
     std::string directory;
     for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
@@ -1286,7 +1288,7 @@ int main(int argc, char **argv) {
 
         pthread_create(&play_video_thread, NULL, play_video_func, NULL);
     }
-
+*/
     while (!keypress) {
         // Call Lua loop function
         config->GetRuntime()->Loop();

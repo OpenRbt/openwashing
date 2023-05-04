@@ -1,5 +1,6 @@
 #include "dia_security.h"
 #include <openssl/md5.h>
+#include <openssl/evp.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -17,10 +18,15 @@ int dia_security_calculate_md5(const char * str,unsigned char * result, const ch
     if (result == 0 || str == 0) {
         return 1;
     }
-    MD5_CTX c;
+    //MD5_CTX c;
+    EVP_MD_CTX *ctx = NULL;
+    const EVP_MD *type = EVP_sha1();
+    //ENGINE *impl;
     char buf[4];
-    MD5_Init(&c);
-    MD5_Update(&c, str, strlen(str));
+    EVP_DigestInit_ex(ctx, type, NULL);
+    //MD5_Init(&c);
+    EVP_DigestUpdate(ctx, str, strlen(str));
+    //MD5_Update(&c, str, strlen(str));
     buf[0]='4';
     buf[2]='8';
     buf[1]='z';
@@ -28,9 +34,12 @@ int dia_security_calculate_md5(const char * str,unsigned char * result, const ch
     buf[2]='3';
     buf[1]='9';
     buf[3]='2';
-    MD5_Update(&c, buf, 4);
-    MD5_Update(&c, salt, strlen(salt));
-    MD5_Final(result, &c);
+    EVP_DigestUpdate(ctx, buf, 4);
+    //MD5_Update(&c, buf, 4);
+    EVP_DigestUpdate(ctx, salt, strlen(salt));
+    //MD5_Update(&c, salt, strlen(salt));
+    EVP_DigestFinal_ex(ctx, result, NULL);
+    //MD5_Final(result, &c);
     return 0;
 }
 

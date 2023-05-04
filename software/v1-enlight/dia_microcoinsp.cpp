@@ -47,7 +47,6 @@ int DiaMicroCoinSp_Detect(DiaDevice * device)
 }
 
 int DiaMicroCoinSp_SendRequest(DiaDevice * device, char * bufToSend, char additionalBytesCount, char cmd) {
-    //printf("send request %d\n", additionalBytesCount); fflush(stdout);
     DiaMicroCoinSp_SendRequestRaw(device, bufToSend, additionalBytesCount, cmd);
     return DiaMicroCoinSp_GetAnswerRaw(device);
 }
@@ -69,7 +68,6 @@ void DiaMicroCoinSp_SendRequestRaw(DiaDevice *device, char * bufToSend, char add
         sum-=buf[i];
     }
     buf[4+additionalBytesCount] = sum;
-    //printf(">> ");
     //DiaMicroCoinSp_PrintBuffer(buf, 5 + additionalBytesCount);
     DiaDevice_WritePort(device, buf, 5 + additionalBytesCount);
 }
