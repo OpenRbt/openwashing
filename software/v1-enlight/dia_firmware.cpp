@@ -1038,6 +1038,7 @@ int main(int argc, char **argv) {
             printf("Wrong post number received [%s]\n", stationIDasString.c_str());
         }
         if (stationID == 0) {
+            sleep(1);
             StartScreenMessage(STARTUP_MESSAGE::POST, "POST is not assigned");
             printf("POST is not assigned\n");
             sleep(1);
