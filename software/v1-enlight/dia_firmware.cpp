@@ -57,6 +57,8 @@
 
 DiaConfiguration *config;
 
+SDL_Event _event;
+
 int _IntervalsCount;
 
 // Public key for signing every request to Central Server.
@@ -74,7 +76,6 @@ int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
 
 int _to_be_destroyed = 0;
-int _start_listening_key_press = 0;
 
 int _CurrentBalance = 0;
 int _CurrentProgram = -1;
@@ -114,7 +115,6 @@ std::string _SessionID = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
-//pthread_t key_press_thread;
 //pthread_t play_video_thread;
 
 int GetKey(DiaGpio *_gpio) {
@@ -779,22 +779,12 @@ void *get_volume_func(void *ptr) {
 }
 
 void KeyPress(){
-    SDL_Event event;
-    while (SDL_PollEvent(&event)){
-        if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
+    while (SDL_PollEvent(&_event)){
+        if (_event.type == SDL_QUIT || _event.key.keysym.sym == SDLK_ESCAPE) {
             printf("SDL_QUIT\n");
             _to_be_destroyed = 1;
         }
     }
-}
-
-void * key_press_func(void * ptr) {
-    while(!_to_be_destroyed && !_start_listening_key_press) {
-        KeyPress();
-        delay(100);
-    }
-    pthread_exit(0);
-    return 0;
 }
 
 int RecoverRelay() {
@@ -1001,8 +991,6 @@ int main(int argc, char **argv) {
     }
     StartScreenUpdate();
 
-    //pthread_create(&key_press_thread, NULL, key_press_func, NULL);
-
     printf("Looking for firmware in [%s]\n", folder.c_str());
     printf("Version: %s\n", DIA_VERSION);
 
@@ -1027,6 +1015,11 @@ int main(int argc, char **argv) {
             StartScreenMessage(STARTUP_MESSAGE::SERVER_IP, "Server IP: " + serverIP);
             need_to_find = 0;
         }	    
+
+        KeyPress();
+        if (_to_be_destroyed) {
+            return 1;
+        }
     }
 
     network->SetHostAddress(serverIP);
@@ -1051,6 +1044,7 @@ int main(int argc, char **argv) {
             sleep(1);
         }
 
+        KeyPress();
         if (_to_be_destroyed) {
             return 1;
         }
@@ -1110,6 +1104,10 @@ int main(int argc, char **argv) {
             default:
                 break;
         }
+        KeyPress();
+        if (_to_be_destroyed) {
+            return 1;
+        }
     }
 
     printf("Config initialization...\n");
@@ -1122,6 +1120,10 @@ int main(int argc, char **argv) {
         StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Failed to create screen");
         while (1) {
             sleep(1);
+            KeyPress();
+            if (_to_be_destroyed) {
+                return 1;
+            }
         }
         return 1;
     break;
@@ -1130,6 +1132,10 @@ int main(int argc, char **argv) {
         StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Failed to init GPIO");
         while (1) {
             sleep(1);
+            KeyPress();
+            if (_to_be_destroyed) {
+                return 1;
+            }
         }
         return 1;
     break;
@@ -1138,6 +1144,10 @@ int main(int argc, char **argv) {
         StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Bad configuration file");
         while (1) {
             sleep(1);
+            KeyPress();
+            if (_to_be_destroyed) {
+                return 1;
+            }
         }
         return 1;
     break;
@@ -1158,6 +1168,7 @@ int main(int argc, char **argv) {
             sleep(1);
         }
 
+        KeyPress();
         if (_to_be_destroyed) {
             return 1;
         }
@@ -1174,6 +1185,7 @@ int main(int argc, char **argv) {
             sleep(1);
         }
         
+        KeyPress();
         if (_to_be_destroyed) {
             return 1;
         }
@@ -1194,6 +1206,7 @@ int main(int argc, char **argv) {
             }
             sleep(1);
 
+            KeyPress();
             if (_to_be_destroyed) {
                 return 1;
             }
@@ -1311,7 +1324,6 @@ int main(int argc, char **argv) {
     // Runtime start
     int keypress = 0;
     int mousepress = 0;
-    SDL_Event event;
 
     // Call Lua setup function
     config->GetRuntime()->Setup();
@@ -1376,8 +1388,8 @@ int main(int argc, char **argv) {
             }
         }
 
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
+        while (SDL_PollEvent(&_event)) {
+            switch (_event.type) {
                 case SDL_QUIT:
                     keypress = 1;
                     printf("Quitting by sdl_quit\n");
@@ -1386,7 +1398,7 @@ int main(int argc, char **argv) {
                     mousepress = 1;
                     break;
                 case SDL_KEYDOWN:
-                    switch (event.key.keysym.sym) {
+                    switch (_event.key.keysym.sym) {
                         case SDLK_UP:
                             // Debug service money addition
                             _BalanceBanknotes += 10;
