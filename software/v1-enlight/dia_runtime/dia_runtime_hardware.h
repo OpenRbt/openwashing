@@ -57,38 +57,74 @@ class DiaRuntimeHardware {
 
     int (*CreateSession_function)();
     int CreateSession() {
-        int ans = CreateSession_function();
-        return ans;
+        if(CreateSession_function){
+            int ans = CreateSession_function();
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function CreateSession\n");
+        }
+        return 0;
     }
 
     int (*EndSession_function)();
     int EndSession() {
-        int ans = EndSession_function();
-        return ans;
+        if(EndSession_function){
+            int ans = EndSession_function();
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function EndSession_function\n");
+        }
+        return 0;
     }
 
     int (*SetBonuses_function)(int bonuses);
     int SetBonuses(int bonuses) {
-        int ans = SetBonuses_function(bonuses);
-        return ans;
+        if(SetBonuses_function){
+            int ans = SetBonuses_function(bonuses);
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function SetBonuses_function\n");
+        }
+        return 0;
     }
 
     std::string (*getQR_function)();
     std::string GetQR() {
-        std::string QR = getQR_function();
-        return QR;
+        if(getQR_function){
+            std::string QR = getQR_function();
+            return QR;
+        }
+        else{
+            printf("error: NIL object or function getQR_function\n");
+        }
+        return "0";
     }
 
     int (*sendPause_function)();
     int SendPause() {
-        int answer = sendPause_function();
-        return answer;
+        if(sendPause_function){
+            int ans = sendPause_function();
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function sendPause_function\n");
+        }
+        return 0;
     }
 
     std::string (*getSessionID_function)();
     std::string GetSessionID() {
-        std::string sessionID = getSessionID_function();
-        return sessionID;
+        if(getSessionID_function){
+            std::string sessionID = getSessionID_function();
+            return sessionID;
+        }
+        else{
+            printf("error: NIL object or function getSessionID_function\n");
+        }
+        return "0";
     }
 
     int (*set_current_state_function)(int balance);

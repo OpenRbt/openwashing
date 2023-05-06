@@ -1229,34 +1229,6 @@ class DiaNetwork {
         return res;
     }
 
-    std::string json_create_station_reports_dates(int id, int startDate, int endDate) {
-        json_t *object = json_object();
-
-        json_object_set_new(object, "id", json_integer(id));
-        json_object_set_new(object, "startDate", json_integer(startDate));
-        json_object_set_new(object, "endDate", json_integer(endDate));
-        char *str = json_dumps(object, 0);
-        std::string res = str;
-
-        free(str);
-        str = 0;
-        json_decref(object);
-        return res;
-    }
-
-    std::string json_create_station_reports_current_money(int id) {
-        json_t *object = json_object();
-
-        json_object_set_new(object, "id", json_integer(id));
-        char *str = json_dumps(object, 0);
-        std::string res = str;
-
-        free(str);
-        str = 0;
-        json_decref(object);
-        return res;
-    }
-
     std::string json_create_get_qr() {
         return json_create_get_volue();
     }
