@@ -100,7 +100,7 @@ class DiaRuntimeHardware {
         else{
             printf("error: NIL object or function getQR_function\n");
         }
-        return "0";
+        return "";
     }
 
     int (*sendPause_function)();
@@ -124,7 +124,7 @@ class DiaRuntimeHardware {
         else{
             printf("error: NIL object or function getSessionID_function\n");
         }
-        return "0";
+        return "";
     }
 
     int (*set_current_state_function)(int balance);
