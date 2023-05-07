@@ -71,6 +71,14 @@
         "click_id":"6"
       },
       {
+      	"id":"p6_ico_stop",
+        "type":"image",
+        "position": "1610;713",
+        "size":"249;249",
+        "src":"programs/p6/stop_ico.png",
+        "visible":"false"
+      },
+      {
         "id":"p7_ico",
         "type":"image",
         "position": "1610;713",

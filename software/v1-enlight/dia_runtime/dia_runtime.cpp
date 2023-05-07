@@ -1,14 +1,15 @@
 #include "dia_runtime.h"
+
 #include <string>
 
-int DiaRuntime::Init(std::string folder, json_t * src_json, json_t * include_json) {
+int DiaRuntime::Init(std::string folder, json_t *src_json, json_t *include_json) {
     hardware = 0;
-    if(src_json == 0) {
+    if (src_json == 0) {
         printf("error: script src is null\n");
         return 1;
     }
 
-    if(!json_is_string(src_json)) {
+    if (!json_is_string(src_json)) {
         printf("error: script src is not string\n");
         return 1;
     }
@@ -17,21 +18,19 @@ int DiaRuntime::Init(std::string folder, json_t * src_json, json_t * include_jso
     std::string includeNew = "";
 
     // Let's do the same with include file
-    if(include_json != 0) {
+    if (include_json != 0) {
         printf("include file is in use\n");
-        if(!json_is_string(include_json)) {
+        if (!json_is_string(include_json)) {
             printf("error: include json is not string\n");
             return 1;
         }
         includeNew = json_string_value(include_json);
     }
 
-    
-
     return InitStr(folder, srcNew, includeNew);
 }
 
-void printMessage(const std::string& s) {
+void printMessage(const std::string &s) {
     fprintf(stderr, "%s\n", s.c_str());
 }
 
@@ -59,7 +58,6 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         printf("\n\n\nERROR: Setup function is not defined\n\n\n");
         return 1;
     } else {
-        // printf("log: setup function is found\n");
     }
     SetupFunction = new LuaRef(Lua);
     *SetupFunction = setupFunction;
@@ -69,7 +67,6 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         printf("\n\n\nERROR: Loop function is not defined\n\n\n");
         return 1;
     } else {
-        //printf("log: loop function is found\n");
     }
 
     LoopFunction = new LuaRef(Lua);
@@ -77,68 +74,85 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
 
     printf("RUNTIME'S PROPERLY INITIALIZED..\n");
     getGlobalNamespace(Lua)
-    .beginClass<DiaRuntimeScreen>("DiaRuntimeScreen")
-    .addConstructor<void(*)()>()
-    .addFunction("Display", &DiaRuntimeScreen::Display)
-    .addFunction("Set", &DiaRuntimeScreen::SetValue)
-    .endClass();
+        .beginClass<DiaRuntimeScreen>("DiaRuntimeScreen")
+        .addConstructor<void (*)()>()
+        .addFunction("Display", &DiaRuntimeScreen::Display)
+        .addFunction("Set", &DiaRuntimeScreen::SetValue)
+        .addFunction("GenerateQR", &DiaRuntimeScreen::GenerateQR)
+        .endClass();
 
     getGlobalNamespace(Lua)
-    .beginClass<DiaRuntimeHardware>("DiaRuntimeHardware")
-    .addConstructor<void(*)()>()
-    .addFunction("TurnLight", &DiaRuntimeHardware::TurnLight)
-    .addFunction("TurnProgram", &DiaRuntimeHardware::TurnProgram)
-    .addFunction("GetCoins", &DiaRuntimeHardware::GetCoins)
-    .addFunction("GetBanknotes", &DiaRuntimeHardware::GetBanknotes)
-    .addFunction("GetService", &DiaRuntimeHardware::GetService)
-    .addFunction("GetIsPreflight", &DiaRuntimeHardware::GetIsPreflight)
-    .addFunction("GetOpenLid", &DiaRuntimeHardware::GetOpenLid)
-    .addFunction("SmartDelay", &DiaRuntimeHardware::SmartDelay)
-    .addFunction("GetKey", &DiaRuntimeHardware::GetKey)
-    .addFunction("SendReceipt", &DiaRuntimeHardware::SendReceipt)
-    .addFunction("IncrementCars", &DiaRuntimeHardware::IncrementCars)
-    .addFunction("GetElectronical", &DiaRuntimeHardware::GetElectronical)
-    .addFunction("RequestTransaction", &DiaRuntimeHardware::RequestTransaction)
-    .addFunction("GetHours", &DiaRuntimeHardware::GetHours)
-    .addFunction("GetMinutes", &DiaRuntimeHardware::GetMinutes)
-    .addFunction("GetVolume", &DiaRuntimeHardware::GetVolume)
-    .addFunction("GetSensorActive", &DiaRuntimeHardware::GetSensorActive)
-    .addFunction("StartFluidFlowSensor", &DiaRuntimeHardware::StartFluidFlowSensor)
-    .addFunction("GetTransactionStatus", &DiaRuntimeHardware::GetTransactionStatus)
-    .addFunction("AbortTransaction", &DiaRuntimeHardware::AbortTransaction)
-    .addFunction("SetCurrentState", &DiaRuntimeHardware::SetCurrentState)
-    .addFunction("HasCardReader", &DiaRuntimeHardware::HasCardReader)
-    .endClass();
+        .beginClass<DiaRuntimeHardware>("DiaRuntimeHardware")
+        .addConstructor<void (*)()>()
+        .addFunction("TurnLight", &DiaRuntimeHardware::TurnLight)
+        .addFunction("TurnProgram", &DiaRuntimeHardware::TurnProgram)
+        .addFunction("GetCoins", &DiaRuntimeHardware::GetCoins)
+        .addFunction("GetBanknotes", &DiaRuntimeHardware::GetBanknotes)
+        .addFunction("GetService", &DiaRuntimeHardware::GetService)
+        .addFunction("GetBonuses", &DiaRuntimeHardware::GetBonuses)
+        .addFunction("SetBonuses", &DiaRuntimeHardware::SetBonuses)
+        .addFunction("GetIsPreflight", &DiaRuntimeHardware::GetIsPreflight)
+        .addFunction("GetOpenLid", &DiaRuntimeHardware::GetOpenLid)
+        .addFunction("SmartDelay", &DiaRuntimeHardware::SmartDelay)
+        .addFunction("GetKey", &DiaRuntimeHardware::GetKey)
+        .addFunction("CreateSession", &DiaRuntimeHardware::CreateSession)
+        .addFunction("EndSession", &DiaRuntimeHardware::EndSession)
+        .addFunction("GetCanPlayVideo", &DiaRuntimeHardware::GetCanPlayVideo)
+        .addFunction("SetCanPlayVideo", &DiaRuntimeHardware::SetCanPlayVideo)
+        .addFunction("GetIsPlayingVideo", &DiaRuntimeHardware::GetIsPlayingVideo)
+        .addFunction("SetIsPlayingVideo", &DiaRuntimeHardware::SetIsPlayingVideo)
+        .addFunction("GetQR", &DiaRuntimeHardware::GetQR)
+        .addFunction("SendPause", &DiaRuntimeHardware::SendPause)
+        .addFunction("GetSessionID", &DiaRuntimeHardware::GetSessionID)
+        .addFunction("SendReceipt", &DiaRuntimeHardware::SendReceipt)
+        .addFunction("IncrementCars", &DiaRuntimeHardware::IncrementCars)
+        .addFunction("GetElectronical", &DiaRuntimeHardware::GetElectronical)
+        .addFunction("RequestTransaction", &DiaRuntimeHardware::RequestTransaction)
+        .addFunction("GetHours", &DiaRuntimeHardware::GetHours)
+        .addFunction("GetMinutes", &DiaRuntimeHardware::GetMinutes)
+        .addFunction("GetVolume", &DiaRuntimeHardware::GetVolume)
+        .addFunction("GetSensorActive", &DiaRuntimeHardware::GetSensorActive)
+        .addFunction("StartFluidFlowSensor", &DiaRuntimeHardware::StartFluidFlowSensor)
+        .addFunction("BonusSystemIsActive", &DiaRuntimeHardware::BonusSystemIsActive)
+        .addFunction("IsAuthorized", &DiaRuntimeHardware::IsAuthorized)
+        .addFunction("BonusSystemRefreshActiveQR", &DiaRuntimeHardware::BonusSystemRefreshActiveQR)
+        .addFunction("BonusSystemConfirmSession", &DiaRuntimeHardware::BonusSystemConfirmSession)
+        .addFunction("BonusSystemStartSession", &DiaRuntimeHardware::BonusSystemStartSession)
+        .addFunction("BonusSystemFinishSession", &DiaRuntimeHardware::BonusSystemFinishSession)
+        .addFunction("GetTransactionStatus", &DiaRuntimeHardware::GetTransactionStatus)
+        .addFunction("AbortTransaction", &DiaRuntimeHardware::AbortTransaction)
+        .addFunction("SetCurrentState", &DiaRuntimeHardware::SetCurrentState)
+        .addFunction("HasCardReader", &DiaRuntimeHardware::HasCardReader)
+        .endClass();
 
     getGlobalNamespace(Lua)
-    .beginClass<DiaRuntimeRegistry>("DiaRuntimeRegistry")
-    .addFunction("Value", &DiaRuntimeRegistry::Value)
-    .addFunction("ValueFromStation", &DiaRuntimeRegistry::ValueFromStation)
-    .addFunction("ValueInt", &DiaRuntimeRegistry::ValueInt)
-    .addFunction("SetValueByKeyIfNotExists", &DiaRuntimeRegistry::SetValueByKeyIfNotExists)
-    .addFunction("SetValueByKey", &DiaRuntimeRegistry::SetValueByKey)
-    .addFunction("GetPostID", &DiaRuntimeRegistry::GetPostID)
-    .addFunction("GetPrice", &DiaRuntimeRegistry::GetPrice)
-    .addFunction("GetDiscount", &DiaRuntimeRegistry::GetDiscount)
-    .addFunction("GetIsFinishingProgram", &DiaRuntimeRegistry::GetIsFinishingProgram)
-    .endClass();
+        .beginClass<DiaRuntimeRegistry>("DiaRuntimeRegistry")
+        .addFunction("Value", &DiaRuntimeRegistry::Value)
+        .addFunction("ValueFromStation", &DiaRuntimeRegistry::ValueFromStation)
+        .addFunction("ValueInt", &DiaRuntimeRegistry::ValueInt)
+        .addFunction("SetValueByKeyIfNotExists", &DiaRuntimeRegistry::SetValueByKeyIfNotExists)
+        .addFunction("SetValueByKey", &DiaRuntimeRegistry::SetValueByKey)
+        .addFunction("GetPostID", &DiaRuntimeRegistry::GetPostID)
+        .addFunction("GetPrice", &DiaRuntimeRegistry::GetPrice)
+        .addFunction("GetDiscount", &DiaRuntimeRegistry::GetDiscount)
+        .addFunction("GetIsFinishingProgram", &DiaRuntimeRegistry::GetIsFinishingProgram)
+        .endClass();
 
     getGlobalNamespace(Lua)
-    .beginClass<DiaRuntimeSvcWeather>("DiaRuntimeSvcWeather")
-    .addFunction("GetTempDegrees", &DiaRuntimeSvcWeather::GetTempDegrees)
-    .addFunction("GetTempFraction", &DiaRuntimeSvcWeather::GetTempFraction)
-    .addFunction("IsNegative", &DiaRuntimeSvcWeather::isNegative)
-    .endClass();
+        .beginClass<DiaRuntimeSvcWeather>("DiaRuntimeSvcWeather")
+        .addFunction("GetTempDegrees", &DiaRuntimeSvcWeather::GetTempDegrees)
+        .addFunction("GetTempFraction", &DiaRuntimeSvcWeather::GetTempFraction)
+        .addFunction("IsNegative", &DiaRuntimeSvcWeather::isNegative)
+        .endClass();
 
     return 0;
 }
 
-int DiaRuntime::AddScreen(DiaRuntimeScreen * screen) {
+int DiaRuntime::AddScreen(DiaRuntimeScreen *screen) {
     assert(screen);
     all_screens.push_back(screen);
     luabridge::push(Lua, screen);
     lua_setglobal(Lua, screen->Name.c_str());
-    //printf("added screen [%s]\n", screen->Name.c_str());
     return 0;
 }
 
@@ -169,21 +183,21 @@ int DiaRuntime::AddAnimations() {
     return 0;
 }
 
-int DiaRuntime::AddHardware(DiaRuntimeHardware * hw) {
+int DiaRuntime::AddHardware(DiaRuntimeHardware *hw) {
     luabridge::push(Lua, hw);
     lua_setglobal(Lua, "hardware");
     printf("added hardware\n");
     return 0;
 }
 
-int DiaRuntime::AddRegistry(DiaRuntimeRegistry * reg) {
+int DiaRuntime::AddRegistry(DiaRuntimeRegistry *reg) {
     luabridge::push(Lua, reg);
     lua_setglobal(Lua, "registry");
     printf("added registry\n");
     return 0;
 }
 
-int DiaRuntime::AddSvcWeather(DiaRuntimeSvcWeather * svc) {
+int DiaRuntime::AddSvcWeather(DiaRuntimeSvcWeather *svc) {
     luabridge::push(Lua, svc);
     lua_setglobal(Lua, "weather");
     printf("added weather\n");
@@ -214,11 +228,11 @@ DiaRuntime::~DiaRuntime() {
     if (LoopFunction) {
         delete LoopFunction;
     }
-    if(Lua!=0) {
+    if (Lua != 0) {
         lua_close(Lua);
         Lua = 0;
     }
-    for(std::list<DiaRuntimeScreen *>::iterator it = all_screens.begin(); it!=all_screens.end(); it++) {
+    for (std::list<DiaRuntimeScreen *>::iterator it = all_screens.begin(); it != all_screens.end(); it++) {
         delete *it;
     }
 }

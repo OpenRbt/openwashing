@@ -3,6 +3,12 @@
 -- setup is running at the start just once
 setup = function()
     -- global variables
+
+    is_paused = false
+
+    can_play_video = false
+    is_playing_video = false
+
     balance = 0.0
     start_balance = 0
 
@@ -10,6 +16,7 @@ setup = function()
     max_electron_balance = 900
     electron_balance = 0
     volume = 0
+    tmp_volume = 0
     
     balance_seconds = 0
     cash_balance = 0.0
@@ -32,6 +39,8 @@ setup = function()
     button_cashless = 101
     button_begin = 102
     button_cancel = 103
+    button_pause = 201
+    button_play = 202
 
     price_p = {}
     
@@ -42,6 +51,7 @@ setup = function()
     
     mode_welcome = 10
     mode_choose = 20
+    mode_play_video = 25
     mode_fundraising = 30
     mode_keyboard = 40
     mode_wait = 50
@@ -81,6 +91,7 @@ end
 run_mode = function(new_mode)   
     if new_mode == mode_welcome then return welcome_mode() end
     if new_mode == mode_choose then return choose_mode() end
+    if new_mode == mode_play_video then return play_video_mode() end
     if new_mode == mode_fundraising then return fundraising_mode() end
     if new_mode == mode_keyboard then return keyboard_mode() end
     if new_mode == mode_wait then return wait_mode() end
@@ -105,16 +116,45 @@ choose_mode = function()
     run_stop()
     check_open_lid()
 
+    can_play_video = true
+    set_can_play_video(can_play_video)
+
+    if get_is_playing_video() then
+        return mode_play_video
+    end
+
     turn_light(0, animation.idle)
 
     pressed_key = get_key()
-    if pressed_key == button_cash then return mode_fundraising end
-    if pressed_key == button_cashless then return mode_keyboard end
+    if pressed_key == button_cash then
+        can_play_video = false
+        set_can_play_video(can_play_video)
+        return mode_fundraising 
+    end
+    if pressed_key == button_cashless then
+        can_play_video = false
+        set_can_play_video(can_play_video)
+        electron_balance = 0
+        return mode_keyboard
+    end
     
     update_balance()
-    if balance > 0.99 then return mode_fundraising end
+    if balance > 0.99 then 
+        can_play_video = false
+        set_can_play_video(can_play_video)
+        return mode_fundraising 
+    end
 
     return mode_choose
+end
+
+play_video_mode = function()
+
+    if not get_is_playing_video() then
+        return mode_choose
+    end
+
+    return mode_play_video
 end
 
 keyboard_mode = function()
@@ -157,7 +197,7 @@ wait_mode = function()
         waiting_loops = wait_mode_seconds * 10;
 
         request_transaction(electron_balance)
-        electron_balance = min_electron_balance
+        print("\n\n\n electron_balance: ", electron_balance)
         is_transaction_started = true
     end
 
@@ -218,6 +258,7 @@ start_filling_mode = function()
     if pressed_key == button_begin then
         start_balance = balance
         start_fluid_flow_sensor(volume * 1000)
+        set_current_state(balance)
         return mode_filling
     end
 
@@ -227,19 +268,33 @@ start_filling_mode = function()
 end
 
 filling_mode = function()
-    run_fillin()
-    show_filling(balance)
-    check_open_lid()
-    
-    turn_light(0, animation.one_button)
-    
-    balance = price_p[1] * (volume - get_volume() / 1000)
 
+    check_open_lid()
+
+    pressed_key = get_key()
+
+    if pressed_key == button_pause then
+        is_paused = not is_paused
+        if is_paused == false then 
+            start_fluid_flow_sensor(volume * 1000)
+        else
+            volume = volume - get_volume() / 1000
+            hardware:SendPause()
+        end
+
+    end
+
+    if is_paused == false then 
+        show_filling(balance)
+        turn_light(0, animation.one_button)
+        balance = price_p[1] * (volume - get_volume() / 1000)
+    end
+    
     if balance <= 0.01 then
         balance = 0
         return mode_thanks
     end
-
+    
     if get_sensor_active() == false then
         balance = 0
         waiting_loops = 0
@@ -343,6 +398,15 @@ show_start_filling = function(balance_rur, volume_rur)
 end
 
 show_filling = function(balance_rur)
+
+    if is_paused == true then
+        filling:Set("play.visible", "true")
+        filling:Set("pause.visible", "false")
+    else
+        filling:Set("play.visible", "false")
+        filling:Set("pause.visible", "true")
+    end
+
     balance_int = math.ceil(balance_rur)
     filling:Set("balance.value", balance_int)
     set_progressbar(balance_rur / start_balance)
@@ -508,12 +572,12 @@ increment_cars = function()
 end
 
 run_fillin = function()
-    set_current_state(balance, 1)
+    set_current_state(balance)
     run_program(1)
 end
 
 run_stop = function()
-    set_current_state(balance, 0)
+    set_current_state(balance)
     run_program(0)
 end
 
@@ -533,8 +597,8 @@ abort_transaction = function()
     return hardware:AbortTransaction()
 end
 
-set_current_state = function(current_balance, current_program)
-    return hardware:SetCurrentState(math.floor(current_balance), current_program)
+set_current_state = function(current_balance)
+    return hardware:SetCurrentState(math.floor(current_balance))
 end
 
 update_balance = function()
@@ -586,7 +650,7 @@ get_time_minutes = function()
 end
 
 get_volume = function()
-    return hardware:GetVolume()
+    return hardware:GetVolume() 
 end
 
 start_fluid_flow_sensor = function(volume_rur)
@@ -595,6 +659,22 @@ end
 
 get_sensor_active = function()
     return hardware:GetSensorActive()
+end
+
+get_can_play_video = function()
+    return hardware:GetCanPlayVideo()
+end
+
+set_can_play_video = function(canPlayVideo)
+    hardware:SetCanPlayVideo(canPlayVideo)
+end
+
+get_is_playing_video = function()
+    return hardware:GetIsPlayingVideo()
+end
+
+set_is_playing_video = function(isPlayingVideo)
+    hardware:SetIsPlayingVideo(isPlayingVideo)
 end
 
 need_to_open_lid = function()

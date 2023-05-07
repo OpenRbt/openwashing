@@ -36,3 +36,6 @@
 *.exe.debug
 /software/v1-enlight/3rd/lua53/src/lua
 /software/v1-enlight/3rd/lua53/src/luac
+
+# IDEs
+software/v1-enlight/.vscode/settings.json

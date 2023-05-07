@@ -7,6 +7,13 @@
 #include "dia_screen_config.h"
 #include "dia_all_items.h"
 
+class SpecificObjectPtr {
+    public:
+        virtual DiaIntPair getSize() = 0;
+        virtual void SetPicture(SDL_Surface * newPicture) = 0;
+        virtual void SetScaledPicture(SDL_Surface * newPicture) = 0;
+};
+
 class DiaScreenItem {
 private:
     std::map<std::string, std::string> items;
@@ -15,7 +22,7 @@ public:
     std::string type;
     DiaBoolean visible;
     DiaScreenConfig *Parent;
-
+    bool isQr;
 
     // virtual function to display an element
 
@@ -26,7 +33,8 @@ public:
     int (*notify_ptr)(DiaScreenItem *, void *, std::string);
 
     // the object pointer to the specific item;
-    void * specific_object_ptr;
+    SpecificObjectPtr * specific_object_ptr;
+    
 
     // end of virtual functions block
     DiaScreenItem(DiaScreenConfig * newParent);

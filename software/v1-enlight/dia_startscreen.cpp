@@ -57,7 +57,6 @@ int StartScreenInit(std::string path) {
         return -1;
     }
     TTF_Init();
-    //logo = IMG_Load("./resources/logo.png");
     logo = IMG_Load_RW(SDL_RWFromMem((void *)LOGO, LOGO_SIZE),1);
     line_size = info->current_h / (MAX_MESSAGES * 2);
     if (vertical){
@@ -68,7 +67,6 @@ int StartScreenInit(std::string path) {
     
     resX = info->current_w;
     resY = info->current_h;
-    //font = TTF_OpenFont("./resources/Roboto-Regular.ttf", font_size);
     font = TTF_OpenFontRW(SDL_RWFromConstMem(ROBOTO_REGULAR, ROBOTO_REGULAR_SIZE),1, line_size);
     StartScreenMessage(STARTUP_MESSAGE::DISPLAY_INFO, "Display: " + std::to_string(info->current_w) + "x" + std::to_string(info->current_h) + " | " + (vertical ? "VERTICAL" : "HORIZONTAL"));
     return 0;

@@ -10,6 +10,7 @@
 #include "dia_screen_item.h"
 #include "dia_screen.h"
 #include "dia_all_items.h"
+#include <SDL.h>
 
 class AreaItem
 {
@@ -37,6 +38,7 @@ public:
     int InitDetails(json_t *screen_json);
     int AddItem(DiaScreenItem * item);
     int Display(DiaScreen * screen);
+    int SetQr(SDL_Surface * qr);
     ~DiaScreenConfig();
     DiaScreenConfig();
 };

@@ -264,6 +264,23 @@
             "src":"pic/progressbar/progress_12.png"
           }
         ]
+      },
+      {
+        "id":"pause",
+        "type":"image",
+        "position": "1350;480",
+        "size":"150;88",
+        "src":"pic/pause.png",
+        "click_id":"201",
+        "visible":"true"
+      },
+      {
+        "id":"play",
+        "type":"image",
+        "position": "1350;480",
+        "size":"175;137",
+        "src":"pic/play.png",
+        "visible":"false"
       }
     ]
   }
