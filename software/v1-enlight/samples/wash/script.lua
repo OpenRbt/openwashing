@@ -621,6 +621,7 @@ create_session = function()
     qr = hardware:GetQR();
     if qr == nil or qr == '' then
         choose_method:Set("qr.visible", "false")
+        choose_method:Set("bonus_pic.visible", "false")
     else
         welcome:GenerateQR(qr);
         session_id = hardware:GetSessionID();
