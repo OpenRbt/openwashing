@@ -5,7 +5,6 @@
 #include <stdlib.h>
 
 int DiaConfiguration::InitFromFile() {
-    //printf("loading config from resource: '%s' / '%s'\n", _Folder.c_str(), DIA_DEFAULT_FIRMWARE_FILENAME);
     std::string resource = dia_get_resource(_Folder.c_str(), DIA_DEFAULT_FIRMWARE_FILENAME);
     return InitFromString(resource.c_str());
 }
@@ -33,9 +32,7 @@ int DiaConfiguration::InitFromString(const char * configuration_json) {
         return CONFIGURATION_STATUS::ERROR_JSON;
     }
 
-    //printf("json parsed\n");
     int res = InitFromJson(root);
-    //printf("configuration parsed\n");
     json_decref(root);
     return res;
 }
@@ -107,8 +104,6 @@ int DiaConfiguration::InitFromJson(json_t * configuration_json) {
     }
 
     _Name = json_string_value(name_json);
-    //printf("Configuration's name is parsed: ");
-    //printf("%s\n", _Name.c_str());
 
     // Let's unpack Screens
     json_t * screens_json = json_object_get(configuration_json, "screens");
@@ -147,7 +142,6 @@ int DiaConfiguration::InitFromJson(json_t * configuration_json) {
             printf("resolution parsing error: [%s], must by like [848x480]\n", _Resolution.c_str());
         }
     }
-    //printf("resolution:[%s], parsed ad [%d]*[%d]\n", _Resolution.c_str(), _ResX, _ResY);
 
     _NeedToRotateTouchScreen = 0;
     json_t *touch_rotate_json = json_object_get(configuration_json, "touch_rotate");
@@ -192,7 +186,6 @@ int DiaConfiguration::InitFromJson(json_t * configuration_json) {
     _RelaysNumber = json_integer_value(relays_json);
 
     for(unsigned int i = 0; i < json_array_size(screens_json); i++) {
-        //printf("screen loop \n");
         json_t * screen_json = json_array_get(screens_json, i);
         if(!json_is_object(screen_json)) {
             fprintf(stderr, "error: screen %d is not an object\n", i + 1);
@@ -233,13 +226,15 @@ int DiaConfiguration::LoadConfig() {
     configuration_json = json_loads(answer.c_str(), 0, &error);
     if (!configuration_json) {
         printf("Error in LoadConfig: %d: %s\n", error.line, error.text );
+        json_decref(configuration_json);
         return 1;
     }
 
     if(!json_is_object(configuration_json)) {
 	    printf("LoadConfig not a JSON\n");
+        json_decref(configuration_json);
                 return 1;
-        }
+    }
 
     json_t *preflight_json = json_object_get(configuration_json, "preflightSec");
     if(json_is_integer(preflight_json)) {
@@ -261,19 +256,21 @@ int DiaConfiguration::LoadConfig() {
     json_t *programs_json = json_object_get(configuration_json, "programs");
     if(!json_is_array(programs_json)) {
         fprintf(stderr, "error: programs is not an array\n");
+        json_decref(configuration_json);
         return 1;
     }
     for (unsigned int i=0;i< json_array_size(programs_json); i++) {
-        //printf("programs reading loop\n");
         json_t * program_json = json_array_get(programs_json, i);
         if(!json_is_object(program_json)) {
             fprintf(stderr, "error: program %d is not an object\n", i + 1);
+            json_decref(configuration_json);
             return 1;
         }
         // XXX rebuild
         DiaProgram * program = new DiaProgram(program_json);
         if(!program->_InitializedOk) {
             printf("Something's wrong with the program");
+            json_decref(configuration_json);
             return 1;
         }
         tmpPrograms[program->ButtonID] = program;
@@ -281,6 +278,7 @@ int DiaConfiguration::LoadConfig() {
     for (int i = 1;i <= GetProgramsNumber(); i++) {
         if (!tmpPrograms[i]) {
         fprintf(stderr, "error: LoadConfig, program # %d not found\n", i);
+        json_decref(configuration_json);
         return 1;
         }
     }
@@ -319,6 +317,11 @@ int DiaConfiguration::LoadConfig() {
         _LastUpdate = json_integer_value(last_update);
     }
 
+    json_decref(programs_json);
+    json_decref(relay_board_json);
+    json_decref(preflight_json);
+    json_decref(last_update);
+    json_decref(configuration_json);
     return 0;
 }
 
@@ -335,27 +338,32 @@ int DiaConfiguration::LoadDiscounts() {
 
     station_discounts_json = json_loads(answer.c_str(), 0, &error);
     if (!station_discounts_json) {
+        json_decref(station_discounts_json);
         return 1;
     }
 
     if (!json_is_array(station_discounts_json)) {
+        json_decref(station_discounts_json);
         printf("LoadConfig not a JSON\n");
         return 1;
     }
 
     this->_Discounts.clear();
 
+    json_t *button_discount_json;
+    json_t *button_id_json;
+    json_t *button_discount_value_json;
     for (unsigned int i = 0; i < json_array_size(station_discounts_json); i++) {
-        json_t *button_discount_json = json_array_get(station_discounts_json, i);
+        button_discount_json = json_array_get(station_discounts_json, i);
         if (json_is_object(button_discount_json)) {
             int button, dicount;
-            json_t *button_id_json = json_object_get(button_discount_json, "buttonID");
+            button_id_json = json_object_get(button_discount_json, "buttonID");
             if json_is_integer (button_id_json) {
                 button = json_integer_value(button_id_json);
             } else {
                 continue;
             }
-            json_t *button_discount_value_json = json_object_get(button_discount_json, "discount");
+            button_discount_value_json = json_object_get(button_discount_json, "discount");
             if json_is_integer (button_discount_value_json) {
                 dicount = json_integer_value(button_discount_value_json);
                 if (dicount > 0) {
@@ -364,6 +372,10 @@ int DiaConfiguration::LoadDiscounts() {
             }
         }
     }
+    json_decref(station_discounts_json);
+    json_decref(button_discount_json);
+    json_decref(button_id_json);
+    json_decref(button_discount_value_json);
     return 0;
 }
 

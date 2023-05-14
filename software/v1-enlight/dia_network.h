@@ -1,29 +1,30 @@
 #ifndef _DIA_NETWORK_LIB
 #define _DIA_NETWORK_LIB
 
+#include <arpa/inet.h>
+#include <assert.h>
+#include <curl/curl.h>
+#include <jansson.h>
+#include <net/if.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
-#include <assert.h>
-#include <curl/curl.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include "dia_channel.h"
-#include <new>
-#include <list>
-#include <map>
-#include <jansson.h>
+
 #include <iomanip>
 #include <iostream>
+#include <list>
+#include <map>
+#include <new>
 #include <queue>
-
 #include <sstream>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <net/if.h>
-#include <arpa/inet.h>
+#include <string>
+
+#include "dia_channel.h"
 
 #define MAX_RELAY_NUM 6
 #define CHANNEL_SIZE 8192
@@ -33,7 +34,7 @@
 
 // Message for report sending channel.
 class NetworkMessage {
-    public:
+   public:
     uint8_t resolved;
     unsigned long long entry_id;
     std::string json_request;
@@ -44,7 +45,7 @@ class NetworkMessage {
 };
 
 class ReceiptToSend {
-public:
+   public:
     int PostPosition;
     int Cash;
     int Electronical;
@@ -56,7 +57,7 @@ public:
 };
 
 typedef struct curl_answer {
-    char * data;
+    char *data;
     size_t length;
 } curl_answer_t;
 
@@ -66,6 +67,8 @@ typedef struct money_report {
     int banknotes_total;
     int cashless_total;
     int service_total;
+    int bonuses_total;
+    std::string session_id;
 } money_report_t;
 
 typedef struct RelayStat {
@@ -78,16 +81,15 @@ typedef struct relay_report {
 } relay_report_t;
 
 class DiaNetwork {
-private:
-// For receipts
+   private:
+    // For receipts
 
-
-public:
-    DiaChannel<ReceiptToSend> * receipts_channel;
+   public:
+    DiaChannel<ReceiptToSend> *receipts_channel;
 
     DiaNetwork() {
         _Host = "";
-	    _Port = ":8020";
+        _Port = ":8020";
         curl_global_init(CURL_GLOBAL_ALL);
 
         _OnlineCashRegister = "";
@@ -113,7 +115,6 @@ public:
         }
     }
 
-    
     // Base function for sending a GET request.
     // Parameters: gets pre-created HTTP body, modifies answer from server, gets address of host (URL).
     int SendRequestGet(std::string *answer, std::string host_addr, int timeout) {
@@ -136,7 +137,7 @@ public:
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "diae/0.1");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->_Writefunc);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &raw_answer);
-	    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
@@ -181,15 +182,16 @@ public:
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "diae/0.1");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->_Writefunc);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &raw_answer);
-	    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 10000);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 10000);
 
         res = curl_easy_perform(curl);
         int http_code = 0;
-        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
         if ((res != CURLE_OK) || ((http_code != 200) && (http_code != 201) && (http_code != 204))) {
             printf("CURL code is wrong %d, http code %d\n", res, http_code);
             DestructCurlAnswer(&raw_answer);
             curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
             return 1;
         }
         *answer = raw_answer.data;
@@ -207,7 +209,7 @@ public:
         int err = this->SendPingRequestGet("localhost");
         if (!err) {
             ip = "localhost";
-	        return 0;
+            return 0;
         }
 
         int sock = socket(PF_INET, SOCK_DGRAM, 0);
@@ -220,17 +222,17 @@ public:
 
         memset(&loopback, 0, sizeof(loopback));
         loopback.sin_family = AF_INET;
-        loopback.sin_addr.s_addr = INADDR_LOOPBACK;   
-        loopback.sin_port = htons(9);                 
+        loopback.sin_addr.s_addr = INADDR_LOOPBACK;
+        loopback.sin_port = htons(9);
 
-        if (connect(sock, reinterpret_cast<sockaddr*>(&loopback), sizeof(loopback)) == -1) {
+        if (connect(sock, reinterpret_cast<sockaddr *>(&loopback), sizeof(loopback)) == -1) {
             close(sock);
             printf("Could not connect\n");
             return SERVER_UNAVAILABLE;
         }
 
         socklen_t addrlen = sizeof(loopback);
-        if (getsockname(sock, reinterpret_cast<sockaddr*>(&loopback), &addrlen) == -1) {
+        if (getsockname(sock, reinterpret_cast<sockaddr *>(&loopback), &addrlen) == -1) {
             close(sock);
             printf("Could not getsockname\n");
             return SERVER_UNAVAILABLE;
@@ -246,12 +248,12 @@ public:
             printf("Local ip address: %s\n", buf);
         }
 
-	    std::string baseIP(buf);
+        std::string baseIP(buf);
         std::string reqIP;
 
-	    printf("Base IP: %s\n", baseIP.c_str());
+        printf("Base IP: %s\n", baseIP.c_str());
 
-	    // Truncate baseIP to prepare for scan
+        // Truncate baseIP to prepare for scan
         int dotCount = 0;
         for (int j = 0; j < INET_ADDRSTRLEN; j++) {
             if (baseIP[j] == '.')
@@ -265,19 +267,13 @@ public:
         for (int i = 1; i < 255; i++) {
             std::string reqUrl = reqIP + std::to_string(i);
 
-            //printf("%s\n", reqUrl.c_str());
-
             err = this->SendPingRequestGet(reqUrl);
 
             if (!err) {
                 // We found it!
                 ip = reqIP + std::to_string(i);
                 return 0;
-            }
-
-            if (stop) {
-                break;
-            }
+            }         	
         }   	
 
         return SERVER_UNAVAILABLE;
@@ -286,24 +282,24 @@ public:
     // Returns local machine's MAC address of eth0 interface.
     // Modfifes out parameter == MAC address without ":" symbols.
     std::string GetMacAddress(const int outSize) {
-   	    int fd;
-	
-	    struct ifreq ifr;
-	    const char *iface = "eth0";
-	    char *mac = 0;
-	
-	    fd = socket(AF_INET, SOCK_DGRAM, 0);
-	    ifr.ifr_addr.sa_family = AF_INET;
-	    strncpy((char *)ifr.ifr_name , (const char *)iface , IFNAMSIZ-1);
-	    ioctl(fd, SIOCGIFHWADDR, &ifr);
-	    close(fd);
-	
-	    mac = (char *)ifr.ifr_hwaddr.sa_data;
+        int fd;
+
+        struct ifreq ifr;
+        const char *iface = "eth0";
+        char *mac = 0;
+
+        fd = socket(AF_INET, SOCK_DGRAM, 0);
+        ifr.ifr_addr.sa_family = AF_INET;
+        strncpy((char *)ifr.ifr_name, (const char *)iface, IFNAMSIZ - 1);
+        ioctl(fd, SIOCGIFHWADDR, &ifr);
+        close(fd);
+
+        mac = (char *)ifr.ifr_hwaddr.sa_data;
 
         // Convert MAC bytes to hexagonal with fixed width
         std::stringstream ss;
-        for(int i = 0; i < outSize; ++i) {
-            ss << std::setw(2) << std::setfill('0') << std::hex << (int)abs(mac[i]);
+        for (int i = 0; i < outSize; ++i) {
+            ss << std::setw(2) << std::setfill('0') << std::hex << (int)abs(mac[i]); //Первое, на что ругается valgrind
         }
         return ss.str();
     }
@@ -339,17 +335,64 @@ public:
             printf("Server located on: %s\n", serverIP.c_str());
         } else {
             printf("Failed: no server found...\n");
-		    serverIP = "";
-	    }
-        
+            serverIP = "";
+        }
+
         return serverIP;
     }
 
-    // GetStationConig request to specified URL with method POST. 
+    int CreateSession(std::string &sessionID, std::string &QR) {
+        std::string url = _Host + _Port + "/create-session";
+
+        int result;
+        std::string json_create_session_request = json_create_get_volue();
+        std::string answer;
+        result = SendRequest(&json_create_session_request, &answer, url);
+
+        if (result || answer == "") return 1;
+
+        json_error_t error;
+        json_t *json = json_loads(answer.c_str(), 0, &error);
+
+        if (!json_is_object(json)) {
+            json_decref(json);
+            return 1;
+        }
+
+        json_t *id_json = json_object_get(json, "ID");
+        json_t *qr_json = json_object_get(json, "QR");
+
+        if (!(json_is_string(id_json) && json_is_string(qr_json))) {
+            json_decref(json);
+            json_decref(id_json);
+            json_decref(qr_json);
+            return 1;
+        }
+
+        sessionID = json_string_value(id_json);
+        QR = json_string_value(qr_json);
+        json_decref(json);
+        json_decref(id_json);
+        json_decref(qr_json);
+        return 0;
+    }
+
+    int EndSession(std::string &sessionID) {
+        std::string url = _Host + _Port + "/end-session";
+
+        int result;
+        std::string json_end_session_request = json_create_end_session(sessionID);
+        std::string answer;
+        result = SendRequest(&json_end_session_request, &answer, url);
+
+        return result ? 1 : 0;
+    }
+
+    // GetStationConig request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
-    int GetStationConig(std::string& answer) {
-	    std::string url = _Host+ _Port + "/station-program-by-hash";
-        
+    int GetStationConig(std::string &answer) {
+        std::string url = _Host + _Port + "/station-program-by-hash";
+
         int result;
         std::string json_ping_request = json_create_card_reader_config();
         result = SendRequest(&json_ping_request, &answer, url);
@@ -359,36 +402,50 @@ public:
         return 0;
     }
 
-    // RunProgramOnServer request to specified URL with method POST. 
+    // RunProgramOnServer request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     int RunProgramOnServer(int programID, int preflight) {
-	    std::string url = _Host+ _Port + "/run-program";
+        std::string url = _Host + _Port + "/run-program";
         std::string answer;
 
         int result;
         std::string json_run_program_request = json_create_run_program(programID, preflight);
         result = SendRequest(&json_run_program_request, &answer, url);
-        if ((result) || (answer !="")) {
+        if ((result) || (answer != "")) {
             fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
         return 0;
     }
 
-    // GetVolume request to specified URL with method POST. 
+    int StopProgramOnServer() {
+        std::string url = _Host + _Port + "/stop-program";
+        std::string answer;
+
+        int result;
+        std::string json_stop_program_request = json_create_get_volue();
+        result = SendRequest(&json_stop_program_request, &answer, url);
+        if ((result) || (answer != "")) {
+            fprintf(stderr, "StopProgramOnServer answer %s\n", answer.c_str());
+            return 1;
+        }
+        return 0;
+    }
+
+    // GetVolume request to specified URL with method POST.
     int GetVolume(std::string *status) {
-	    std::string url = _Host+ _Port + "/volume-dispenser";
+        std::string url = _Host + _Port + "/volume-dispenser";
         std::string answer;
         std::string json_get_volue_request = json_create_get_volue();
         int result;
-        
+
         result = SendRequest(&json_get_volue_request, &answer, url);
 
         if (result == 0 && answer != "") {
             json_error_t error;
             json_t *json = json_loads(answer.c_str(), 0, &error);
 
-            if(!json_is_object(json)){
+            if (!json_is_object(json)) {
                 printf("GetVolume answer %s\n", answer.c_str());
                 json_decref(json);
                 return -1;
@@ -397,49 +454,53 @@ public:
             json_t *volume_json = json_object_get(json, "volume");
             json_t *status_json = json_object_get(json, "status");
 
-            if(!(json_is_integer(volume_json) && json_is_string(status_json))){
+            if (!(json_is_integer(volume_json) && json_is_string(status_json))) {
                 printf("GetVolume answer %s\n", answer.c_str());
                 json_decref(json);
+                json_decref(volume_json);
+                json_decref(status_json);
                 return -1;
             }
             *status = json_string_value(status_json);
             int v = json_integer_value(volume_json);
             json_decref(json);
+            json_decref(volume_json);
+            json_decref(status_json);
             return v;
         }
         printf("GetVolume answer %s\n", answer.c_str());
         return -1;
     }
 
-    int StartFluidFlowSensor(int volume){
-        std::string url = _Host+ _Port + "/run-dispenser";
+    int StartFluidFlowSensor(int volume, int startProgramID, int stopProgramID) {
+        std::string url = _Host + _Port + "/run-dispenser";
         std::string answer;
-        std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume);
+        std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume, startProgramID, stopProgramID);
         int result;
 
         result = SendRequest(&json_start_fluid_flow_sensor_request, &answer, url);
 
-        if ((result) || (answer !="")) {
+        if ((result) || (answer != "")) {
             fprintf(stderr, "StartFluidFlowSensor answer %s\n", answer.c_str());
             return 1;
         }
         return 0;
     }
 
-    // GetCardReaderConig request to specified URL with method POST. 
+    // GetCardReaderConig request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
-    int GetCardReaderConig(std::string& cardReaderType, std::string& host, std::string& port) {
+    int GetCardReaderConig(std::string &cardReaderType, std::string &host, std::string &port) {
         std::string answer;
-	    std::string url = _Host+ _Port + "/card-reader-config-by-hash";
-        
+        std::string url = _Host + _Port + "/card-reader-config-by-hash";
+
         int result;
         std::string json_ping_request = json_create_card_reader_config();
         result = SendRequest(&json_ping_request, &answer, url);
-	
+
         if (result) {
             return 1;
         }
-	
+
         json_t *object;
         json_error_t error;
 
@@ -448,13 +509,13 @@ public:
         printf("GetCardReaderConig answer %s\n", answer.c_str());
         do {
             if (!object) {
-                printf("Error in GetCardReaderConig: %d: %s\n", error.line, error.text );
+                printf("Error in GetCardReaderConig: %d: %s\n", error.line, error.text);
                 err = 1;
                 break;
             }
 
-            if(!json_is_object(object)) {
-		        printf("Not a JSON\n");
+            if (!json_is_object(object)) {
+                printf("Not a JSON\n");
                 break;
             }
 
@@ -478,34 +539,34 @@ public:
         return err;
     }
 
-    // PING request to specified URL with method GET. 
+    // PING request to specified URL with method GET.
     // Returns 0, if request was OK, other value - in case of failure.
     int SendPingRequestGet(std::string url) {
         std::string answer;
-	    url += _Port + "/ping";
+        url += _Port + "/ping";
         printf("trying %s ...\n", url.c_str());
         return SendRequestGet(&answer, url, 200);
     }
 
-    // PING request to specified URL with method POST. 
+    // PING request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int& service_money, bool& open_station, int& button_id, int balance, int program, int& lastUpdate, int& lastDiscountUpdate) {
+    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, bool &isAuthorized, int &bonusAmount) {
         std::string answer;
-	    std::string url = _Host + _Port + "/ping";
-        
+        std::string url = _Host + _Port + "/ping";
+
         int result;
         std::string json_ping_request = json_create_ping_report(balance, program);
         result = SendRequest(&json_ping_request, &answer, url);
-	//printf("Server answer on PING:\n%s\n", answer.c_str());
-	
+        // printf("Server answer on PING:\n%s\n", answer.c_str());
+
         if (result == 2) {
             return 3;
         }
         if (result) {
             return 1;
         }
-	
+
         json_t *object;
         json_error_t error;
 
@@ -513,13 +574,13 @@ public:
         object = json_loads(answer.c_str(), 0, &error);
         do {
             if (!object) {
-                printf("Error in PING: %d: %s\n", error.line, error.text );
+                printf("Error in PING: %d: %s\n", error.line, error.text);
                 err = 1;
                 break;
             }
 
-            if(!json_is_object(object)) {
-		printf("Not a JSON\n");
+            if (!json_is_object(object)) {
+                printf("Not a JSON\n");
                 break;
             }
 
@@ -534,17 +595,109 @@ public:
             json_t *obj_button_id;
             obj_button_id = json_object_get(object, "ButtonID");
             button_id = (int)json_integer_value(obj_button_id);
-            
+
             json_t *obj_last_update;
             obj_last_update = json_object_get(object, "lastUpdate");
             lastUpdate = (int)json_integer_value(obj_last_update);
-            
+
             json_t *obj_last_discount_update;
             obj_last_discount_update = json_object_get(object, "lastDiscountUpdate");
-            lastDiscountUpdate = (int)json_integer_value(obj_last_discount_update);            
+            lastDiscountUpdate = (int)json_integer_value(obj_last_discount_update);
+
+            json_t *obj_bonus_system;
+            obj_bonus_system = json_object_get(object, "bonus_system_active");
+            bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
+
+            json_t *obj_bonus_amount;
+            obj_bonus_amount = json_object_get(object, "bonusAmount");
+            bonusAmount = (int)json_integer_value(obj_bonus_amount);
+
+            json_t *obj_is_authorized;
+            obj_is_authorized = json_object_get(object, "isAuthorized");
+            isAuthorized = (bool)json_boolean_value(obj_is_authorized);
+
+            json_t *obj_qr_data;
+            obj_qr_data = json_object_get(object, "qr_data");
+            if (json_is_string(obj_qr_data)) {
+                qrData = (std::string)json_string_value(obj_qr_data);
+            }
+            json_decref(obj_service_amount);
+            json_decref(obj_open_station);
+            json_decref(obj_button_id);
+            json_decref(obj_last_update);
+            json_decref(obj_last_discount_update);
+            json_decref(obj_bonus_system);
+            json_decref(obj_bonus_amount);
+            json_decref(obj_is_authorized);
+            json_decref(obj_qr_data);
         } while (0);
         json_decref(object);
         return err;
+    }
+
+    int GetQr(std::string &qrData) {
+        std::string url = _Host + _Port + "/get-qr";
+        std::string answer;
+        std::string json_get_qr_request = json_create_get_qr();
+        int result;
+
+        result = SendRequest(&json_get_qr_request, &answer, url);
+
+        if (result == 0 && answer != "") {
+            json_error_t error;
+            json_t *json = json_loads(answer.c_str(), 0, &error);
+
+            if (!json_is_object(json)) {
+                printf("GetQr answer %s\n", answer.c_str());
+                json_decref(json);
+                return 1;
+            }
+
+            json_t *qr_data_json = json_object_get(json, "qr_data");
+
+            if (!json_is_string(qr_data_json)) {
+                printf("GetVolume answer %s\n", answer.c_str());
+                json_decref(json);
+                return 1;
+            }
+
+            qrData = (std::string)json_string_value(qr_data_json);
+
+            json_decref(json);
+            json_decref(qr_data_json);
+            return 0;
+        }
+        printf("GetVolume answer %s\n", answer.c_str());
+        return 1;
+    }
+
+    int sendPause(int stopProgramID) {
+        std::string url = _Host + _Port + "/stop-dispenser";
+        std::string answer;
+        std::string json_stop_dispenser_request = json_create_stop_dispenser(stopProgramID);
+        int result;
+
+        result = SendRequest(&json_stop_dispenser_request, &answer, url);
+
+        if (result == 0 && answer != "") {
+            return 0;
+        }
+        printf("sendPause answer %s\n", answer.c_str());
+        return 1;
+    }
+
+    int SetBonuses(int bonuses) {
+        std::string url = _Host + _Port + "/set-bonuses";
+        std::string answer;
+        std::string json_set_bonuses_request = json_create_set_bonuses(bonuses);
+        int result;
+        result = SendRequest(&json_set_bonuses_request, &answer, url);
+
+        if (result == 0 && answer != "") {
+            return 0;
+        }
+        printf("SetBonuses answer %s\n", answer.c_str());
+        return 1;
     }
 
     // GetStationDiscounts request to specified URL with method POST.
@@ -562,8 +715,8 @@ public:
 
     // Adds a receipt to a queue.
     int ReceiptRequest(int postPosition, int cash, int electronical) {
-        if ((cash + electronical) >0) {
-            ReceiptToSend * incomingReceipt = new ReceiptToSend(postPosition, cash, electronical);
+        if ((cash + electronical) > 0) {
+            ReceiptToSend *incomingReceipt = new ReceiptToSend(postPosition, cash, electronical);
             receipts_channel->Push(incomingReceipt);
         }
         return 0;
@@ -579,21 +732,21 @@ public:
             return 1;
         }
 
-        std::string reqUrl;	    
+        std::string reqUrl;
         reqUrl = "https://" + _OnlineCashRegister + ":8443/";
         reqUrl += "V2/" + std::to_string(postPosition) + "/" + std::to_string(cash) + "/" + std::to_string(electronical);
 
         curl_easy_setopt(curl, CURLOPT_URL, reqUrl.c_str());
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "diae/0.1");
-	    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-	    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-	        printf("%s", curl_easy_strerror(res));
-	        printf("\n");
+            printf("%s", curl_easy_strerror(res));
+            printf("\n");
             curl_easy_cleanup(curl);
             return SERVER_UNAVAILABLE;
         }
@@ -603,19 +756,21 @@ public:
     }
 
     // Encodes money report data and sends it to Central Server via SAVE request.
-    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total) {
-        money_report_t money_report_data = {0,0,0,0,0};
-        
+    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
+        money_report_t money_report_data = {0, 0, 0, 0, 0, 0, ""};
+
         money_report_data.cars_total = cars_total;
         money_report_data.coins_total = coins_total;
         money_report_data.banknotes_total = banknotes_total;
         money_report_data.cashless_total = cashless_total;
         money_report_data.service_total = service_total;
+        money_report_data.bonuses_total = bonuses_total;
+        money_report_data.session_id = session_id;
 
-	    printf("Sending money report...\n");
+        printf("Sending money report...\n");
         // Encode data to JSON
         std::string json_money_report_request = json_create_money_report(&money_report_data);
-	    printf("JSON:\n%s\n", json_money_report_request.c_str());
+        printf("JSON:\n%s\n", json_money_report_request.c_str());
         // Send a request
         CreateAndPushEntry(json_money_report_request, "/save-money");
         return 0;
@@ -624,14 +779,14 @@ public:
     // Sends LOAD request to Central Server and decodes JSON result to money report.
     int GetLastMoneyReport(money_report_t *money_report_data) {
         std::string answer;
-        
+
         // Encode LOAD request to JSON
         std::string json_get_last_money_report_request = json_get_last_money_report();
 
         // Send request to Central Server
-	std::string url = _Host + _Port + "/load-money";
+        std::string url = _Host + _Port + "/load-money";
         int res = SendRequest(&json_get_last_money_report_request, &answer, url);
-        
+
         if (res > 0) {
             printf("No connection to server\n");
             return 1;
@@ -642,49 +797,56 @@ public:
         object = json_loads(answer.c_str(), 0, &error);
         int err = 0;
 
-	printf("Server returned for Get Last Money: \n%s\n", answer.c_str());
+        printf("Server returned for Get Last Money: \n%s\n", answer.c_str());
         do {
             if (!object) {
-                printf("Error in get_last_money_report on line %d: %s\n", error.line, error.text );
+                printf("Error in get_last_money_report on line %d: %s\n", error.line, error.text);
                 err = 1;
                 break;
             }
 
-            if(!json_is_object(object)) {
+            if (!json_is_object(object)) {
                 err = 1;
                 break;
             }
-            
-            json_t* obj_var = json_object_get(object, "carsTotal");
-            if(!json_is_integer(obj_var)) {
+
+            json_t *obj_var = json_object_get(object, "carsTotal");
+            if (!json_is_integer(obj_var)) {
                 money_report_data->cars_total = 0;
             } else
-                money_report_data->cars_total = json_integer_value(obj_var);
+                money_report_data->cars_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "coins");
-            if(!json_is_integer(obj_var)) {
+            if (!json_is_integer(obj_var)) {
                 money_report_data->coins_total = 0;
             } else
-                money_report_data->coins_total = json_integer_value(obj_var);
+                money_report_data->coins_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "banknotes");
-            if(!json_is_integer(obj_var)) {
+            if (!json_is_integer(obj_var)) {
                 money_report_data->banknotes_total = 0;
             } else
-            	money_report_data->banknotes_total = json_integer_value(obj_var);
+                money_report_data->banknotes_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "electronical");
-            if(!json_is_integer(obj_var)) {
+            if (!json_is_integer(obj_var)) {
                 money_report_data->cashless_total = 0;
             } else
-            	money_report_data->cashless_total = json_integer_value(obj_var);
+                money_report_data->cashless_total = (int)json_integer_value(obj_var);
 
             obj_var = json_object_get(object, "service");
-            if(!json_is_integer(obj_var)) {
+            if (!json_is_integer(obj_var)) {
                 money_report_data->service_total = 0;
             } else
-            	money_report_data->service_total = json_integer_value(obj_var);
-        } while(0);
+                money_report_data->service_total = (int)json_integer_value(obj_var);
+            obj_var = json_object_get(object, "bonuses");
+            if (!json_is_integer(obj_var)) {
+                money_report_data->bonuses_total = 0;
+            } else
+                money_report_data->bonuses_total = (int)json_integer_value(obj_var);
+
+            json_decref(obj_var);
+        } while (0);
         json_decref(object);
         return err;
     }
@@ -692,20 +854,20 @@ public:
     // Sends LOAD request to Central Server and decodes JSON result to relay report.
     int GetLastRelayReport(relay_report_t *relay_report_data) {
         std::string answer;
-        
+
         // Encode LOAD request to JSON
         std::string json_get_last_relay_report_request = json_get_last_relay_report();
 
         // Send request to Central Server
-	std::string url = _Host + _Port + "/load-relay";
+        std::string url = _Host + _Port + "/load-relay";
         int res = SendRequest(&json_get_last_relay_report_request, &answer, url);
-        
+
         if (res > 0) {
             printf("No connection to server\n");
             return 1;
         }
 
-        fprintf(stderr,"%s\n",answer.c_str());
+        fprintf(stderr, "%s\n", answer.c_str());
 
         json_t *object;
         json_error_t error;
@@ -714,52 +876,54 @@ public:
 
         do {
             if (!object) {
-                printf("Error in get_last_relay_report on line %d: %s\n", error.line, error.text );
+                printf("Error in get_last_relay_report on line %d: %s\n", error.line, error.text);
                 err = 1;
                 break;
             }
 
-            if(!json_is_object(object)) {
-		printf("JSON is not an object\n");
+            if (!json_is_object(object)) {
+                printf("JSON is not an object\n");
                 err = 1;
                 break;
             }
 
             json_t *obj_array;
             obj_array = json_object_get(object, "relayStats");
-            if(!json_is_array(obj_array)) {
+            if (!json_is_array(obj_array)) {
                 err = 1;
                 break;
             }
 
-            json_t *element;
-            json_t *obj_var;
+            json_t *element = new json_t();
+            json_t *obj_var = new json_t();
             int i, relay_id, switched_count, total_time_on;
 
             json_array_foreach(obj_array, i, element) {
-                obj_var = json_object_get(element, "relayID" );
-                if(!json_is_integer(obj_var)) {
-		    printf("relayId problem\n");
-		    err = 1;
-		    break;
+                obj_var = json_object_get(element, "relayID");
+                if (!json_is_integer(obj_var)) {
+                    printf("relayId problem\n");
+                    err = 1;
+                    break;
                 }
-                relay_id = json_integer_value(obj_var);
-            
-                obj_var = json_object_get(element, "switchedCount" );
-                if(!json_is_integer(obj_var)) {
-		    switched_count = 0;
-                } else
-                    switched_count = json_integer_value(obj_var);
+                relay_id = (int)json_integer_value(obj_var);
 
-                obj_var = json_object_get(element, "totalTimeOn" );
-                if(!json_is_integer(obj_var)) {
-		    total_time_on = 0;
+                obj_var = json_object_get(element, "switchedCount");
+                if (!json_is_integer(obj_var)) {
+                    switched_count = 0;
                 } else
-                    total_time_on = json_integer_value(obj_var);
-                relay_report_data->RelayStats[relay_id-1].switched_count = switched_count;
-                relay_report_data->RelayStats[relay_id-1].total_time_on = total_time_on;
+                    switched_count = (int)json_integer_value(obj_var);
+
+                obj_var = json_object_get(element, "totalTimeOn");
+                if (!json_is_integer(obj_var)) {
+                    total_time_on = 0;
+                } else
+                    total_time_on = (int)json_integer_value(obj_var);
+                relay_report_data->RelayStats[relay_id - 1].switched_count = switched_count;
+                relay_report_data->RelayStats[relay_id - 1].total_time_on = total_time_on;
             }
-        } while(0);
+            json_decref(element);
+            json_decref(obj_var);
+        } while (0);
 
         json_decref(object);
         return err;
@@ -786,7 +950,6 @@ public:
         }
         return result;
     }
-
 
     // Sends SAVE request to Central Server and decodes JSON result to value string.
     // Gets key and value strings.
@@ -818,67 +981,68 @@ public:
 
         // Encode LOAD request to JSON with key string
         std::string get_registry_value = json_get_registry_value(key);
-	printf("JSON:\n%s\n", get_registry_value.c_str());
+        printf("JSON:\n%s\n", get_registry_value.c_str());
 
         // Send request to Central Server
-	std::string url = _Host + _Port + "/load";
+        std::string url = _Host + _Port + "/load";
         int res = SendRequest(&get_registry_value, &answer, url);
-        
-	printf("Server answer: %s\n", answer.c_str());
+
+        printf("Server answer: %s\n", answer.c_str());
 
         if (res > 0) {
             printf("No connection to server\n");
         } else {
-	    if (answer.length() > 3) result = answer.substr(1, answer.length()-3);
-	}
+            if (answer.length() > 3) result = answer.substr(1, answer.length() - 3);
+        }
         return result;
     }
 
-    std::string GetRegistryValueFromStationByKey(int stationID, std::string key){
+    std::string GetRegistryValueFromStationByKey(int stationID, std::string key) {
         std::string answer;
         std::string result = "";
 
         // Encode LOAD-FROM-STATION request to JSON with key string
         std::string get_registry_value_from_station = json_get_registry_value_from_station(stationID, key);
-    printf("JSON:\n%s\n",get_registry_value_from_station.c_str());
+        printf("JSON:\n%s\n", get_registry_value_from_station.c_str());
 
-         // Send request to Central Server
-	std::string url = _Host + _Port + "/load-from-station";
+        // Send request to Central Server
+        std::string url = _Host + _Port + "/load-from-station";
         int res = SendRequest(&get_registry_value_from_station, &answer, url);
-        
-	printf("Server answer: %s\n", answer.c_str());
+
+        printf("Server answer: %s\n", answer.c_str());
 
         if (res > 0) {
             printf("No connection to server\n");
         } else {
-	    if (answer.length() > 3) result = answer.substr(1, answer.length()-3);
-	}
+            if (answer.length() > 3) result = answer.substr(1, answer.length() - 3);
+        }
 
         return result;
     }
 
-// Sends request to Central Server and return station id.
+    // Sends request to Central Server and return station id.
     std::string GetStationID() {
         std::string answer;
         std::string result = "";
 
         std::string get_public_key = json_get_public_key();
-	    printf("GetStationID JSON:\n%s\n", get_public_key.c_str());
+        printf("GetStationID JSON:\n%s\n", get_public_key.c_str());
 
         // Send request to Central Server
-	    std::string url = _Host + _Port + "/station-by-hash";
-            int res = SendRequest(&get_public_key, &answer, url);
-        
-	    printf("Server answer: %s\n", answer.c_str());
+        std::string url = _Host + _Port + "/station-by-hash";
+        int res = SendRequest(&get_public_key, &answer, url);
+
+        printf("Server answer: %s\n", answer.c_str());
 
         if (res > 0) {
             printf("No connection to server\n");
         } else {
-	        if (answer != "") result = answer;
-	    }
+            if (answer != "") result = answer;
+        }
         return result;
     }
-private:
+
+   private:
     int interrupted = 0;
     std::string _PublicKey;
     std::string _OnlineCashRegister;
@@ -892,9 +1056,9 @@ private:
 
     // Thread, which tries to send reports to Central Server.
     static void *process_extract(void *arg) {
-        DiaNetwork *Dia = (DiaNetwork*) arg;
+        DiaNetwork *Dia = (DiaNetwork *)arg;
 
-        while(!Dia->interrupted) {
+        while (!Dia->interrupted) {
             int res = Dia->PopAndSend();
             if (res == SERVER_UNAVAILABLE) {
                 sleep(5);
@@ -907,9 +1071,9 @@ private:
 
     // Thread, which tries to send reports to Central Server.
     static void *process_receipts(void *arg) {
-        DiaNetwork *Dia = (DiaNetwork*) arg;
+        DiaNetwork *Dia = (DiaNetwork *)arg;
 
-        while(!Dia->interrupted) {
+        while (!Dia->interrupted) {
             int res = Dia->PopAndSendReceipt();
             if (res == SERVER_UNAVAILABLE) {
                 sleep(5);
@@ -921,11 +1085,11 @@ private:
     }
 
     int PopAndSendReceipt() {
-        ReceiptToSend * extractedReceipt;
-        int err = receipts_channel->Peek(&extractedReceipt);        
+        ReceiptToSend *extractedReceipt;
+        int err = receipts_channel->Peek(&extractedReceipt);
 
         if (err) {
-            //CHANNEL_BUFFER_EMPTY IS THE ONLY ERR
+            // CHANNEL_BUFFER_EMPTY IS THE ONLY ERR
             sleep(1);
             return 0;
         }
@@ -942,19 +1106,19 @@ private:
         return 0;
     }
 
-    // Interrupt the report processing thread. 
+    // Interrupt the report processing thread.
     int StopTheWorld() {
         interrupted = 1;
         return 0;
     }
 
-    // Pop message from channel (queue) and send it to the Central Server. 
+    // Pop message from channel (queue) and send it to the Central Server.
     int PopAndSend() {
-        NetworkMessage * message;
+        NetworkMessage *message;
         int err = channel.Peek(&message);
 
         if (err) {
-            //CHANNEL_BUFFER_EMPTY IS THE ONLY ERR
+            // CHANNEL_BUFFER_EMPTY IS THE ONLY ERR
             sleep(1);
             return 0;
         }
@@ -976,20 +1140,19 @@ private:
 
     // Add new message (report) to the channel. Thread will pop it in the future.
     int CreateAndPushEntry(std::string json_string, std::string route) {
-        NetworkMessage * entry = new NetworkMessage();
-        if(!entry) {
+        NetworkMessage *entry = new NetworkMessage();
+        if (!entry) {
             return 1;
         }
 
         entry->stime = time(NULL);
         entry->json_request = json_string;
-	    entry->route = route;
+        entry->route = route;
 
         if (channel.Push(entry) == CHANNEL_BUFFER_OVERFLOW) {
             printf("CHANNEL BUFFER OVERFLOW\n");
             return 1;
-        }
-        else {
+        } else {
             return 0;
         }
     }
@@ -1051,11 +1214,12 @@ private:
         return res;
     }
 
-    std::string json_create_start_fluid_flow_sensor(int volume) {
+    std::string json_create_end_session(std::string sessionID) {
         json_t *object = json_object();
 
         json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
-        json_object_set_new(object, "volume", json_integer(volume));
+        json_object_set_new(object, "sessionID", json_string(sessionID.c_str()));
+
         char *str = json_dumps(object, 0);
         std::string res = str;
 
@@ -1065,7 +1229,55 @@ private:
         return res;
     }
 
-    // Encodes money report struct to JSON string. 
+    std::string json_create_get_qr() {
+        return json_create_get_volue();
+    }
+
+    std::string json_create_stop_dispenser(int stopProgramID) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "stopProgramID", json_integer(stopProgramID));
+
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_set_bonuses(int bonuses) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "bonuses", json_integer(bonuses));
+
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_start_fluid_flow_sensor(int volume, int startProgramID, int stopProgramID) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "volume", json_integer(volume));
+        json_object_set_new(object, "startProgramID", json_integer(startProgramID));
+        json_object_set_new(object, "stopProgramID", json_integer(stopProgramID));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    // Encodes money report struct to JSON string.
     std::string json_create_money_report(struct money_report *s) {
         json_t *object = json_object();
 
@@ -1073,9 +1285,11 @@ private:
         json_object_set_new(object, "Banknotes", json_integer(s->banknotes_total));
         json_object_set_new(object, "CarsTotal", json_integer(s->cars_total));
         json_object_set_new(object, "Coins", json_integer(s->coins_total));
-        json_object_set_new(object, "Electronical",json_integer(s->cashless_total));
-        json_object_set_new(object, "Service",json_integer(s->service_total));
-    
+        json_object_set_new(object, "Electronical", json_integer(s->cashless_total));
+        json_object_set_new(object, "Service", json_integer(s->service_total));
+        json_object_set_new(object, "Bonuses", json_integer(s->bonuses_total));
+        json_object_set_new(object, "SessionID", json_string(s->session_id.c_str()));
+
         char *str = json_dumps(object, 0);
         std::string res = str;
         free(str);
@@ -1092,9 +1306,9 @@ private:
 
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
 
-        for(int i = 0; i < MAX_RELAY_NUM; i++) {
+        for (int i = 0; i < MAX_RELAY_NUM; i++) {
             relayobj[i] = json_object();
-            json_object_set_new(relayobj[i], "RelayID", json_integer(i+1));
+            json_object_set_new(relayobj[i], "RelayID", json_integer(i + 1));
             json_object_set_new(relayobj[i], "SwitchedCount", json_integer(s->RelayStats[i].switched_count));
             json_object_set_new(relayobj[i], "TotalTimeOn", json_integer(s->RelayStats[i].total_time_on));
             json_array_append_new(relayarr, relayobj[i]);
@@ -1112,12 +1326,12 @@ private:
     // Encodes key and value to JSON string.
     std::string json_set_registry_value(std::string key, std::string value) {
         json_t *object = json_object();
-	json_t *keypair = json_object();
+        json_t *keypair = json_object();
 
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
         json_object_set_new(keypair, "Key", json_string(key.c_str()));
-	json_object_set_new(keypair, "Value", json_string(value.c_str()));
-	json_object_set_new(object, "KeyPair", keypair);
+        json_object_set_new(keypair, "Value", json_string(value.c_str()));
+        json_object_set_new(object, "KeyPair", keypair);
 
         char *str = json_dumps(object, 0);
         std::string res = str;
@@ -1143,8 +1357,8 @@ private:
         json_decref(object);
         return res;
     }
-    
-    std::string json_get_registry_value_from_station(int stationID, std::string key){
+
+    std::string json_get_registry_value_from_station(int stationID, std::string key) {
         json_t *object = json_object();
 
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
@@ -1183,9 +1397,9 @@ private:
         json_object_set_new(object, "Banknotes", json_integer(1));
         json_object_set_new(object, "CarsTotal", json_integer(1));
         json_object_set_new(object, "Coins", json_integer(1));
-        json_object_set_new(object, "Electronical",json_integer(1));
-        json_object_set_new(object, "Service",json_integer(1));
-    
+        json_object_set_new(object, "Electronical", json_integer(1));
+        json_object_set_new(object, "Service", json_integer(1));
+
         char *str = json_dumps(object, 0);
         std::string res = str;
         free(str);
@@ -1202,7 +1416,7 @@ private:
 
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
 
-        for(int i = 0; i < MAX_RELAY_NUM; i++) {
+        for (int i = 0; i < MAX_RELAY_NUM; i++) {
             relayobj[i] = json_object();
             json_object_set_new(relayobj[i], "RelayID", json_integer(1));
             json_object_set_new(relayobj[i], "SwitchedCount", json_integer(1));
@@ -1233,23 +1447,23 @@ private:
     }
     static size_t _Writefunc(void *ptr, size_t size, size_t nmemb, curl_answer_t *answer) {
         assert(answer);
-         size_t new_len = answer->length + size*nmemb;
-        answer->data = (char*)realloc(answer->data, new_len+1);
+        size_t new_len = answer->length + size * nmemb;
+        answer->data = (char *)realloc(answer->data, new_len + 1);
         assert(answer->data);
-        memcpy(answer->data+answer->length, ptr, size*nmemb);
+        memcpy(answer->data + answer->length, ptr, size * nmemb);
         answer->data[new_len] = '\0';
         answer->length = new_len;
 
-        return size*nmemb;
+        return size * nmemb;
     }
 
-    void InitCurlAnswer(curl_answer_t * raw_answer) {
-        raw_answer->data = (char *) malloc(1);
+    void InitCurlAnswer(curl_answer_t *raw_answer) {
+        raw_answer->data = (char *)malloc(1);
         raw_answer->length = 0;
         raw_answer->data[0] = 0;
     }
 
-    void DestructCurlAnswer(curl_answer_t * raw_answer) {
+    void DestructCurlAnswer(curl_answer_t *raw_answer) {
         free(raw_answer->data);
     }
 };

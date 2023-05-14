@@ -7,6 +7,7 @@ DiaScreenItem::DiaScreenItem(DiaScreenConfig * newParent) {
     display_ptr = 0;
     notify_ptr = 0;
     specific_object_ptr = 0;
+    isQr = false;
     Parent = newParent;
 }
 
@@ -19,7 +20,6 @@ int DiaScreenItem::Init(json_t * screen_item_json) {
         return 1;
     }
     id = json_string_value(id_json);
-    //printf("item init id='%s' \n", id.c_str());
     ///////////////////////////////////
     json_t * type_json = json_object_get(screen_item_json, "type");
     if (!json_is_string(type_json)) {
@@ -27,7 +27,6 @@ int DiaScreenItem::Init(json_t * screen_item_json) {
         return 1;
     }
     type = json_string_value(type_json);
-    //printf("item init type='%s'\n", type.c_str());
 
     json_t * visible_json = json_object_get(screen_item_json, "visible");
     if (visible_json == 0) {
@@ -51,13 +50,14 @@ int DiaScreenItem::Init(json_t * screen_item_json) {
 
         digits->Init(this, screen_item_json);
     } else if(type.compare("image")==0) {
-        //printf("image object found...\n");
         DiaScreenItemImage * image = new DiaScreenItemImage();
-
 
         this->specific_object_ptr = image;
         this->notify_ptr = dia_screen_item_image_notify;
         this->display_ptr = dia_screen_item_image_display;
+
+        json_t * is_qr = json_object_get(screen_item_json, "is_qr");
+        this->isQr = json_boolean_value(is_qr);
 
         image->Init(this, screen_item_json);
     } else if (type.compare("image_array") == 0) {
@@ -87,7 +87,6 @@ std::string DiaScreenItem::GetValue(std::string key, int * error) {
     }
     if(error!=0) *error = 0;
     std::string res = items[key];
-    //printf("value unpacked ='%s':'%s'\n", key.c_str(), res.c_str());
     return res;
 }
 int DiaScreenItem::SetValue(std::string key, json_t * value) {
@@ -104,7 +103,6 @@ int DiaScreenItem::SetValue(std::string key, json_t * value) {
 }
 
 int DiaScreenItem::SetValue(std::string key, std::string value) {
-    //printf("Set value for string started: key=%s, value=%s\n", key.c_str(), value.c_str());
     // Let's check common values first
     if (key.compare("visible")==0) {
         int oldVisible = visible.value;
@@ -117,7 +115,6 @@ int DiaScreenItem::SetValue(std::string key, std::string value) {
     }
 
     if (items.find(key) == items.end()) {
-        //printf("new item ... \n");
         Parent->Changed = true;
 
         items[key] = value;

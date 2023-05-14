@@ -46,7 +46,6 @@ class DiaProgram {
         json_t *price_json = json_object_get(program_node, "price");
         if(!json_is_integer(price_json)) {
             Price = 0;
-            // fprintf(stderr, "error: price is not int for program \n");
             // return;
         } else {
             Price = json_integer_value(price_json);
@@ -99,7 +98,6 @@ class DiaProgram {
             return 1;
         }
         for (unsigned int i=0;i<json_array_size(relays_src); i++) {
-            //printf("relays reading loop\n");
             json_t * relay_json = json_array_get(relays_src, i);
             if(!json_is_object(relay_json)) {
                 printf("relays element %d is not an object\n", i);
