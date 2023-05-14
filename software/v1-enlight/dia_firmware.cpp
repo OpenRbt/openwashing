@@ -556,7 +556,7 @@ int smart_delay_function(void *arg, int ms) {
 /////// End of Runtime functions ///////
 
 int RunProgram() {
-    if ((_IsServerRelayBoard) && (_IsPreflight == 0)) {
+    if ((1 || _IsServerRelayBoard) && (_IsPreflight == 0)) {
         _IntervalsCountProgram++;
     }
     if (_IntervalsCountProgram < 0) {
@@ -568,16 +568,17 @@ int RunProgram() {
     }
     if (_CurrentProgram != _OldProgram) {
         if (_IsPreflight) {
-            if (_IsServerRelayBoard) {
+            if (1 || _IsServerRelayBoard) {
                 int count = 0;
                 int err = 1;
-                while ((err) && (count < 4)) {
+                while ((err) && (count < DIA_REQUEST_RETRY_ATTEMPTS))
+                {
                     count++;
                     printf("relay control server board: run program preflight programID=%d\n", _CurrentProgramID);
                     err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
                     if (err != 0) {
                         fprintf(stderr, "relay control server board: run program error\n");
-                        delay(500);
+                        delay(100);
                     }
                 }
             }
@@ -586,7 +587,7 @@ int RunProgram() {
     }
     if ((_IntervalsCountPreflight == 0) && (_IsPreflight)) {
         _IsPreflight = 0;
-        if (_IsServerRelayBoard) {
+        if (1 || _IsServerRelayBoard) {
             _IntervalsCountProgram = 1000;
         }
     }
@@ -608,13 +609,13 @@ int RunProgram() {
     if (_IntervalsCountProgram > 20) {
         int count = 0;
         int err = 1;
-        while ((err) && (count < 4) && (_CurrentProgramID >= 0)) {
+        while ((err) && (count < DIA_REQUEST_RETRY_ATTEMPTS) && (_CurrentProgramID >= 0)) {
             count++;
             printf("relay control server board: run program programID=%d\n", _CurrentProgramID);
             err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
             if (err != 0) {
                 fprintf(stderr, "relay control server board: run program error\n");
-                delay(500);
+                delay(100);
             }
             if ((err == 0) && (_CurrentProgramID == 0)) {
                 _CurrentProgramID = -1;
