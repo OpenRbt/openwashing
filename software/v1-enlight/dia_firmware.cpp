@@ -33,7 +33,7 @@
 #include "dia_devicemanager.h"
 #include "dia_functions.h"
 #include "dia_gpio.h"
-#include "dia_network.h"
+#include "dia_firmware.h"
 #include "dia_runtime.h"
 #include "dia_runtime_registry.h"
 #include "dia_screen.h"
