@@ -115,14 +115,26 @@ class DiaRuntimeHardware {
         return 0;
     }
 
-    std::string (*getSessionID_function)();
-    std::string GetSessionID() {
-        if(getSessionID_function){
-            std::string sessionID = getSessionID_function();
+    std::string (*getVisibleSession_function)();
+    std::string GetVisibleSession() {
+        if(getVisibleSession_function){
+            std::string sessionID = getVisibleSession_function();
             return sessionID;
         }
         else{
-            printf("error: NIL object or function getSessionID_function\n");
+            printf("error: NIL object or function getVisibleSession_function\n");
+        }
+        return "";
+    }
+
+    std::string (*getActiveSession_function)();
+    std::string GetActiveSession() {
+        if(getActiveSession_function){
+            std::string sessionID = getActiveSession_function();
+            return sessionID;
+        }
+        else{
+            printf("error: NIL object or function getActiveSession_function\n");
         }
         return "";
     }

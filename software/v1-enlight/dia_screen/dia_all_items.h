@@ -7,4 +7,5 @@
 class DiaScreenConfig;
 class DiaScreenItem;
 class DiaScreenItemImage;
+class DiaScreenItemQr;
 class DiaScreenItemImageArray;
