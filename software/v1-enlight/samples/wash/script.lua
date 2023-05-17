@@ -83,10 +83,10 @@ setup = function()
     update_post();
     welcome:Set("post_number.value", post_position)
     
-    create_session()
+    --create_session()
 
     qr = "";
-    session_id = "";
+    visible_session = "";
     
     forget_pressed_key();
     return 0
@@ -134,10 +134,7 @@ end
 
 run_mode = function(new_mode)   
     if new_mode == mode_welcome then return welcome_mode() end
-    if new_mode == mode_choose_method then
-        create_session()
-        return choose_method_mode() 
-    end
+    if new_mode == mode_choose_method then return choose_method_mode() end
     if new_mode == mode_select_price then return select_price_mode() end
     if new_mode == mode_wait_for_card then return wait_for_card_mode() end
     if new_mode == mode_ask_for_money then return ask_for_money_mode() end
@@ -166,6 +163,10 @@ welcome_mode = function()
 end
 
 choose_method_mode = function()
+    visible_session = hardware:GetVisibleSession();
+    if visible_session == "" then
+        create_session()
+    end
     show_choose_method()
     run_stop()
 
@@ -386,7 +387,10 @@ thanks_mode = function()
         run_pause()
         waiting_loops = thanks_mode_seconds * 10;
         is_waiting_receipt = true
-        hardware:EndSession();
+        if visible_session ~= "" then 
+            hardware:EndSession();
+            visible_session = ""
+        end
     end
 
     if waiting_loops > 0 then
@@ -429,6 +433,7 @@ end
 
 show_choose_method = function()
     choose_method:Set("post_number.value", post_position)
+    choose_method:Set("qr_pic.url", qr)
     choose_method:Display()
 end
 
@@ -623,7 +628,6 @@ create_session = function()
         choose_method:Set("qr.visible", "false")
         choose_method:Set("bonus_pic.visible", "false")
     else
-        welcome:GenerateQR(qr);
-        session_id = hardware:GetSessionID();
+        visible_session = hardware:GetVisibleSession();
     end
 end

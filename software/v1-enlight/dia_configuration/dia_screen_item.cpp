@@ -1,13 +1,14 @@
+#include <iostream>
 #include "dia_screen_item.h"
 #include "dia_screen_item_digits.h"
 #include "dia_screen_item_image.h"
+#include "dia_screen_item_qr.h"
 #include "dia_screen_item_image_array.h"
 
 DiaScreenItem::DiaScreenItem(DiaScreenConfig * newParent) {
     display_ptr = 0;
     notify_ptr = 0;
     specific_object_ptr = 0;
-    isQr = false;
     Parent = newParent;
 }
 
@@ -56,10 +57,15 @@ int DiaScreenItem::Init(json_t * screen_item_json) {
         this->notify_ptr = dia_screen_item_image_notify;
         this->display_ptr = dia_screen_item_image_display;
 
-        json_t * is_qr = json_object_get(screen_item_json, "is_qr");
-        this->isQr = json_boolean_value(is_qr);
-
         image->Init(this, screen_item_json);
+    } else if(type.compare("qr") == 0) {
+        DiaScreenItemQr * qr = new DiaScreenItemQr();
+        
+        this->specific_object_ptr = qr;
+        this->notify_ptr = dia_screen_item_qr_notify;
+        this->display_ptr = dia_screen_item_qr_display;
+
+        qr->Init(this, screen_item_json);
     } else if (type.compare("image_array") == 0) {
         printf("Image Array found...\n");
         
@@ -159,6 +165,16 @@ DiaScreenItem::~DiaScreenItem() {
             printf("image deleted \n");
         } else {
             printf("image can't be deleted \n");
+        }
+    } else if(type.compare("qr")==0 ){
+        printf("qr object to be destroyed...\n");
+        if(specific_object_ptr!=0) {
+            DiaScreenItemQr * qr = (DiaScreenItemQr *) this->specific_object_ptr;
+            delete qr;
+            specific_object_ptr = 0;
+            printf("qr deleted \n");
+        } else {
+            printf("qr can't be deleted \n");
         }
     } else {
         printf("error, can't destroy type '%s'\n", type.c_str() );

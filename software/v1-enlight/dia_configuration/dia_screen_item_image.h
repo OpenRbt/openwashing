@@ -23,8 +23,6 @@ public:
     virtual void SetPicture(SDL_Surface * newPicture);
     virtual void SetScaledPicture(SDL_Surface * newPicture);
 
-    //void SetPicture(SDL_Surface * newPicture);
-    //void SetScaledPicture(SDL_Surface * newPicture);
     void Rescale();
     virtual ~DiaScreenItemImage();
     DiaScreenItemImage();

@@ -22,6 +22,8 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <thread>
+#include <chrono>
 #include <wiringPi.h>
 
 #include <iostream>
@@ -39,6 +41,7 @@
 #include "dia_screen.h"
 #include "dia_screen_item.h"
 #include "dia_screen_item_image.h"
+#include "dia_screen_item_qr.h"
 #include "dia_security.h"
 #include "dia_startscreen.h"
 
@@ -86,6 +89,7 @@ int _IsServerRelayBoard = 0;
 int _IntervalsCountProgram = 0;
 int _IntervalsCountPreflight = 0;
 
+int _WaitSecondsForNextSession = 180;
 int _Volume = 0;
 int _SensorVolume = 0;
 bool _SensorActive = false;
@@ -111,10 +115,14 @@ std::string _FlashName = "Flash";
 std::string _FileName;
 
 std::string _Qr = "";
-std::string _SessionID = "";
+std::string _NextSession = "";
+std::string _VisibleSession = "";
+std::string _ActiveSession = "";
+
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
+pthread_t active_session_thread;
 //pthread_t play_video_thread;
 
 int GetKey(DiaGpio *_gpio) {
@@ -142,23 +150,6 @@ DiaNetwork *network = new DiaNetwork();
 
 int set_current_state(int balance) {
     _CurrentBalance = balance;
-    return 0;
-}
-
-int set_QR(std::string address) {
-    if(!address.empty()){                  // User-supplied text
-        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
-        const QrCode qr = QrCode::encodeText(address.c_str(), errCorLvl);
-        SDL_Surface *qrSurface = dia_QRToSurface(qr);
-        std::map<std::string, DiaScreenConfig *>::iterator it;
-        for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
-            it->second->SetQr(qrSurface);
-        }
-
-        if (qrSurface!=0) {
-            SDL_FreeSurface(qrSurface);
-        }
-    }
     return 0;
 }
 
@@ -204,21 +195,26 @@ int CreateSession() {
     int answer = network->CreateSession(sessionID, QR);
     if (!answer) {
         _Qr = QR;
-        _SessionID = sessionID;
+        _VisibleSession = sessionID;
     }
     return answer;
 }
 
 int EndSession() {
-    return network->EndSession(_SessionID);
+    int answer = network->EndSession(_ActiveSession);
+    return answer;
 }
 
 std::string getQR() {
     return _Qr;
 }
 
-std::string getSessionID() {
-    return _SessionID;
+std::string getVisibleSession() {
+    return _VisibleSession;
+}
+
+std::string getActiveSession() {
+    return _ActiveSession;
 }
 
 int dirExists(const char *path) {
@@ -244,7 +240,6 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
 }
 
 int SetBonuses(int bonuses) {
-    std::cout << "\n bonuses: " << bonuses << "\n";
     return network->SetBonuses(bonuses);
 }
 
@@ -276,7 +271,7 @@ int send_receipt(int postPosition, int cash, int electronical) {
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1, 0, 0, 0, 0, 0, getSessionID());
+    SaveIncome(1, 0, 0, 0, 0, 0, getVisibleSession());
     return 0;
 }
 
@@ -345,7 +340,7 @@ int get_service() {
 
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, curMoney, 0, getSessionID());
+        SaveIncome(0, 0, 0, 0, curMoney, 0, getVisibleSession());
     }
     return curMoney;
 }
@@ -356,7 +351,7 @@ int get_bonuses() {
 
     if (curMoney > 0) {
         printf("bonus %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, 0, curMoney, getSessionID());
+        SaveIncome(0, 0, 0, 0, 0, curMoney, getVisibleSession());
     }
     return curMoney;
 }
@@ -428,7 +423,7 @@ int get_coins(void *object) {
 
     int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
     if (totalMoney > 0) {
-        SaveIncome(0, totalMoney, 0, 0, 0, 0, getSessionID());
+        SaveIncome(0, totalMoney, 0, 0, 0, 0, getVisibleSession());
     }
 
     return totalMoney;
@@ -457,7 +452,7 @@ int get_banknotes(void *object) {
     if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
     int totalMoney = curMoney + gpioBanknote;
     if (totalMoney > 0) {
-        SaveIncome(0, 0, totalMoney, 0, 0, 0, getSessionID());
+        SaveIncome(0, 0, totalMoney, 0, 0, 0, getVisibleSession());
     }
     return totalMoney;
 }
@@ -467,7 +462,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney > 0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0, 0, 0, curMoney, 0, 0, getSessionID());
+        SaveIncome(0, 0, 0, curMoney, 0, 0, getVisibleSession());
         manager->ElectronMoney = 0;
     }
     return curMoney;
@@ -626,6 +621,15 @@ int RunProgram() {
     return 0;
 }
 
+int ActiveSession(){
+    std::this_thread::sleep_for(std::chrono::seconds(_WaitSecondsForNextSession));
+    if(_CurrentBalance == 0){
+        EndSession();
+        std::cout<<"\n\nEnd Session permanently\n\n";
+    }
+    return 0;
+}
+
 int GetVolume() {
     /**/
     if (_SensorActivate) {
@@ -662,6 +666,14 @@ int GetVolume() {
     return 0;
 }
 
+void *active_session_func(void *ptr) {
+    ActiveSession();
+    delay(100);
+
+    pthread_exit(0);
+    return 0;
+}
+
 /////// Central server communication functions //////
 
 // Sends PING request to Central Server every 2 seconds.
@@ -685,9 +697,9 @@ int CentralServerDialog() {
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
-    std::string qrData = "";
+    std::string session = "";
 
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, isAuthorized, bonusAmount);
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, session, isAuthorized, bonusAmount);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
             config->LoadConfig();
@@ -718,7 +730,11 @@ int CentralServerDialog() {
 
     if (isAuthorized != _IsAuthorized) {
         _IsAuthorized = isAuthorized;
-        printf("User authorized: %d\n", isAuthorized);
+        if(_IsAuthorized){
+            _ActiveSession = _VisibleSession;
+            _VisibleSession = "";
+            pthread_create(&active_session_thread, NULL, active_session_func, NULL);
+        }
     }
 
     if (buttonID != 0) {
@@ -1232,7 +1248,6 @@ int main(int argc, char **argv) {
         screen->object = (void *)it->second;
         screen->set_value_function = dia_screen_config_set_value_function;
         screen->screen_object = config->GetScreen();
-        screen->set_QR_function = set_QR;
         screen->display_screen = dia_screen_display_screen;
         config->GetRuntime()->AddScreen(screen);
     }
@@ -1250,7 +1265,8 @@ int main(int argc, char **argv) {
     hardware->CreateSession_function = CreateSession;
     hardware->EndSession_function = EndSession;
 
-    hardware->getSessionID_function = getSessionID;
+    hardware->getVisibleSession_function = getVisibleSession;
+    hardware->getActiveSession_function = getActiveSession;
     hardware->getQR_function = getQR;
     hardware->SetBonuses_function = SetBonuses;
 
