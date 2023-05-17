@@ -34,12 +34,12 @@
         "visible":"true"
       },
       {
-      	"id":"qr",
-        "type":"image",
+      	"id":"qr_pic",
+        "type":"qr",
         "position": "1298;177",
         "size":"460;460",
         "src":"pic/qr.png",
-        "is_qr": true,
+        "url":"",
         "visible":"true"
       },
       {

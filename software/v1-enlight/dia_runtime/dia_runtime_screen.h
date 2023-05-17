@@ -47,11 +47,6 @@ public:
 
         return 0;
     }
-
-    int (*set_QR_function)(std::string address);
-    void GenerateQR(std::string address){
-        set_QR_function(address);
-    }
     
 
     std::string GetValue(std::string key) {
