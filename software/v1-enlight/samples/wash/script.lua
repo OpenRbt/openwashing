@@ -387,10 +387,6 @@ thanks_mode = function()
         run_pause()
         waiting_loops = thanks_mode_seconds * 10;
         is_waiting_receipt = true
-        if visible_session ~= "" then 
-            hardware:EndSession();
-            visible_session = ""
-        end
     end
 
     if waiting_loops > 0 then
@@ -410,6 +406,12 @@ thanks_mode = function()
         cash_balance = 0
         electronical_balance = 0
         is_waiting_receipt = false
+
+        if visible_session ~= "" then 
+            hardware:EndSession();
+            visible_session = ""
+        end
+        
 	if hascardreader() then
         	return mode_choose_method
     	end
