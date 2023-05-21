@@ -115,7 +115,6 @@ std::string _FlashName = "Flash";
 std::string _FileName;
 
 std::string _Qr = "";
-std::string _NextSession = "";
 std::string _VisibleSession = "";
 std::string _ActiveSession = "";
 
