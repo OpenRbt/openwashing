@@ -551,7 +551,7 @@ class DiaNetwork {
     // PING request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, bool &isAuthorized, int &bonusAmount) {
+    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, std::string &authorizedSessionID, int &bonusAmount) {
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 
@@ -612,10 +612,17 @@ class DiaNetwork {
             obj_bonus_amount = json_object_get(object, "bonusAmount");
             bonusAmount = (int)json_integer_value(obj_bonus_amount);
 
-            json_t *obj_is_authorized;
-            obj_is_authorized = json_object_get(object, "isAuthorized");
-            isAuthorized = (bool)json_boolean_value(obj_is_authorized);
-
+            json_t *obj_authorized_session_ID;
+            obj_authorized_session_ID = json_object_get(object, "AuthorizedSessionID");
+            
+            if (json_is_string(obj_authorized_session_ID)) {
+                authorizedSessionID = (std::string)json_string_value(obj_authorized_session_ID);
+            }
+            else{
+                authorizedSessionID = "";
+                
+            }
+            std::cout<<"\n\n\nuthorizedSessionID network: " << authorizedSessionID << "\n\n\n";
             json_t *obj_qr_data;
             obj_qr_data = json_object_get(object, "qr_data");
             if (json_is_string(obj_qr_data)) {
@@ -628,7 +635,7 @@ class DiaNetwork {
             json_decref(obj_last_discount_update);
             json_decref(obj_bonus_system);
             json_decref(obj_bonus_amount);
-            json_decref(obj_is_authorized);
+            json_decref(obj_authorized_session_ID);
             json_decref(obj_qr_data);
         } while (0);
         json_decref(object);

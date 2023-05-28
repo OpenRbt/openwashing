@@ -101,7 +101,7 @@ bool _IsPlayingVideo = false;
 int _CanPlayVideoTimer = 0;
 
 bool _BonusSystemIsActive = false;
-bool _IsAuthorized = false;
+std::string _AuthorizedSessionID = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
@@ -193,6 +193,7 @@ int CreateSession() {
     std::string sessionID;
     int answer = network->CreateSession(sessionID, QR);
     if (!answer) {
+        std::cout<<"\n\n\nCreateSession QR: "<<QR;
         _Qr = QR;
         _VisibleSession = sessionID;
     }
@@ -201,6 +202,7 @@ int CreateSession() {
 
 int EndSession() {
     int answer = network->EndSession(_ActiveSession);
+    std::cout<<"\n\n\nEndSession: "<<_ActiveSession<<"\nanswer:"<<answer;
     return answer;
 }
 
@@ -313,8 +315,8 @@ bool bonus_system_is_active() {
     return _BonusSystemIsActive;
 }
 
-bool is_athorized() {
-    return _IsAuthorized;
+std::string authorized_session_ID() {
+    return _AuthorizedSessionID;
 }
 
 int bonus_system_refresh_active_qr() {
@@ -690,14 +692,14 @@ int CentralServerDialog() {
     int serviceMoney = 0;
     int bonusAmount = 0;
     bool openStation = false;
-    bool isAuthorized = false;
+    std::string authorizedSessionID = "";
     bool bonusSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
     std::string session = "";
 
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, session, isAuthorized, bonusAmount);
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, session, authorizedSessionID, bonusAmount);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
             config->LoadConfig();
@@ -726,11 +728,14 @@ int CentralServerDialog() {
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
 
-    if (isAuthorized != _IsAuthorized) {
-        _IsAuthorized = isAuthorized;
-        if(_IsAuthorized){
-            _ActiveSession = _VisibleSession;
-            _VisibleSession = "";
+    if (authorizedSessionID == _VisibleSession) {
+        _VisibleSession = "";
+        _AuthorizedSessionID = authorizedSessionID;
+        if( _ActiveSession != "" ){
+            EndSession();
+        }
+        if (_AuthorizedSessionID != ""){
+            _ActiveSession = authorizedSessionID;
             pthread_create(&active_session_thread, NULL, active_session_func, NULL);
         }
     }
@@ -869,7 +874,7 @@ int RecoverRegistry() {
     int bonusAmount = 0;
     bool openStation = false;
     bool bonusSystemActive = false;
-    bool isAuthorized = false;
+    std::string authorizedSessionID = "";
     int buttonID = 0;
 
     int lastUpdate = 0;
@@ -879,7 +884,7 @@ int RecoverRegistry() {
     std::string qrData = "";
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, isAuthorized, bonusAmount);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, bonusAmount);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1307,7 +1312,7 @@ int main(int argc, char **argv) {
     printf("HW init 7...\n");
 
     hardware->bonus_system_is_active_function = bonus_system_is_active;
-    hardware->is_athorized_function = is_athorized;
+    hardware->authorized_session_ID_function = authorized_session_ID;
     hardware->bonus_system_refresh_active_qr_function = bonus_system_refresh_active_qr;
     hardware->bonus_system_start_session_function = bonus_system_start_session;
     hardware->bonus_system_confirm_session_function = bonus_system_confirm_session;
