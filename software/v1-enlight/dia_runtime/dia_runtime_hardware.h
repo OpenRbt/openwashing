@@ -325,13 +325,13 @@ class DiaRuntimeHardware {
         return false;
     }
 
-    bool (*is_athorized_function)();
-    bool IsAuthorized() {
-        if (is_athorized_function) {
-            return is_athorized_function();
+    std::string (*authorized_session_ID_function)();
+    std::string AuthorizedSessionID() {
+        if (authorized_session_ID_function) {
+            return authorized_session_ID_function();
         }
         printf("error: NIL object or function IsAuthorized\n");
-        return false;
+        return "";
     }
 
     int (*bonus_system_refresh_active_qr_function)();

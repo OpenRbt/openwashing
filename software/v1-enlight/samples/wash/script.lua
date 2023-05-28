@@ -620,7 +620,12 @@ hascardreader = function()
 end
 
 is_authorized_function = function ()
-    return hardware:IsAuthorized()
+    authorizedSessionID = hardware:AuthorizedSessionID();
+    printMessage("\n\n\nauthorizedSessionID: " .. authorizedSessionID)
+    if authorizedSessionID ~= "" and authorizedSessionID ~= nil then
+        return true
+    end
+    return false
 end
 
 create_session = function()
@@ -629,7 +634,5 @@ create_session = function()
     if qr == nil or qr == '' then
         choose_method:Set("qr.visible", "false")
         choose_method:Set("bonus_pic.visible", "false")
-    else
-        visible_session = hardware:GetVisibleSession();
     end
 end
