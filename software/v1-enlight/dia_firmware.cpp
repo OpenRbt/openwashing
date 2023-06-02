@@ -107,9 +107,6 @@ int _BonusSystemBalance = 0;
 
 bool _IsDirExist = false;
 int _MaxAfkTime = 30;
-//std::string str(s)
-//std::string _UserName;
-//char* login = getlogin();
 
 std::string _FlashName = "Flash";
 std::string _FileName;
@@ -122,7 +119,7 @@ std::string _ActiveSession = "";
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
 pthread_t active_session_thread;
-//pthread_t play_video_thread;
+pthread_t play_video_thread;
 
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
@@ -201,8 +198,9 @@ int CreateSession() {
 }
 
 int EndSession() {
-    int answer = network->EndSession(_ActiveSession);
-    std::cout<<"\n\n\nEndSession: "<<_ActiveSession<<"\nanswer:"<<answer;
+    int answer = network->EndSession(_AuthorizedSessionID);
+    std::cout<<"\n\n\nEndSession: "<<_AuthorizedSessionID<<"\nanswer:"<<answer;
+    _AuthorizedSessionID = "";
     return answer;
 }
 
@@ -214,20 +212,15 @@ std::string getVisibleSession() {
     return _VisibleSession;
 }
 
-std::string getActiveSession() {
-    return _ActiveSession;
+bool dirExists(const std::string& dirName_in)
+{
+    fs::path dirNamePath(dirName_in);
+    if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
+        return true;
+    }
+    return false;
 }
 
-int dirExists(const char *path) {
-    struct stat info;
-
-    if (stat(path, &info) != 0)
-        return 0;
-    else if (info.st_mode & S_IFDIR)
-        return 1;
-    else
-        return 0;
-}
 
 // Saves new income money and creates money report to Central Server.
 void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
@@ -621,15 +614,6 @@ int RunProgram() {
     return 0;
 }
 
-int ActiveSession(){
-    std::this_thread::sleep_for(std::chrono::seconds(_WaitSecondsForNextSession));
-    if(_CurrentBalance == 0){
-        EndSession();
-        std::cout<<"\n\nEnd Session permanently\n\n";
-    }
-    return 0;
-}
-
 int GetVolume() {
     /**/
     if (_SensorActivate) {
@@ -663,14 +647,6 @@ int GetVolume() {
             printf("Completion of fluid flow. Status: %s\n", status.c_str());
         }
     }
-    return 0;
-}
-
-void *active_session_func(void *ptr) {
-    ActiveSession();
-    delay(100);
-
-    pthread_exit(0);
     return 0;
 }
 
@@ -728,16 +704,14 @@ int CentralServerDialog() {
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
 
-    if (authorizedSessionID == _VisibleSession) {
-        _VisibleSession = "";
-        _AuthorizedSessionID = authorizedSessionID;
-        if( _ActiveSession != "" ){
+    if (authorizedSessionID == _VisibleSession && _VisibleSession != "") {
+        std::cout<<"\n\n\nPing authorizedSessionID: " << authorizedSessionID;
+        std::cout<<"\n\n\nPing _VisibleSession: " << _VisibleSession;
+        if( _AuthorizedSessionID != "" ){
             EndSession();
         }
-        if (_AuthorizedSessionID != ""){
-            _ActiveSession = authorizedSessionID;
-            pthread_create(&active_session_thread, NULL, active_session_func, NULL);
-        }
+        _AuthorizedSessionID = authorizedSessionID;
+        _VisibleSession = "";
     }
 
     if (buttonID != 0) {
@@ -1269,7 +1243,6 @@ int main(int argc, char **argv) {
     hardware->EndSession_function = EndSession;
 
     hardware->getVisibleSession_function = getVisibleSession;
-    hardware->getActiveSession_function = getActiveSession;
     hardware->getQR_function = getQR;
     hardware->SetBonuses_function = SetBonuses;
 
@@ -1365,18 +1338,20 @@ int main(int argc, char **argv) {
 /*
     std::list<std::string> directories;
     std::string directory;
-    for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
-        directories.push_back(entry.path());
+    for (const auto &entry : fs::directory_iterator("/media")) {
+        if(fs::is_directory(entry.path())) {
+            directories.push_back(entry.path());
+        }
+    }
 
     for (auto const &i : directories) {
-        _IsDirExist = dirExists((i + "/openrbt_video").c_str());
-        if (_IsDirExist) {
-            directory = (i + "/openrbt_video").c_str();
+        if (dirExists(i + "/openrbt_video")) {
+            directory = i + "/openrbt_video";
             break;
         }
     }
 
-    if (_IsDirExist) {
+    if (!directory.empty()) {
         for (const auto &entry : fs::directory_iterator(directory))
             _FileName = entry.path();
 

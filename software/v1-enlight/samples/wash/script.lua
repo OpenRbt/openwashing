@@ -319,6 +319,7 @@ program_mode = function(working_mode)
   end
   set_current_state(balance)
   if balance <= 0.01 then
+    forget_pressed_key()
     return mode_thanks 
   end
   update_balance()
@@ -348,7 +349,10 @@ pause_mode = function()
     set_current_state(balance,6)
     show_pause(balance, balance_seconds, cur_price)
     
-    if balance <= 0.01 then return mode_thanks end
+    if balance <= 0.01 then
+        forget_pressed_key()
+        return mode_thanks 
+    end
     
     suggested_mode = get_mode_by_pressed_key()
 
@@ -371,6 +375,7 @@ confirm_end_mode = function ()
     if pressed_key == 6 then
         hardware:SetBonuses(math.ceil(balance))
         money_wait_seconds = 0
+        forget_pressed_key()
         return mode_thanks
     end
 
@@ -412,7 +417,7 @@ thanks_mode = function()
             visible_session = ""
         end
         
-	if hascardreader() then
+	    if hascardreader() then
         	return mode_choose_method
     	end
         return mode_ask_for_money
