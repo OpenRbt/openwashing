@@ -22,6 +22,8 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <thread>
+#include <chrono>
 #include <wiringPi.h>
 
 #include <iostream>
@@ -39,6 +41,7 @@
 #include "dia_screen.h"
 #include "dia_screen_item.h"
 #include "dia_screen_item_image.h"
+#include "dia_screen_item_qr.h"
 #include "dia_security.h"
 #include "dia_startscreen.h"
 
@@ -86,6 +89,7 @@ int _IsServerRelayBoard = 0;
 int _IntervalsCountProgram = 0;
 int _IntervalsCountPreflight = 0;
 
+int _WaitSecondsForNextSession = 180;
 int _Volume = 0;
 int _SensorVolume = 0;
 bool _SensorActive = false;
@@ -97,25 +101,25 @@ bool _IsPlayingVideo = false;
 int _CanPlayVideoTimer = 0;
 
 bool _BonusSystemIsActive = false;
-bool _IsAuthorized = false;
+std::string _AuthorizedSessionID = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
 bool _IsDirExist = false;
 int _MaxAfkTime = 30;
-//std::string str(s)
-//std::string _UserName;
-//char* login = getlogin();
 
 std::string _FlashName = "Flash";
 std::string _FileName;
 
 std::string _Qr = "";
-std::string _SessionID = "";
+std::string _VisibleSession = "";
+std::string _ActiveSession = "";
+
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
-//pthread_t play_video_thread;
+pthread_t active_session_thread;
+pthread_t play_video_thread;
 
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
@@ -142,23 +146,6 @@ DiaNetwork *network = new DiaNetwork();
 
 int set_current_state(int balance) {
     _CurrentBalance = balance;
-    return 0;
-}
-
-int set_QR(std::string address) {
-    if(!address.empty()){                  // User-supplied text
-        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
-        const QrCode qr = QrCode::encodeText(address.c_str(), errCorLvl);
-        SDL_Surface *qrSurface = dia_QRToSurface(qr);
-        std::map<std::string, DiaScreenConfig *>::iterator it;
-        for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
-            it->second->SetQr(qrSurface);
-        }
-
-        if (qrSurface!=0) {
-            SDL_FreeSurface(qrSurface);
-        }
-    }
     return 0;
 }
 
@@ -203,34 +190,37 @@ int CreateSession() {
     std::string sessionID;
     int answer = network->CreateSession(sessionID, QR);
     if (!answer) {
+        std::cout<<"\n\n\nCreateSession QR: "<<QR;
         _Qr = QR;
-        _SessionID = sessionID;
+        _VisibleSession = sessionID;
     }
     return answer;
 }
 
 int EndSession() {
-    return network->EndSession(_SessionID);
+    int answer = network->EndSession(_AuthorizedSessionID);
+    std::cout<<"\n\n\nEndSession: "<<_AuthorizedSessionID<<"\nanswer:"<<answer;
+    _AuthorizedSessionID = "";
+    return answer;
 }
 
 std::string getQR() {
     return _Qr;
 }
 
-std::string getSessionID() {
-    return _SessionID;
+std::string getVisibleSession() {
+    return _VisibleSession;
 }
 
-int dirExists(const char *path) {
-    struct stat info;
-
-    if (stat(path, &info) != 0)
-        return 0;
-    else if (info.st_mode & S_IFDIR)
-        return 1;
-    else
-        return 0;
+bool dirExists(const std::string& dirName_in)
+{
+    fs::path dirNamePath(dirName_in);
+    if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
+        return true;
+    }
+    return false;
 }
+
 
 // Saves new income money and creates money report to Central Server.
 void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
@@ -244,7 +234,7 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
 }
 
 int SetBonuses(int bonuses) {
-    std::cout << "\n bonuses: " << bonuses << "\n";
+    std::cout<<"\n\n\nSetBonuses: "<<bonuses;
     return network->SetBonuses(bonuses);
 }
 
@@ -276,7 +266,7 @@ int send_receipt(int postPosition, int cash, int electronical) {
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1, 0, 0, 0, 0, 0, getSessionID());
+    SaveIncome(1, 0, 0, 0, 0, 0, getVisibleSession());
     return 0;
 }
 
@@ -319,8 +309,8 @@ bool bonus_system_is_active() {
     return _BonusSystemIsActive;
 }
 
-bool is_athorized() {
-    return _IsAuthorized;
+std::string authorized_session_ID() {
+    return _AuthorizedSessionID;
 }
 
 int bonus_system_refresh_active_qr() {
@@ -345,7 +335,7 @@ int get_service() {
 
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, curMoney, 0, getSessionID());
+        SaveIncome(0, 0, 0, 0, curMoney, 0, getVisibleSession());
     }
     return curMoney;
 }
@@ -356,7 +346,7 @@ int get_bonuses() {
 
     if (curMoney > 0) {
         printf("bonus %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, 0, curMoney, getSessionID());
+        SaveIncome(0, 0, 0, 0, 0, curMoney, getVisibleSession());
     }
     return curMoney;
 }
@@ -428,7 +418,7 @@ int get_coins(void *object) {
 
     int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
     if (totalMoney > 0) {
-        SaveIncome(0, totalMoney, 0, 0, 0, 0, getSessionID());
+        SaveIncome(0, totalMoney, 0, 0, 0, 0, getVisibleSession());
     }
 
     return totalMoney;
@@ -457,7 +447,7 @@ int get_banknotes(void *object) {
     if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
     int totalMoney = curMoney + gpioBanknote;
     if (totalMoney > 0) {
-        SaveIncome(0, 0, totalMoney, 0, 0, 0, getSessionID());
+        SaveIncome(0, 0, totalMoney, 0, 0, 0, getVisibleSession());
     }
     return totalMoney;
 }
@@ -467,7 +457,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney > 0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0, 0, 0, curMoney, 0, 0, getSessionID());
+        SaveIncome(0, 0, 0, curMoney, 0, 0, getVisibleSession());
         manager->ElectronMoney = 0;
     }
     return curMoney;
@@ -680,14 +670,14 @@ int CentralServerDialog() {
     int serviceMoney = 0;
     int bonusAmount = 0;
     bool openStation = false;
-    bool isAuthorized = false;
+    std::string authorizedSessionID = "";
     bool bonusSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
-    std::string qrData = "";
+    std::string session = "";
 
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, isAuthorized, bonusAmount);
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, session, authorizedSessionID, bonusAmount);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
             config->LoadConfig();
@@ -703,7 +693,7 @@ int CentralServerDialog() {
     }
     if (bonusAmount > 0) {
         // TODO protect with mutex
-        _Balance += bonusAmount;
+        _BalanceBonuses += bonusAmount;
     }
     if (openStation) {
         _OpenLid = _OpenLid + 1;
@@ -716,9 +706,14 @@ int CentralServerDialog() {
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
 
-    if (isAuthorized != _IsAuthorized) {
-        _IsAuthorized = isAuthorized;
-        printf("User authorized: %d\n", isAuthorized);
+    if (authorizedSessionID == _VisibleSession && _VisibleSession != "") {
+        std::cout<<"\n\n\nPing authorizedSessionID: " << authorizedSessionID;
+        std::cout<<"\n\n\nPing _VisibleSession: " << _VisibleSession;
+        if( _AuthorizedSessionID != "" ){
+            EndSession();
+        }
+        _AuthorizedSessionID = authorizedSessionID;
+        _VisibleSession = "";
     }
 
     if (buttonID != 0) {
@@ -855,7 +850,7 @@ int RecoverRegistry() {
     int bonusAmount = 0;
     bool openStation = false;
     bool bonusSystemActive = false;
-    bool isAuthorized = false;
+    std::string authorizedSessionID = "";
     int buttonID = 0;
 
     int lastUpdate = 0;
@@ -865,7 +860,7 @@ int RecoverRegistry() {
     std::string qrData = "";
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, isAuthorized, bonusAmount);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, bonusAmount);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1232,7 +1227,6 @@ int main(int argc, char **argv) {
         screen->object = (void *)it->second;
         screen->set_value_function = dia_screen_config_set_value_function;
         screen->screen_object = config->GetScreen();
-        screen->set_QR_function = set_QR;
         screen->display_screen = dia_screen_display_screen;
         config->GetRuntime()->AddScreen(screen);
     }
@@ -1250,7 +1244,7 @@ int main(int argc, char **argv) {
     hardware->CreateSession_function = CreateSession;
     hardware->EndSession_function = EndSession;
 
-    hardware->getSessionID_function = getSessionID;
+    hardware->getVisibleSession_function = getVisibleSession;
     hardware->getQR_function = getQR;
     hardware->SetBonuses_function = SetBonuses;
 
@@ -1293,7 +1287,7 @@ int main(int argc, char **argv) {
     printf("HW init 7...\n");
 
     hardware->bonus_system_is_active_function = bonus_system_is_active;
-    hardware->is_athorized_function = is_athorized;
+    hardware->authorized_session_ID_function = authorized_session_ID;
     hardware->bonus_system_refresh_active_qr_function = bonus_system_refresh_active_qr;
     hardware->bonus_system_start_session_function = bonus_system_start_session;
     hardware->bonus_system_confirm_session_function = bonus_system_confirm_session;
@@ -1346,18 +1340,20 @@ int main(int argc, char **argv) {
 /*
     std::list<std::string> directories;
     std::string directory;
-    for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
-        directories.push_back(entry.path());
+    for (const auto &entry : fs::directory_iterator("/media")) {
+        if(fs::is_directory(entry.path())) {
+            directories.push_back(entry.path());
+        }
+    }
 
     for (auto const &i : directories) {
-        _IsDirExist = dirExists((i + "/openrbt_video").c_str());
-        if (_IsDirExist) {
-            directory = (i + "/openrbt_video").c_str();
+        if (dirExists(i + "/openrbt_video")) {
+            directory = i + "/openrbt_video";
             break;
         }
     }
 
-    if (_IsDirExist) {
+    if (!directory.empty()) {
         for (const auto &entry : fs::directory_iterator(directory))
             _FileName = entry.path();
 

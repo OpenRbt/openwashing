@@ -115,14 +115,26 @@ class DiaRuntimeHardware {
         return 0;
     }
 
-    std::string (*getSessionID_function)();
-    std::string GetSessionID() {
-        if(getSessionID_function){
-            std::string sessionID = getSessionID_function();
+    std::string (*getVisibleSession_function)();
+    std::string GetVisibleSession() {
+        if(getVisibleSession_function){
+            std::string sessionID = getVisibleSession_function();
             return sessionID;
         }
         else{
-            printf("error: NIL object or function getSessionID_function\n");
+            printf("error: NIL object or function getVisibleSession_function\n");
+        }
+        return "";
+    }
+
+    std::string (*getActiveSession_function)();
+    std::string GetActiveSession() {
+        if(getActiveSession_function){
+            std::string sessionID = getActiveSession_function();
+            return sessionID;
+        }
+        else{
+            printf("error: NIL object or function getActiveSession_function\n");
         }
         return "";
     }
@@ -313,13 +325,13 @@ class DiaRuntimeHardware {
         return false;
     }
 
-    bool (*is_athorized_function)();
-    bool IsAuthorized() {
-        if (is_athorized_function) {
-            return is_athorized_function();
+    std::string (*authorized_session_ID_function)();
+    std::string AuthorizedSessionID() {
+        if (authorized_session_ID_function) {
+            return authorized_session_ID_function();
         }
         printf("error: NIL object or function IsAuthorized\n");
-        return false;
+        return "";
     }
 
     int (*bonus_system_refresh_active_qr_function)();

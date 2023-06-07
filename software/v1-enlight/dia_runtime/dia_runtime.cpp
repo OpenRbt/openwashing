@@ -78,7 +78,6 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addConstructor<void (*)()>()
         .addFunction("Display", &DiaRuntimeScreen::Display)
         .addFunction("Set", &DiaRuntimeScreen::SetValue)
-        .addFunction("GenerateQR", &DiaRuntimeScreen::GenerateQR)
         .endClass();
 
     getGlobalNamespace(Lua)
@@ -103,7 +102,8 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("SetIsPlayingVideo", &DiaRuntimeHardware::SetIsPlayingVideo)
         .addFunction("GetQR", &DiaRuntimeHardware::GetQR)
         .addFunction("SendPause", &DiaRuntimeHardware::SendPause)
-        .addFunction("GetSessionID", &DiaRuntimeHardware::GetSessionID)
+        .addFunction("GetVisibleSession", &DiaRuntimeHardware::GetVisibleSession)
+        .addFunction("GetActiveSession", &DiaRuntimeHardware::GetActiveSession)
         .addFunction("SendReceipt", &DiaRuntimeHardware::SendReceipt)
         .addFunction("IncrementCars", &DiaRuntimeHardware::IncrementCars)
         .addFunction("GetElectronical", &DiaRuntimeHardware::GetElectronical)
@@ -114,7 +114,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("GetSensorActive", &DiaRuntimeHardware::GetSensorActive)
         .addFunction("StartFluidFlowSensor", &DiaRuntimeHardware::StartFluidFlowSensor)
         .addFunction("BonusSystemIsActive", &DiaRuntimeHardware::BonusSystemIsActive)
-        .addFunction("IsAuthorized", &DiaRuntimeHardware::IsAuthorized)
+        .addFunction("AuthorizedSessionID", &DiaRuntimeHardware::AuthorizedSessionID)
         .addFunction("BonusSystemRefreshActiveQR", &DiaRuntimeHardware::BonusSystemRefreshActiveQR)
         .addFunction("BonusSystemConfirmSession", &DiaRuntimeHardware::BonusSystemConfirmSession)
         .addFunction("BonusSystemStartSession", &DiaRuntimeHardware::BonusSystemStartSession)

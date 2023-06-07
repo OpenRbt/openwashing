@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <iostream>
 
 #include "dia_functions.h"
 #include "string.h"
@@ -198,6 +199,8 @@ SDL_Surface *dia_ScaleSurface(SDL_Surface *Surface, Uint16 Width, Uint16 Height)
 
     SDL_Surface *_ret = SDL_CreateRGBSurface(Surface->flags, Width, Height, Surface->format->BitsPerPixel,
         Surface->format->Rmask, Surface->format->Gmask, Surface->format->Bmask, Surface->format->Amask);
+
+        
 
 //|_|_|_|_|
 //|_|_|_|_|

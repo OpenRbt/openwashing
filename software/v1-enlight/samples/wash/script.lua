@@ -83,10 +83,10 @@ setup = function()
     update_post();
     welcome:Set("post_number.value", post_position)
     
-    create_session()
+    --create_session()
 
     qr = "";
-    session_id = "";
+    visible_session = "";
     
     forget_pressed_key();
     return 0
@@ -134,10 +134,7 @@ end
 
 run_mode = function(new_mode)   
     if new_mode == mode_welcome then return welcome_mode() end
-    if new_mode == mode_choose_method then
-        create_session()
-        return choose_method_mode() 
-    end
+    if new_mode == mode_choose_method then return choose_method_mode() end
     if new_mode == mode_select_price then return select_price_mode() end
     if new_mode == mode_wait_for_card then return wait_for_card_mode() end
     if new_mode == mode_ask_for_money then return ask_for_money_mode() end
@@ -166,6 +163,10 @@ welcome_mode = function()
 end
 
 choose_method_mode = function()
+    visible_session = hardware:GetVisibleSession();
+    if visible_session == "" then
+        create_session()
+    end
     show_choose_method()
     run_stop()
 
@@ -318,6 +319,7 @@ program_mode = function(working_mode)
   end
   set_current_state(balance)
   if balance <= 0.01 then
+    forget_pressed_key()
     return mode_thanks 
   end
   update_balance()
@@ -347,7 +349,10 @@ pause_mode = function()
     set_current_state(balance,6)
     show_pause(balance, balance_seconds, cur_price)
     
-    if balance <= 0.01 then return mode_thanks end
+    if balance <= 0.01 then
+        forget_pressed_key()
+        return mode_thanks 
+    end
     
     suggested_mode = get_mode_by_pressed_key()
 
@@ -370,6 +375,7 @@ confirm_end_mode = function ()
     if pressed_key == 6 then
         hardware:SetBonuses(math.ceil(balance))
         money_wait_seconds = 0
+        forget_pressed_key()
         return mode_thanks
     end
 
@@ -386,7 +392,6 @@ thanks_mode = function()
         run_pause()
         waiting_loops = thanks_mode_seconds * 10;
         is_waiting_receipt = true
-        hardware:EndSession();
     end
 
     if waiting_loops > 0 then
@@ -404,9 +409,16 @@ thanks_mode = function()
     else
         send_receipt(post_position, cash_balance, electronical_balance)
         cash_balance = 0
+        bonuses_balance = 0
         electronical_balance = 0
         is_waiting_receipt = false
-	if hascardreader() then
+
+        if visible_session ~= "" then 
+            hardware:EndSession();
+            visible_session = ""
+        end
+        
+	    if hascardreader() then
         	return mode_choose_method
     	end
         return mode_ask_for_money
@@ -429,6 +441,7 @@ end
 
 show_choose_method = function()
     choose_method:Set("post_number.value", post_position)
+    choose_method:Set("qr_pic.url", qr)
     choose_method:Display()
 end
 
@@ -613,7 +626,12 @@ hascardreader = function()
 end
 
 is_authorized_function = function ()
-    return hardware:IsAuthorized()
+    authorizedSessionID = hardware:AuthorizedSessionID();
+    printMessage("\n\n\nauthorizedSessionID: " .. authorizedSessionID)
+    if authorizedSessionID ~= "" and authorizedSessionID ~= nil then
+        return true
+    end
+    return false
 end
 
 create_session = function()
@@ -622,8 +640,5 @@ create_session = function()
     if qr == nil or qr == '' then
         choose_method:Set("qr.visible", "false")
         choose_method:Set("bonus_pic.visible", "false")
-    else
-        welcome:GenerateQR(qr);
-        session_id = hardware:GetSessionID();
     end
 end

@@ -38,7 +38,6 @@ public:
     int InitDetails(json_t *screen_json);
     int AddItem(DiaScreenItem * item);
     int Display(DiaScreen * screen);
-    int SetQr(SDL_Surface * qr);
     ~DiaScreenConfig();
     DiaScreenConfig();
 };
