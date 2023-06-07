@@ -55,7 +55,10 @@
         "concepts": "cpp",
         "cstring": "cpp",
         "numbers": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
     },
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}"
 }
