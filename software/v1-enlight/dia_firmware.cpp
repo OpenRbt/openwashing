@@ -234,6 +234,7 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
 }
 
 int SetBonuses(int bonuses) {
+    std::cout<<"\n\n\nSetBonuses: "<<bonuses;
     return network->SetBonuses(bonuses);
 }
 
@@ -691,7 +692,7 @@ int CentralServerDialog() {
     }
     if (bonusAmount > 0) {
         // TODO protect with mutex
-        _Balance += bonusAmount;
+        _BalanceBonuses += bonusAmount;
     }
     if (openStation) {
         _OpenLid = _OpenLid + 1;
