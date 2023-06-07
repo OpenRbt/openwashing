@@ -409,6 +409,7 @@ thanks_mode = function()
     else
         send_receipt(post_position, cash_balance, electronical_balance)
         cash_balance = 0
+        bonuses_balance = 0
         electronical_balance = 0
         is_waiting_receipt = false
 
