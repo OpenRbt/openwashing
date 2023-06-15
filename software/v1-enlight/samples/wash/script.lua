@@ -684,5 +684,8 @@ get_QR = function()
     if qr == nil or qr == '' then
         choose_method:Set("qr_pic.visible", "false")
         choose_method:Set("bonus_pic.visible", "false")
+    else
+        choose_method:Set("qr_pic.visible", "true")
+        choose_method:Set("bonus_pic.visible", "true")
     end
 end
