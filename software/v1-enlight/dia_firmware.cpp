@@ -731,7 +731,14 @@ int CentralServerDialog() {
     }
     _VisibleSessionID = visibleSessionTmp;
     _AuthorizedSessionID = authorizedSessionID;
-    _Qr = "https://app.openwashing.com/#/?sessionID=" + _VisibleSessionID;
+    std::cout<<"\n\n\n_VisibleSessionID: "<<_VisibleSessionID;
+    std::cout<<"\n\n\n_AuthorizedSessionID: "<<_AuthorizedSessionID;
+    if(_VisibleSessionID != ""){
+        _Qr = "https://app.openwashing.com/#/?sessionID=" + _VisibleSessionID;
+    }
+    else{
+        _Qr = "";
+    }
     if (buttonID != 0) {
         printf("BUTTON PRESSED %d \n", buttonID);
     }
