@@ -100,6 +100,8 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("SetCanPlayVideo", &DiaRuntimeHardware::SetCanPlayVideo)
         .addFunction("GetIsPlayingVideo", &DiaRuntimeHardware::GetIsPlayingVideo)
         .addFunction("SetIsPlayingVideo", &DiaRuntimeHardware::SetIsPlayingVideo)
+        .addFunction("GetIsConnectedToBonusSystem", &DiaRuntimeHardware::GetIsConnectedToBonusSystem)
+        .addFunction("SetIsConnectedToBonusSystem", &DiaRuntimeHardware::SetIsConnectedToBonusSystem)
         .addFunction("GetQR", &DiaRuntimeHardware::GetQR)
         .addFunction("SendPause", &DiaRuntimeHardware::SendPause)
         .addFunction("GetVisibleSession", &DiaRuntimeHardware::GetVisibleSession)

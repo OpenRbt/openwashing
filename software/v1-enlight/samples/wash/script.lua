@@ -25,6 +25,7 @@ setup = function()
     -- constants
     welcome_mode_seconds = 3
     thanks_mode_seconds = 120
+    connection_to_bonus_seconds = 5
     free_pause_seconds = 120
     wait_card_mode_seconds = 40
     max_money_wait_seconds = 90
@@ -32,6 +33,7 @@ setup = function()
     is_paused = false
     is_authorized = false
     is_transaction_started = false
+    is_connected_to_bonus_system = false
     is_waiting_receipt = false
     is_money_added = false
 
@@ -71,6 +73,7 @@ setup = function()
     -- end of modes which MUST follow each other
     mode_confirm_end = 110
     mode_thanks = 120
+    mode_connected_to_bonus_system = 130
     real_ms_per_loop = 100
     
     currentMode = mode_welcome
@@ -83,7 +86,7 @@ setup = function()
     update_post();
     welcome:Set("post_number.value", post_position)
     
-    --create_session()
+    create_session()
 
     qr = "";
     visible_session = "";
@@ -142,7 +145,7 @@ run_mode = function(new_mode)
     if is_working_mode (new_mode) then return program_mode(new_mode) end
     if new_mode == mode_pause then return pause_mode() end
     if new_mode == mode_confirm_end then return confirm_end_mode() end
-    
+    if new_mode == mode_connected_to_bonus_system then return connected_to_bonus_system_mode() end
     
     if new_mode == mode_thanks then return thanks_mode() end
 end
@@ -164,9 +167,8 @@ end
 
 choose_method_mode = function()
     visible_session = hardware:GetVisibleSession();
-    if visible_session == "" then
-        create_session()
-    end
+    get_QR()
+    
     show_choose_method()
     run_stop()
 
@@ -190,8 +192,35 @@ choose_method_mode = function()
     if balance > 0.99 then
         return mode_work
     end
+    
+    if get_is_connected_to_bonus_system() then
+        return mode_connected_to_bonus_system
+    end
 
     return mode_choose_method
+end
+
+connected_to_bonus_system_mode = function()
+
+    show_connected_to_bonus_system()
+    if is_connected_to_bonus_system == false then
+        waiting_seconds = connection_to_bonus_seconds * 10;
+        is_connected_to_bonus_system = true
+    end
+
+    if waiting_seconds > 0 then
+        pressed_key = get_key()
+        if pressed_key > 0 and pressed_key < 7 then
+            waiting_seconds = 0
+        end
+        waiting_seconds = waiting_seconds - 1
+    else
+        is_connected_to_bonus_system = false
+        set_is_connected_to_bonus_system(false)
+        return mode_choose_method
+    end
+
+    return mode_connected_to_bonus_system
 end
 
 select_price_mode = function()
@@ -415,7 +444,6 @@ thanks_mode = function()
 
         if visible_session ~= "" then 
             hardware:EndSession();
-            visible_session = ""
         end
         
 	    if hascardreader() then
@@ -443,6 +471,10 @@ show_choose_method = function()
     choose_method:Set("post_number.value", post_position)
     choose_method:Set("qr_pic.url", qr)
     choose_method:Display()
+end
+
+show_connected_to_bonus_system = function()
+    connected_to_bonus_system:Display()
 end
 
 show_select_price = function(balance_rur)
@@ -636,9 +668,21 @@ end
 
 create_session = function()
     hardware:CreateSession();
+    get_QR()
+end
+
+get_is_connected_to_bonus_system = function()
+    return hardware:GetIsConnectedToBonusSystem();
+end
+
+set_is_connected_to_bonus_system = function(connectedToBonusSystem)
+    hardware:SetIsConnectedToBonusSystem(connectedToBonusSystem);
+end
+
+get_QR = function()
     qr = hardware:GetQR();
     if qr == nil or qr == '' then
-        choose_method:Set("qr.visible", "false")
+        choose_method:Set("qr_pic.visible", "false")
         choose_method:Set("bonus_pic.visible", "false")
     end
 end

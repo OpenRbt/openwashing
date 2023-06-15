@@ -14,7 +14,7 @@ DiaScreenItem::DiaScreenItem(DiaScreenConfig * newParent) {
 
 int DiaScreenItem::Init(json_t * screen_item_json) {
     // we need to parse ID and TYPE
-    //printf("item init triggered \n" );
+    printf("item init triggered \n" );
     json_t * id_json = json_object_get(screen_item_json, "id");
     if (!json_is_string(id_json)) {
         printf("error: id of screen item is not a string\n");

@@ -101,6 +101,7 @@ bool _IsPlayingVideo = false;
 int _CanPlayVideoTimer = 0;
 
 bool _BonusSystemIsActive = false;
+bool _IsConnectedToBonusSystem = false;
 std::string _AuthorizedSessionID = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
@@ -112,7 +113,7 @@ std::string _FlashName = "Flash";
 std::string _FileName;
 
 std::string _Qr = "";
-std::string _VisibleSession = "";
+std::string _VisibleSessionID = "";
 std::string _ActiveSession = "";
 
 
@@ -165,6 +166,14 @@ bool getIsPlayingVideo() {
     return _IsPlayingVideo;
 }
 
+void setIsConnectedToBonusSystem(bool isConnectedToBonusSystem) {
+    _IsConnectedToBonusSystem = isConnectedToBonusSystem;
+}
+
+bool getIsConnectedToBonusSystem() {
+    return _IsConnectedToBonusSystem;
+}
+
 void *play_video_func(void *ptr) {
     while (!_to_be_destroyed) {
         usleep(1 * 1000 * 1000);
@@ -189,19 +198,18 @@ int CreateSession() {
     std::string QR;
     std::string sessionID;
     int answer = network->CreateSession(sessionID, QR);
-    if (!answer) {
-        std::cout<<"\n\n\nCreateSession QR: "<<QR;
-        _Qr = QR;
-        _VisibleSession = sessionID;
-    }
+    _VisibleSessionID = sessionID;
+    _Qr = QR;
     return answer;
 }
 
 int EndSession() {
-    int answer = network->EndSession(_AuthorizedSessionID);
-    std::cout<<"\n\n\nEndSession: "<<_AuthorizedSessionID<<"\nanswer:"<<answer;
-    _AuthorizedSessionID = "";
-    return answer;
+    if(_AuthorizedSessionID != ""){
+        int answer = network->EndSession(_AuthorizedSessionID);
+        std::cout<<"\nEndSession: "<<_AuthorizedSessionID<<"\nanswer:"<<answer;
+        return answer;
+    }
+    return 1;
 }
 
 std::string getQR() {
@@ -209,7 +217,7 @@ std::string getQR() {
 }
 
 std::string getVisibleSession() {
-    return _VisibleSession;
+    return _VisibleSessionID;
 }
 
 bool dirExists(const std::string& dirName_in)
@@ -234,7 +242,7 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
 }
 
 int SetBonuses(int bonuses) {
-    std::cout<<"\n\n\nSetBonuses: "<<bonuses;
+    std::cout<<"\nSetBonuses: "<<bonuses;
     return network->SetBonuses(bonuses);
 }
 
@@ -604,7 +612,7 @@ int RunProgram() {
             printf("relay control server board: run program programID=%d\n", _CurrentProgramID);
             err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
             if (err != 0) {
-                fprintf(stderr, "relay control server board: run program error\n");
+                //fprintf(stderr, "relay control server board: run program error\n");
                 delay(100);
             }
             if ((err == 0) && (_CurrentProgramID == 0)) {
@@ -671,13 +679,14 @@ int CentralServerDialog() {
     int bonusAmount = 0;
     bool openStation = false;
     std::string authorizedSessionID = "";
+    std::string visibleSessionID = "";
     bool bonusSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
-    std::string session = "";
+    std::string qrData = "";
 
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, session, authorizedSessionID, bonusAmount);
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, visibleSessionID, bonusAmount);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
             config->LoadConfig();
@@ -705,17 +714,24 @@ int CentralServerDialog() {
         _BonusSystemIsActive = bonusSystemActive;
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
+    std::string visibleSessionTmp = visibleSessionID;
 
-    if (authorizedSessionID == _VisibleSession && _VisibleSession != "") {
-        std::cout<<"\n\n\nPing authorizedSessionID: " << authorizedSessionID;
-        std::cout<<"\n\n\nPing _VisibleSession: " << _VisibleSession;
-        if( _AuthorizedSessionID != "" ){
-            EndSession();
+    if (_VisibleSessionID == authorizedSessionID) {
+        std::cout<<"\nauthorizedSessionID: "<<authorizedSessionID;
+        std::cout<<"\nvisibleSessionID: "<<visibleSessionID;
+        std::cout<<"\n_VisibleSessionID: "<<_VisibleSessionID;
+        if(authorizedSessionID != ""){
+            _IsConnectedToBonusSystem = true;
         }
-        _AuthorizedSessionID = authorizedSessionID;
-        _VisibleSession = "";
+        CreateSession();
+        visibleSessionTmp = _VisibleSessionID;
     }
-
+    if (_AuthorizedSessionID != authorizedSessionID) {
+        EndSession();
+    }
+    _VisibleSessionID = visibleSessionTmp;
+    _AuthorizedSessionID = authorizedSessionID;
+    _Qr = "https://app.openwashing.com/#/?sessionID=" + _VisibleSessionID;
     if (buttonID != 0) {
         printf("BUTTON PRESSED %d \n", buttonID);
     }
@@ -851,6 +867,7 @@ int RecoverRegistry() {
     bool openStation = false;
     bool bonusSystemActive = false;
     std::string authorizedSessionID = "";
+    std::string sessionID = "";
     int buttonID = 0;
 
     int lastUpdate = 0;
@@ -860,7 +877,7 @@ int RecoverRegistry() {
     std::string qrData = "";
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, bonusAmount);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1254,6 +1271,9 @@ int main(int argc, char **argv) {
     hardware->set_can_play_video_function = setCanPlayVideo;
     hardware->get_is_playing_video_function = getIsPlayingVideo;
     hardware->set_is_playing_video_function = setIsPlayingVideo;
+
+    hardware->get_is_connected_to_bonus_system_function = getIsConnectedToBonusSystem;
+    hardware->set_is_connected_to_bonus_system_function = setIsConnectedToBonusSystem;
 
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
