@@ -412,7 +412,7 @@ class DiaNetwork {
         std::string json_run_program_request = json_create_run_program(programID, preflight);
         result = SendRequest(&json_run_program_request, &answer, url);
         if ((result) || (answer != "")) {
-            fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
+            //fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
         return 0;
@@ -551,7 +551,7 @@ class DiaNetwork {
     // PING request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, std::string &authorizedSessionID, int &bonusAmount) {
+    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, std::string &authorizedSessionID, std::string &sessionID, int &bonusAmount) {
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 
@@ -620,9 +620,16 @@ class DiaNetwork {
             }
             else{
                 authorizedSessionID = "";
-                
             }
-            std::cout<<"\n\n\nuthorizedSessionID network: " << authorizedSessionID << "\n\n\n";
+            json_t *obj_session_ID;
+            obj_session_ID = json_object_get(object, "sessionID");
+            
+            if (json_is_string(obj_session_ID)) {
+                sessionID = (std::string)json_string_value(obj_session_ID);
+            }
+            else{
+                sessionID = "";
+            }
             json_t *obj_qr_data;
             obj_qr_data = json_object_get(object, "qr_data");
             if (json_is_string(obj_qr_data)) {
@@ -636,6 +643,7 @@ class DiaNetwork {
             json_decref(obj_bonus_system);
             json_decref(obj_bonus_amount);
             json_decref(obj_authorized_session_ID);
+            json_decref(obj_session_ID);
             json_decref(obj_qr_data);
         } while (0);
         json_decref(object);

@@ -312,6 +312,26 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    bool (*get_is_connected_to_bonus_system_function)();
+    bool GetIsConnectedToBonusSystem() {
+        if (get_is_connected_to_bonus_system_function) {
+            return get_is_connected_to_bonus_system_function();
+        } else {
+            printf("error: NIL object or function GetIsPlayingVideo\n");
+        }
+        return false;
+    }
+
+    void (*set_is_connected_to_bonus_system_function)(bool isConnectedToBonusSystem);
+    int SetIsConnectedToBonusSystem(bool isConnectedToBonusSystem) {
+        if (set_is_connected_to_bonus_system_function) {
+            set_is_connected_to_bonus_system_function(isConnectedToBonusSystem);
+        } else {
+            printf("error: NIL object or function SetIsPlayingVideo\n");
+        }
+        return 0;
+    }
+
     // StopProgramOnServer
 
     // Bonus system
