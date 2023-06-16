@@ -445,7 +445,7 @@ thanks_mode = function()
         if visible_session ~= "" then 
             hardware:EndSession();
         end
-        
+        hardware:CreateSession();
 	    if hascardreader() then
         	return mode_choose_method
     	end
