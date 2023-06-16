@@ -723,6 +723,9 @@ int CentralServerDialog() {
         if(authorizedSessionID != ""){
             _IsConnectedToBonusSystem = true;
         }
+        else{
+            _IsConnectedToBonusSystem = false;
+        }
         CreateSession();
         visibleSessionTmp = _VisibleSessionID;
     }
@@ -731,8 +734,8 @@ int CentralServerDialog() {
     }
     _VisibleSessionID = visibleSessionTmp;
     _AuthorizedSessionID = authorizedSessionID;
-    std::cout<<"\n\n\n_VisibleSessionID: "<<_VisibleSessionID;
-    std::cout<<"\n\n\n_AuthorizedSessionID: "<<_AuthorizedSessionID;
+    std::cout<<"\n_VisibleSessionID: "<<_VisibleSessionID;
+    std::cout<<"\n_AuthorizedSessionID: "<<_AuthorizedSessionID;
     if(_VisibleSessionID != ""){
         _Qr = "https://app.openwashing.com/#/?sessionID=" + _VisibleSessionID;
     }
