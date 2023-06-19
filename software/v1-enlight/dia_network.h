@@ -137,7 +137,7 @@ public:
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->_Writefunc);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &raw_answer);
 	    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
-        curl_easy_setopt(curl, CURLOPT_MAXLIFETIME_CONN, 10L);
+        curl_easy_setopt(curl, CURLOPT_MAXAGE_CONN, 10L);
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
@@ -183,7 +183,7 @@ public:
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->_Writefunc);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &raw_answer);
 	    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 10000);
-        curl_easy_setopt(curl, CURLOPT_MAXLIFETIME_CONN, 10L);
+        curl_easy_setopt(curl, CURLOPT_MAXAGE_CONN, 10L);
 
         res = curl_easy_perform(curl);
         int http_code = 0;
@@ -591,7 +591,7 @@ public:
 	    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_MAXLIFETIME_CONN, 10L);
+        curl_easy_setopt(curl, CURLOPT_MAXAGE_CONN, 10L);
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
