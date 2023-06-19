@@ -81,6 +81,17 @@ int DiaScreenItemDigits::Init(DiaScreenItem *base_item, json_t * item_json) {
     return 0;
 }
 
+DiaIntPair DiaScreenItemDigits::getSize(){
+    return this->size;
+}
+
+void DiaScreenItemDigits::SetPicture(SDL_Surface * newPicture){
+
+}
+void DiaScreenItemDigits::SetScaledPicture(SDL_Surface * newPicture){
+    
+}
+
 DiaScreenItemDigits::DiaScreenItemDigits() {
     for (int i = 0; i < MAX_DIGITS; i++) {
         OutputRectangles[i] = 0;
@@ -144,7 +155,7 @@ int dia_screen_item_digits_display(DiaScreenItem * base_item, void * digits_ptr,
 }
 
 int dia_screen_item_digits_notify(DiaScreenItem * base_item, void * digits_ptr, std::string key) {
-    //printf("notification recieved for '%s' key\n", key.c_str());
+    printf("notification recieved for '%s' key\n", key.c_str());
     int error = 0;
     std::string value = base_item->GetValue(key, &error);
     if (error!=0) {

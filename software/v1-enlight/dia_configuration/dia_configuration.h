@@ -145,6 +145,10 @@ public:
         _DiscountLastUpdate = value;
     }
 
+    std::string GetFolder(){
+        return _Folder;
+    }
+
     private:
     std::string _Name;
     std::string _Folder;

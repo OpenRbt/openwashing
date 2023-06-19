@@ -10,6 +10,7 @@
 #include "dia_screen_item.h"
 #include "dia_screen.h"
 #include "dia_all_items.h"
+#include <SDL.h>
 
 class AreaItem
 {

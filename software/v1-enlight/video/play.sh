@@ -1,0 +1,1 @@
+ffplay -loop 0 -exitonkeydown -exitonmousedown -fs ./video/rick.mp4

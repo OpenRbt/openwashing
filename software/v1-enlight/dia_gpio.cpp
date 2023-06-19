@@ -58,7 +58,6 @@ void DiaGpio_WriteRelay(DiaGpio * gpio, int relayNumber, int value) {
                     gpio->RelayOnTime[relayNumber] = 0;
                 }
             }
-            //printf("R%d:[%d]\n", relayNumber, value);
             if(gpio->RelayPinStatus[relayNumber]!=value) {
                 digitalWrite(gpio->RelayPin[relayNumber], value);
                 gpio->RelayPinStatus[relayNumber] = value;
@@ -219,14 +218,11 @@ void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
         } else {
             config = &gpio->Programs[gpio->CurrentProgram];
         }
-        //printf("cur_prog:%d\n", gpio->CurrentProgram);
         for(int i=0;i<PIN_COUNT;i++) {
             if(gpio->RelayPin[i]<0) {
-                //printf("skipping %d\n",i);
                 continue;
             }
 
-            //printf("cur config: on:%ld, off:%ld\n",config->OnTime[i], config->OffTime[i] );
             if(config->OnTime[i]<=0) {
                 if(gpio->RelayPinStatus[i]) {
                     printf("-%d; ontime:%ld status:%d\n", i, config->OnTime[i], gpio->RelayPinStatus[i]);
@@ -235,10 +231,8 @@ void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
             } else if(config->OffTime[i]<=0) {
                 if(!gpio->RelayPinStatus[i]) {
                     DiaGpio_WriteRelay(gpio, i, 1);
-                    //printf("+%d\n", i);
                 }
             } else {
-                //printf("curTime %ld,  nextSwitch %ld \n", curTime, config->NextSwitchTime[i] );
                 if(curTime>=config->NextSwitchTime[i]) {
                     if(gpio->RelayPinStatus[i]) {
                         DiaGpio_WriteRelay(gpio, i, 0);

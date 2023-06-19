@@ -1,6 +1,8 @@
+#include <iostream>
 #include "dia_screen_item.h"
 #include "dia_screen_item_digits.h"
 #include "dia_screen_item_image.h"
+#include "dia_screen_item_qr.h"
 #include "dia_screen_item_image_array.h"
 
 DiaScreenItem::DiaScreenItem(DiaScreenConfig * newParent) {
@@ -12,14 +14,13 @@ DiaScreenItem::DiaScreenItem(DiaScreenConfig * newParent) {
 
 int DiaScreenItem::Init(json_t * screen_item_json) {
     // we need to parse ID and TYPE
-    //printf("item init triggered \n" );
+    printf("item init triggered \n" );
     json_t * id_json = json_object_get(screen_item_json, "id");
     if (!json_is_string(id_json)) {
         printf("error: id of screen item is not a string\n");
         return 1;
     }
     id = json_string_value(id_json);
-    //printf("item init id='%s' \n", id.c_str());
     ///////////////////////////////////
     json_t * type_json = json_object_get(screen_item_json, "type");
     if (!json_is_string(type_json)) {
@@ -27,7 +28,6 @@ int DiaScreenItem::Init(json_t * screen_item_json) {
         return 1;
     }
     type = json_string_value(type_json);
-    //printf("item init type='%s'\n", type.c_str());
 
     json_t * visible_json = json_object_get(screen_item_json, "visible");
     if (visible_json == 0) {
@@ -51,15 +51,21 @@ int DiaScreenItem::Init(json_t * screen_item_json) {
 
         digits->Init(this, screen_item_json);
     } else if(type.compare("image")==0) {
-        //printf("image object found...\n");
         DiaScreenItemImage * image = new DiaScreenItemImage();
-
 
         this->specific_object_ptr = image;
         this->notify_ptr = dia_screen_item_image_notify;
         this->display_ptr = dia_screen_item_image_display;
 
         image->Init(this, screen_item_json);
+    } else if(type.compare("qr") == 0) {
+        DiaScreenItemQr * qr = new DiaScreenItemQr();
+        
+        this->specific_object_ptr = qr;
+        this->notify_ptr = dia_screen_item_qr_notify;
+        this->display_ptr = dia_screen_item_qr_display;
+
+        qr->Init(this, screen_item_json);
     } else if (type.compare("image_array") == 0) {
         printf("Image Array found...\n");
         
@@ -87,7 +93,6 @@ std::string DiaScreenItem::GetValue(std::string key, int * error) {
     }
     if(error!=0) *error = 0;
     std::string res = items[key];
-    //printf("value unpacked ='%s':'%s'\n", key.c_str(), res.c_str());
     return res;
 }
 int DiaScreenItem::SetValue(std::string key, json_t * value) {
@@ -104,7 +109,6 @@ int DiaScreenItem::SetValue(std::string key, json_t * value) {
 }
 
 int DiaScreenItem::SetValue(std::string key, std::string value) {
-    //printf("Set value for string started: key=%s, value=%s\n", key.c_str(), value.c_str());
     // Let's check common values first
     if (key.compare("visible")==0) {
         int oldVisible = visible.value;
@@ -117,7 +121,6 @@ int DiaScreenItem::SetValue(std::string key, std::string value) {
     }
 
     if (items.find(key) == items.end()) {
-        //printf("new item ... \n");
         Parent->Changed = true;
 
         items[key] = value;
@@ -162,6 +165,16 @@ DiaScreenItem::~DiaScreenItem() {
             printf("image deleted \n");
         } else {
             printf("image can't be deleted \n");
+        }
+    } else if(type.compare("qr")==0 ){
+        printf("qr object to be destroyed...\n");
+        if(specific_object_ptr!=0) {
+            DiaScreenItemQr * qr = (DiaScreenItemQr *) this->specific_object_ptr;
+            delete qr;
+            specific_object_ptr = 0;
+            printf("qr deleted \n");
+        } else {
+            printf("qr can't be deleted \n");
         }
     } else {
         printf("error, can't destroy type '%s'\n", type.c_str() );

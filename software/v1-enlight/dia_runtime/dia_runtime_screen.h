@@ -9,20 +9,26 @@ extern "C" {
 #include "lualib.h"
 }
 
+#include "../QR/qrcodegen.hpp"
 #include "LuaBridge.h"
+#include "dia_screen_item_image.h"
 #include <string>
 #include <jansson.h>
 #include <list>
 
 using namespace luabridge;
+using std::uint8_t;
+using qrcodegen::QrCode;
+using qrcodegen::QrSegment;
 
 class DiaRuntimeScreen {
 public:
     std::string Name;
     void * object;
+    
     int (*set_value_function)(void * object, const char *element, const char * key, const char * value);
+
     int SetValue(const char * key, const char * value) {
-        //printf("[%s]->[%s] = [%s];\n", Name.c_str(), key, value);
         if(object!=0 && set_value_function!=0) {
             char * buf = strdup(key);
             char * sub_key = buf;
@@ -41,10 +47,13 @@ public:
 
         return 0;
     }
+    
+
     std::string GetValue(std::string key) {
         return "hello";
     }
 
+    
     void * screen_object;
     int (*display_screen) (void * screen_object, void * screen_config);
     int Display() {

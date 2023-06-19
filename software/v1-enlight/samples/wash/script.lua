@@ -3,6 +3,7 @@
 -- setup is running at the start just once
 setup = function()
     -- global variables
+
     balance = 0.0
 
     -- program to turn on when user paid money but has not selected a program
@@ -16,6 +17,7 @@ setup = function()
     balance_seconds = 0
     cash_balance = 0.0
     electronical_balance = 0.0
+    bonuses_balance = 0.0
     post_position = 1
     money_wait_seconds = 0
     last_program_id = 0
@@ -23,11 +25,15 @@ setup = function()
     -- constants
     welcome_mode_seconds = 3
     thanks_mode_seconds = 120
+    connection_to_bonus_seconds = 5
     free_pause_seconds = 120
     wait_card_mode_seconds = 40
     max_money_wait_seconds = 90
     
+    is_paused = false
+    is_authorized = false
     is_transaction_started = false
+    is_connected_to_bonus_system = false
     is_waiting_receipt = false
     is_money_added = false
 
@@ -63,9 +69,11 @@ setup = function()
     -- all these modes MUST follow each other
     mode_work = 50
     mode_pause = 60
-    -- end of modes which MUST follow each other
     
+    -- end of modes which MUST follow each other
+    mode_confirm_end = 110
     mode_thanks = 120
+    mode_connected_to_bonus_system = 130
     real_ms_per_loop = 100
     
     currentMode = mode_welcome
@@ -77,6 +85,12 @@ setup = function()
     init_constants();
     update_post();
     welcome:Set("post_number.value", post_position)
+    
+    create_session()
+
+    qr = "";
+    visible_session = "";
+    
     forget_pressed_key();
     return 0
 end
@@ -84,7 +98,6 @@ end
 -- loop is being executed
 loop = function()
     update_post()
-
     if balance < 0.1 and money_wait_seconds > 0 then
         money_wait_seconds = money_wait_seconds - 1
     end
@@ -99,7 +112,7 @@ loop = function()
     return 0
 end
 
-update_post = function() 
+update_post = function()
     post_position = registry:GetPostID();
 end
 
@@ -131,6 +144,8 @@ run_mode = function(new_mode)
     
     if is_working_mode (new_mode) then return program_mode(new_mode) end
     if new_mode == mode_pause then return pause_mode() end
+    if new_mode == mode_confirm_end then return confirm_end_mode() end
+    if new_mode == mode_connected_to_bonus_system then return connected_to_bonus_system_mode() end
     
     if new_mode == mode_thanks then return thanks_mode() end
 end
@@ -143,6 +158,7 @@ welcome_mode = function()
     init_discounts()
     smart_delay(1000 * welcome_mode_seconds)
     forget_pressed_key()
+    
     if hascardreader() then
         return mode_choose_method
     end
@@ -150,6 +166,9 @@ welcome_mode = function()
 end
 
 choose_method_mode = function()
+    visible_session = hardware:GetVisibleSession();
+    get_QR()
+    
     show_choose_method()
     run_stop()
 
@@ -173,8 +192,35 @@ choose_method_mode = function()
     if balance > 0.99 then
         return mode_work
     end
+    
+    if get_is_connected_to_bonus_system() then
+        return mode_connected_to_bonus_system
+    end
 
     return mode_choose_method
+end
+
+connected_to_bonus_system_mode = function()
+
+    show_connected_to_bonus_system()
+    if is_connected_to_bonus_system == false then
+        waiting_seconds = connection_to_bonus_seconds * 10;
+        is_connected_to_bonus_system = true
+    end
+
+    if waiting_seconds > 0 then
+        pressed_key = get_key()
+        if pressed_key > 0 and pressed_key < 7 then
+            waiting_seconds = 0
+        end
+        waiting_seconds = waiting_seconds - 1
+    else
+        is_connected_to_bonus_system = false
+        set_is_connected_to_bonus_system(false)
+        return mode_choose_method
+    end
+
+    return mode_connected_to_bonus_system
 end
 
 select_price_mode = function()
@@ -284,6 +330,7 @@ ask_for_money_mode = function()
 end
 
 program_mode = function(working_mode)
+    is_paused = false
   sub_mode = working_mode - mode_work
   cur_price = price_p[sub_mode]
   show_working(sub_mode, balance, cur_price)
@@ -301,6 +348,7 @@ program_mode = function(working_mode)
   end
   set_current_state(balance)
   if balance <= 0.01 then
+    forget_pressed_key()
     return mode_thanks 
   end
   update_balance()
@@ -315,6 +363,7 @@ end
 
 pause_mode = function()
     
+    is_paused = true
     run_pause()
     turn_light(6, animation.one_button)
     update_balance()
@@ -329,15 +378,42 @@ pause_mode = function()
     set_current_state(balance,6)
     show_pause(balance, balance_seconds, cur_price)
     
-    if balance <= 0.01 then return mode_thanks end
+    if balance <= 0.01 then
+        forget_pressed_key()
+        return mode_thanks 
+    end
     
     suggested_mode = get_mode_by_pressed_key()
+
+    if suggested_mode == 60 and is_authorized_function() then
+        return mode_confirm_end 
+    end
+
     if suggested_mode >=0 then return suggested_mode end
     return mode_pause
 end
 
+confirm_end_mode = function ()
+    show_confirm_end()
+    
+    pressed_key = get_key()
+    if pressed_key == 1 then
+        return mode_pause
+    end
+
+    if pressed_key == 6 then
+        hardware:SetBonuses(math.ceil(balance))
+        money_wait_seconds = 0
+        forget_pressed_key()
+        return mode_thanks
+    end
+
+    return mode_confirm_end
+end
+
 thanks_mode = function()
     set_current_state(0)
+
     if is_waiting_receipt == false then
         balance = 0
         show_thanks(thanks_mode_seconds)
@@ -346,7 +422,7 @@ thanks_mode = function()
         waiting_loops = thanks_mode_seconds * 10;
         is_waiting_receipt = true
     end
- 
+
     if waiting_loops > 0 then
         show_thanks(waiting_loops/10)
         pressed_key = get_key()
@@ -362,9 +438,15 @@ thanks_mode = function()
     else
         send_receipt(post_position, cash_balance, electronical_balance)
         cash_balance = 0
+        bonuses_balance = 0
         electronical_balance = 0
         is_waiting_receipt = false
-	if hascardreader() then
+
+        if visible_session ~= "" then 
+            hardware:EndSession();
+        end
+        hardware:CreateSession();
+	    if hascardreader() then
         	return mode_choose_method
     	end
         return mode_ask_for_money
@@ -387,7 +469,12 @@ end
 
 show_choose_method = function()
     choose_method:Set("post_number.value", post_position)
+    choose_method:Set("qr_pic.url", qr)
     choose_method:Display()
+end
+
+show_connected_to_bonus_system = function()
+    connected_to_bonus_system:Display()
 end
 
 show_select_price = function(balance_rur)
@@ -411,7 +498,8 @@ show_working = function(sub_mode, balance_rur, price_rur)
     working:Set("pause_digits.visible", "false")
     working:Set("balance.value", balance_int)
     working:Set("price.value", price_rur)
-    
+    working:Set("p6_ico.visible", "true")
+    working:Set("p6_ico_stop.visible", "false")
     switch_submodes(sub_mode)
     working:Display()
 end
@@ -423,6 +511,12 @@ show_pause = function(balance_rur, balance_sec, price_rur)
     working:Set("pause_digits.value", sec_int)
     working:Set("balance.value", balance_int)
     working:Set("price.value", price_rur)
+
+    if is_authorized_function() then
+        working:Set("p6_ico.visible", "false")
+        working:Set("p6_ico_stop.visible", "true")
+    end
+
     switch_submodes(6)
     working:Display()
 end
@@ -431,7 +525,11 @@ switch_submodes = function(sub_mode)
     working:Set("cur_p.index", sub_mode-1)  
 end
 
-show_thanks =  function(seconds_float)
+show_confirm_end = function()
+    confirm_end:Display()
+end
+
+show_thanks = function(seconds_float)
     seconds_int = math.ceil(seconds_float)
     thanks:Set("delay_seconds.value", seconds_int)
     thanks:Display()
@@ -523,8 +621,9 @@ update_balance = function()
     new_banknotes = hardware:GetBanknotes()
     new_electronical = hardware:GetElectronical()
     new_service = hardware:GetService()
+    new_bonuses = hardware:GetBonuses()
 
-    if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 then
+    if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 or new_bonuses > 0 then
         is_money_added = true
         money_wait_seconds = max_money_wait_seconds * 10
     end
@@ -532,10 +631,12 @@ update_balance = function()
     cash_balance = cash_balance + new_coins
     cash_balance = cash_balance + new_banknotes
     electronical_balance = electronical_balance + new_electronical
+    bonuses_balance = bonuses_balance + new_bonuses
     balance = balance + new_coins
     balance = balance + new_banknotes
     balance = balance + new_electronical
     balance = balance + new_service
+    balance = balance + new_bonuses
 end
 
 charge_balance = function(price)
@@ -554,4 +655,37 @@ end
 
 hascardreader = function()
   return hardware:HasCardReader()
+end
+
+is_authorized_function = function ()
+    authorizedSessionID = hardware:AuthorizedSessionID();
+    printMessage("\n\n\nauthorizedSessionID: " .. authorizedSessionID)
+    if authorizedSessionID ~= "" and authorizedSessionID ~= nil then
+        return true
+    end
+    return false
+end
+
+create_session = function()
+    hardware:CreateSession();
+    get_QR()
+end
+
+get_is_connected_to_bonus_system = function()
+    return hardware:GetIsConnectedToBonusSystem();
+end
+
+set_is_connected_to_bonus_system = function(connectedToBonusSystem)
+    hardware:SetIsConnectedToBonusSystem(connectedToBonusSystem);
+end
+
+get_QR = function()
+    qr = hardware:GetQR();
+    if qr == nil or qr == '' then
+        choose_method:Set("qr_pic.visible", "false")
+        choose_method:Set("bonus_pic.visible", "false")
+    else
+        choose_method:Set("qr_pic.visible", "true")
+        choose_method:Set("bonus_pic.visible", "true")
+    end
 end

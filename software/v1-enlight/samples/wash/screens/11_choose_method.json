@@ -5,25 +5,58 @@
         "type":"image",
         "position": "0;0",
         "size":"1920;1080",
-        "src":"pic/2/background_choose_method.png",
+        "src":"pic/background.png",
+        "visible":"true"
+      },
+      {
+        "id":"cash_pic",
+        "type":"image",
+        "position": "150;700",
+        "size":"260;210",
+        "src":"pic/cash.png",
         "visible":"true"
       },
       {
         "id":"cash",
         "type":"image",
-        "position": "0;0",
-        "size":"960;1080",
+        "position": "225;950",
+        "size":"70;40",
         "src":"pic/arrow.png",
-        "visible":"false",
+        "visible":"true",
         "click_id":"2"
+      },
+      {
+        "id":"bonus_pic",
+        "type":"image",
+        "position": "1307;120",
+        "size":"440;40",
+        "src":"pic/bonus.png",
+        "visible":"true"
+      },
+      {
+      	"id":"qr_pic",
+        "type":"qr",
+        "position": "1298;177",
+        "size":"460;460",
+        "src":"pic/qr.png",
+        "url":"",
+        "visible":"true"
+      },
+      {
+        "id":"card_pic",
+        "type":"image",
+        "position": "1500;700",
+        "size":"264;180",
+        "src":"pic/non-cash.png",
+        "visible":"true"
       },
       {
         "id":"card",
         "type":"image",
-        "position": "960;0",
-        "size":"960;1080",
+        "position": "1600;950",
+        "size":"70;40",
         "src":"pic/arrow.png",
-        "visible":"false",
+        "visible":"true",
         "click_id":"5"
       },
       {
