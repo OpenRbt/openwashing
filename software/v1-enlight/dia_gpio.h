@@ -122,7 +122,6 @@ public:
 
     DiaRelayConfig Programs[MAX_PROGRAMS_COUNT];
     DiaRelayConfig PreflightPrograms[MAX_PROGRAMS_COUNT];
-    // std::map<int, int> _ProgramMapping;
     DiaGpio(int maxButtons, int maxRelays, storage_interface_t * storage);
     ~DiaGpio();
 private:
@@ -146,5 +145,4 @@ void DiaGpio_StartAdditionalHandler(DiaGpio *gpio, int preferredIndex);
 void DiaGpio_Test(DiaGpio * gpio);
 void * DiaGpio_WorkingThread(void * gpio);
 inline int DiaGpio_Abs(int from, int to);
-//void DiaGpio
 #endif

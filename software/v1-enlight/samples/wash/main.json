@@ -29,6 +29,14 @@
     {
       "id": "wait_for_card",
       "src": "screens/13_wait_for_card.json"
+    },
+    {
+    	"id": "confirm_end",
+    	"src": "screens/14_confirm_wash_end.json"
+    },
+    {
+    	"id": "connected_to_bonus_system",
+    	"src": "screens/15_connected_to_bonus_system.json"
     }
   ],
   "buttons": 6,

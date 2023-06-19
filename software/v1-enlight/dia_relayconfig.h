@@ -19,7 +19,6 @@ public:
         }
     }
     int InitRelay(int id, int ontime, int offtime) {
-        //printf("RELAY_CONFIG:id:%d,on:%d,off:%d\n",id, ontime, offtime);
         if (id<=0 && id>=PIN_COUNT_CONFIG) {
             printf("err, relay id can't be 0 or less or more than pin count [%d] \n", id);
             return 1;
@@ -32,13 +31,9 @@ public:
         this->RelayNum[id] = id;
         this->OnTime[id] =  ontime;
         this->OffTime[id] = offtime;
-        //printf("AFTER_ASSIGNMENT:id:%d,on:%ld,off:%ld\n",this->RelayNum[id], 
-        //    this->OnTime[id], 
-        //    this->OffTime[id]);
         return 0;
     }
     int ClearRelay(int id) {
-        //printf("RELAY_CONFIG:id:%d,on:%d,off:%d\n",id, ontime, offtime);
         if (id<=0 && id>=PIN_COUNT_CONFIG) {
             printf("err, relay id can't be 0 or less or more than pin count [%d] \n", id);
             return 1;
