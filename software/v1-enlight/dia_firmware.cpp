@@ -397,7 +397,7 @@ int RunProgram() {
     }
     if (_CurrentProgram != _OldProgram) {
         if (_IsPreflight) {
-            if (_IsServerRelayBoard) {
+            if (1 || _IsServerRelayBoard) {
                 int count = 0;
                 int err = 1;
                 while ((err) && (count<4))
