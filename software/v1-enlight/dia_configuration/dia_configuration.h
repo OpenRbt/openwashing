@@ -12,6 +12,11 @@
 #define DIA_DEFAULT_FIRMWARE_FILENAME "main.json"
 
 enum CONFIGURATION_STATUS {SUCCESS,ERROR_GPIO,ERROR_SCREEN, ERROR_JSON};
+enum RelayBoardMode {
+    DanBoard,
+    LocalGPIO,
+    All
+};
 
 class DiaConfiguration {
 private:
@@ -122,7 +127,7 @@ public:
         return _RelaysNumber;
     }
 
-    int GetServerRelayBoard() {
+    RelayBoardMode GetServerRelayBoard() {
         return _ServerRelayBoard;
     }
 
@@ -155,7 +160,7 @@ public:
     std::map<int, DiaProgram*> _Programs;
     std::map<int, int> _Discounts;
     int _PreflightSec;
-    int _ServerRelayBoard;
+    RelayBoardMode _ServerRelayBoard;
     DiaScreen * _Screen;
     DiaRuntime * _Runtime;
     DiaGpio * _Gpio;

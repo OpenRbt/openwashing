@@ -85,7 +85,7 @@ int _CurrentProgram = -1;
 int _CurrentProgramID = 0;
 int _OldProgram = -1;
 int _IsPreflight = 0;
-int _IsServerRelayBoard = 0;
+RelayBoardMode _ServerRelayBoardMode = RelayBoardMode::LocalGPIO;
 int _IntervalsCountProgram = 0;
 int _IntervalsCountPreflight = 0;
 
@@ -553,74 +553,79 @@ int smart_delay_function(void *arg, int ms) {
 }
 /////// End of Runtime functions ///////
 
-int RunProgram() {
-    if ((1 || _IsServerRelayBoard) && (_IsPreflight == 0)) {
-        _IntervalsCountProgram++;
+bool IsRemoteOrAllRelayBoardMode() {
+    return _ServerRelayBoardMode == RelayBoardMode::DanBoard || _ServerRelayBoardMode == RelayBoardMode::All;
+}
+
+bool IsLocalOrAllRelayBoardMode() {
+    return _ServerRelayBoardMode == RelayBoardMode::LocalGPIO || _ServerRelayBoardMode == RelayBoardMode::All;
+}
+
+bool RunProgramOnServerWithRetry(int programID, bool isPreflight) {
+    int count = 0;
+    int err = 1;
+    while (err && count < DIA_REQUEST_RETRY_ATTEMPTS) {
+        count++;
+        printf("relay control server board: run program%s programID=%d\n", isPreflight ? " preflight" : "", programID);
+        err = network->RunProgramOnServer(programID, isPreflight);
+        if (err != 0) {
+            fprintf(stderr, "relay control server board: run program error\n");
+            delay(100);
+        }
     }
+    return err == 0;
+}
+
+int RunProgram() {
+    if (_IsPreflight == 0 && IsRemoteOrAllRelayBoardMode())
+        _IntervalsCountProgram++;
+
     if (_IntervalsCountProgram < 0) {
         printf("Memory corruption on _IntervalsCountProgram\n");
         _IntervalsCountProgram = 0;
     }
-    if (_IntervalsCountPreflight > 0) {
+
+    if (_IntervalsCountPreflight > 0)
         _IntervalsCountPreflight--;
-    }
+
     if (_CurrentProgram != _OldProgram) {
         if (_IsPreflight) {
-            if (1 || _IsServerRelayBoard) {
-                int count = 0;
-                int err = 1;
-                while ((err) && (count < DIA_REQUEST_RETRY_ATTEMPTS))
-                {
-                    count++;
-                    printf("relay control server board: run program preflight programID=%d\n", _CurrentProgramID);
-                    err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
-                    if (err != 0) {
-                        fprintf(stderr, "relay control server board: run program error\n");
-                        delay(100);
-                    }
-                }
+            if (IsRemoteOrAllRelayBoardMode()) {
+                RunProgramOnServerWithRetry(_CurrentProgramID, _IsPreflight);
             }
         }
         _OldProgram = _CurrentProgram;
     }
-    if ((_IntervalsCountPreflight == 0) && (_IsPreflight)) {
+    if (_IntervalsCountPreflight == 0 && _IsPreflight) {
         _IsPreflight = 0;
-        if (1 || _IsServerRelayBoard) {
+        if (IsRemoteOrAllRelayBoardMode()) {
             _IntervalsCountProgram = 1000;
         }
     }
-    if (_IsServerRelayBoard == 0) {
-#ifdef USE_GPIO
-        DiaGpio *gpio = config->GetGpio();
-        if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
-            return 1;
-        }
-        if (gpio != 0) {
-            gpio->CurrentProgram = _CurrentProgram;
-            gpio->CurrentProgramIsPreflight = _IsPreflight;
-        } else {
-            printf("ERROR: trying to run program with null gpio object\n");
-        }
-#endif
+    
+    if (IsLocalOrAllRelayBoardMode()) {
+        #ifdef USE_GPIO
+            DiaGpio *gpio = config->GetGpio();
+            if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
+                return 1;
+            }
+            if (gpio != nullptr) {
+                gpio->CurrentProgram = _CurrentProgram;
+                gpio->CurrentProgramIsPreflight = _IsPreflight;
+            } else {
+                printf("ERROR: trying to run program with null gpio object\n");
+            }
+        #endif
     }
 
-    if (_IntervalsCountProgram > 20) {
-        int count = 0;
-        int err = 1;
-        while ((err) && (count < DIA_REQUEST_RETRY_ATTEMPTS) && (_CurrentProgramID >= 0)) {
-            count++;
-            printf("relay control server board: run program programID=%d\n", _CurrentProgramID);
-            err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
-            if (err != 0) {
-                //fprintf(stderr, "relay control server board: run program error\n");
-                delay(100);
-            }
-            if ((err == 0) && (_CurrentProgramID == 0)) {
-                _CurrentProgramID = -1;
-            }
-        }
+    if (_IntervalsCountProgram > 20 && _CurrentProgramID >= 0) {
+        bool success = RunProgramOnServerWithRetry(_CurrentProgramID, _IsPreflight);
+        if (success && _CurrentProgramID == 0)
+            _CurrentProgramID = -1;
+
         _IntervalsCountProgram = 0;
     }
+    
     return 0;
 }
 
@@ -1216,8 +1221,8 @@ int main(int argc, char **argv) {
 
     printf("Settings loaded...\n");
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Settings from server loaded");
-    _IsServerRelayBoard = config->GetServerRelayBoard();
-    if (config->GetServerRelayBoard()) {
+    _ServerRelayBoardMode = config->GetServerRelayBoard();
+    if (IsRemoteOrAllRelayBoardMode()) {
         int err = 1;
         StartScreenMessage(STARTUP_MESSAGE::RELAY_CONTROL_BOARD, "Checking relay control server board");
         while (err) {
