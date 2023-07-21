@@ -206,7 +206,6 @@ int CreateSession() {
 int EndSession() {
     if(_AuthorizedSessionID != ""){
         int answer = network->EndSession(_AuthorizedSessionID);
-        std::cout<<"\nEndSession: "<<_AuthorizedSessionID<<"\nanswer:"<<answer;
         return answer;
     }
     return 1;
@@ -218,6 +217,10 @@ std::string getQR() {
 
 std::string getVisibleSession() {
     return _VisibleSessionID;
+}
+
+std::string getActiveSession() {
+    return _ActiveSession;
 }
 
 bool dirExists(const std::string& dirName_in)
@@ -242,7 +245,6 @@ void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashle
 }
 
 int SetBonuses(int bonuses) {
-    std::cout<<"\nSetBonuses: "<<bonuses;
     return network->SetBonuses(bonuses);
 }
 
@@ -274,7 +276,7 @@ int send_receipt(int postPosition, int cash, int electronical) {
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1, 0, 0, 0, 0, 0, getVisibleSession());
+    SaveIncome(1, 0, 0, 0, 0, 0, getActiveSession());
     return 0;
 }
 
@@ -343,7 +345,7 @@ int get_service() {
 
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, curMoney, 0, getVisibleSession());
+        SaveIncome(0, 0, 0, 0, curMoney, 0, getActiveSession());
     }
     return curMoney;
 }
@@ -354,7 +356,7 @@ int get_bonuses() {
 
     if (curMoney > 0) {
         printf("bonus %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, 0, curMoney, getVisibleSession());
+        SaveIncome(0, 0, 0, 0, 0, curMoney, getActiveSession());
     }
     return curMoney;
 }
@@ -426,7 +428,7 @@ int get_coins(void *object) {
 
     int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
     if (totalMoney > 0) {
-        SaveIncome(0, totalMoney, 0, 0, 0, 0, getVisibleSession());
+        SaveIncome(0, totalMoney, 0, 0, 0, 0, getActiveSession());
     }
 
     return totalMoney;
@@ -455,7 +457,7 @@ int get_banknotes(void *object) {
     if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
     int totalMoney = curMoney + gpioBanknote;
     if (totalMoney > 0) {
-        SaveIncome(0, 0, totalMoney, 0, 0, 0, getVisibleSession());
+        SaveIncome(0, 0, totalMoney, 0, 0, 0, getActiveSession());
     }
     return totalMoney;
 }
@@ -465,7 +467,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney > 0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0, 0, 0, curMoney, 0, 0, getVisibleSession());
+        SaveIncome(0, 0, 0, curMoney, 0, 0, getActiveSession());
         manager->ElectronMoney = 0;
     }
     return curMoney;
@@ -685,6 +687,7 @@ int CentralServerDialog() {
     bool openStation = false;
     std::string authorizedSessionID = "";
     std::string visibleSessionID = "";
+    std::string serverUrl = "";
     bool bonusSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
@@ -722,9 +725,6 @@ int CentralServerDialog() {
     std::string visibleSessionTmp = visibleSessionID;
 
     if (_VisibleSessionID == authorizedSessionID) {
-        std::cout<<"\nauthorizedSessionID: "<<authorizedSessionID;
-        std::cout<<"\nvisibleSessionID: "<<visibleSessionID;
-        std::cout<<"\n_VisibleSessionID: "<<_VisibleSessionID;
         if(authorizedSessionID != ""){
             _IsConnectedToBonusSystem = true;
         }
@@ -739,10 +739,9 @@ int CentralServerDialog() {
     }
     _VisibleSessionID = visibleSessionTmp;
     _AuthorizedSessionID = authorizedSessionID;
-    std::cout<<"\n_VisibleSessionID: "<<_VisibleSessionID;
-    std::cout<<"\n_AuthorizedSessionID: "<<_AuthorizedSessionID;
     if(_VisibleSessionID != ""){
-        _Qr = "https://app.openwashing.com/#/?sessionID=" + _VisibleSessionID;
+        network->GetServerInfo(serverUrl);
+        _Qr = serverUrl + "/#/?sessionID=" + _VisibleSessionID;
     }
     else{
         _Qr = "";

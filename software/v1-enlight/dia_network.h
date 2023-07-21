@@ -402,6 +402,39 @@ class DiaNetwork {
         return 0;
     }
 
+    int GetServerInfo(std::string &serverHost) {
+        std::string url = _Host + _Port + "/server/info";
+
+        std::string answer;
+        int result;
+        result = SendRequestGet(&answer, url, 200);
+        if ((result) || (answer != "")) {
+            return 1;
+        }
+
+        json_error_t error;
+        json_t *json = json_loads(answer.c_str(), 0, &error);
+
+        if (!json_is_object(json)) {
+            json_decref(json);
+            return 1;
+        }
+
+        json_t *url_json = json_object_get(json, "bonusServiceURL");
+
+        if (!(json_is_string(url_json))) {
+            json_decref(json);
+            json_decref(url_json);
+            return 1;
+        }
+
+        serverHost = json_string_value(url_json);
+        json_decref(json);
+        json_decref(url_json);
+
+        return 0;
+    }
+
     // RunProgramOnServer request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     int RunProgramOnServer(int programID, int preflight) {
