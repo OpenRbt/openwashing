@@ -407,8 +407,8 @@ class DiaNetwork {
 
         std::string answer;
         int result;
-        result = SendRequestGet(&answer, url, 200);
-        if ((result) || (answer != "")) {
+        result = SendRequestGet(&answer, url, 0);
+        if ((result) || (answer == "")) {
             return 1;
         }
 

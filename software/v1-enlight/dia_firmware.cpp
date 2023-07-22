@@ -103,6 +103,7 @@ int _CanPlayVideoTimer = 0;
 bool _BonusSystemIsActive = false;
 bool _IsConnectedToBonusSystem = false;
 std::string _AuthorizedSessionID = "";
+std::string _ServerUrl = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
@@ -687,7 +688,6 @@ int CentralServerDialog() {
     bool openStation = false;
     std::string authorizedSessionID = "";
     std::string visibleSessionID = "";
-    std::string serverUrl = "";
     bool bonusSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
@@ -695,6 +695,7 @@ int CentralServerDialog() {
     std::string qrData = "";
 
     network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, visibleSessionID, bonusAmount);
+    network->GetServerInfo(_ServerUrl);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
             config->LoadConfig();
@@ -740,8 +741,7 @@ int CentralServerDialog() {
     _VisibleSessionID = visibleSessionTmp;
     _AuthorizedSessionID = authorizedSessionID;
     if(_VisibleSessionID != ""){
-        network->GetServerInfo(serverUrl);
-        _Qr = serverUrl + "/#/?sessionID=" + _VisibleSessionID;
+        _Qr = _ServerUrl + "/#/?sessionID=" + _VisibleSessionID;
     }
     else{
         _Qr = "";
