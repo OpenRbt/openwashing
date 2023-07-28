@@ -317,7 +317,7 @@ class DiaRuntimeHardware {
         if (get_is_connected_to_bonus_system_function) {
             return get_is_connected_to_bonus_system_function();
         } else {
-            printf("error: NIL object or function GetIsPlayingVideo\n");
+            printf("error: NIL object or function GetIsConnectedToBonusSystem\n");
         }
         return false;
     }
@@ -327,7 +327,7 @@ class DiaRuntimeHardware {
         if (set_is_connected_to_bonus_system_function) {
             set_is_connected_to_bonus_system_function(isConnectedToBonusSystem);
         } else {
-            printf("error: NIL object or function SetIsPlayingVideo\n");
+            printf("error: NIL object or function SetIsConnectedToBonusSystem\n");
         }
         return 0;
     }
