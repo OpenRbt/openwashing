@@ -1336,7 +1336,7 @@ class DiaNetwork {
         json_object_set_new(object, "Electronical", json_integer(s->cashless_total));
         json_object_set_new(object, "Service", json_integer(s->service_total));
         json_object_set_new(object, "Bonuses", json_integer(s->bonuses_total));
-        json_object_set_new(object, "SessionID", json_string(s->session_id.c_str()));
+        json_object_set_new(object, "SessionId", json_string(s->session_id.c_str()));
 
         char *str = json_dumps(object, 0);
         std::string res = str;

@@ -224,6 +224,8 @@ connected_to_bonus_system_mode = function()
 end
 
 select_price_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
     show_select_price(electron_balance)
     run_stop()
 
@@ -257,6 +259,8 @@ select_price_mode = function()
 end
 
 wait_for_card_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
     show_wait_for_card()
     run_stop()
 
@@ -308,6 +312,8 @@ wait_for_card_mode = function()
 end
 
 ask_for_money_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
     show_ask_for_money()
     run_stop()
     turn_light(0, animation.idle)
@@ -412,6 +418,8 @@ confirm_end_mode = function ()
 end
 
 thanks_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
     set_current_state(0)
 
     if is_waiting_receipt == false then
@@ -443,6 +451,7 @@ thanks_mode = function()
         is_waiting_receipt = false
 
         if visible_session ~= "" then 
+            hardware:CloseVisibleSession();
             hardware:EndSession();
         end
         hardware:CreateSession();
