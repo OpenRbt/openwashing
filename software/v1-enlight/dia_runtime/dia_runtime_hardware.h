@@ -79,6 +79,18 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    int(*CloseVisibleSession_function)();
+    int CloseVisibleSession() {
+        if(CloseVisibleSession_function){
+            int ans = CloseVisibleSession_function();
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function CloseVisibleSession_function\n");
+        }
+        return 0;
+    }
+
     int (*SetBonuses_function)(int bonuses);
     int SetBonuses(int bonuses) {
         if(SetBonuses_function){

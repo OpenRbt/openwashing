@@ -115,7 +115,6 @@ std::string _FileName;
 
 std::string _Qr = "";
 std::string _VisibleSessionID = "";
-std::string _ActiveSession = "";
 
 
 pthread_t run_program_thread;
@@ -212,6 +211,14 @@ int EndSession() {
     return 1;
 }
 
+int CloseVisibleSession() {
+    if(_VisibleSessionID != ""){
+        int answer = network->EndSession(_VisibleSessionID);
+        return answer;
+    }
+    return 1;
+}
+
 std::string getQR() {
     return _Qr;
 }
@@ -221,7 +228,9 @@ std::string getVisibleSession() {
 }
 
 std::string getActiveSession() {
-    return _ActiveSession;
+    if(_AuthorizedSessionID.empty())
+        return _VisibleSessionID;
+    return _AuthorizedSessionID;
 }
 
 bool dirExists(const std::string& dirName_in)
@@ -719,6 +728,10 @@ int CentralServerDialog() {
         // TODO: add the function of turning on the relay, which will open the lock.
     }
 
+    if (bonusSystemActive != _BonusSystemIsActive) {
+        _BonusSystemIsActive = bonusSystemActive;
+        printf("Bonus system activated: %d\n", bonusSystemActive);
+    }
     if (bonusSystemActive != _BonusSystemIsActive) {
         _BonusSystemIsActive = bonusSystemActive;
         printf("Bonus system activated: %d\n", bonusSystemActive);
@@ -1264,6 +1277,7 @@ int main(int argc, char **argv) {
 
     hardware->CreateSession_function = CreateSession;
     hardware->EndSession_function = EndSession;
+    hardware->CloseVisibleSession_function = CloseVisibleSession;
 
     hardware->getVisibleSession_function = getVisibleSession;
     hardware->getQR_function = getQR;
