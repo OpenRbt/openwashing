@@ -96,6 +96,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("GetKey", &DiaRuntimeHardware::GetKey)
         .addFunction("CreateSession", &DiaRuntimeHardware::CreateSession)
         .addFunction("EndSession", &DiaRuntimeHardware::EndSession)
+        .addFunction("CloseVisibleSession", &DiaRuntimeHardware::CloseVisibleSession)
         .addFunction("GetCanPlayVideo", &DiaRuntimeHardware::GetCanPlayVideo)
         .addFunction("SetCanPlayVideo", &DiaRuntimeHardware::SetCanPlayVideo)
         .addFunction("GetIsPlayingVideo", &DiaRuntimeHardware::GetIsPlayingVideo)
