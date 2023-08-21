@@ -724,29 +724,17 @@ int CentralServerDialog() {
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
     if(_BonusSystemIsActive){
-        std::string visibleSessionTmp = visibleSessionID;
-
         if (_VisibleSessionID == authorizedSessionID) {
-            if(authorizedSessionID != ""){
-                _IsConnectedToBonusSystem = true;
-            }
-            else{
-                _IsConnectedToBonusSystem = false;
-            }
+            _IsConnectedToBonusSystem = !authorizedSessionID.empty();
             CreateSession();
-            visibleSessionTmp = _VisibleSessionID;
+            visibleSessionID = _VisibleSessionID;
         }
         if (_AuthorizedSessionID != authorizedSessionID) {
             EndSession();
         }
-        _VisibleSessionID = visibleSessionTmp;
+        _VisibleSessionID = visibleSessionID;
         _AuthorizedSessionID = authorizedSessionID;
-        if(_VisibleSessionID != ""){
-            _Qr = _ServerUrl + "/#/?sessionID=" + _VisibleSessionID;
-        }
-        else{
-            _Qr = "";
-        }
+        _Qr = _VisibleSessionID.empty() ? "" : _ServerUrl + "/#/?sessionID=" + _VisibleSessionID;
     }
     if (buttonID != 0) {
         printf("BUTTON PRESSED %d \n", buttonID);
