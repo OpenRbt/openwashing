@@ -638,7 +638,7 @@ class DiaNetwork {
             lastDiscountUpdate = (int)json_integer_value(obj_last_discount_update);
 
             json_t *obj_bonus_system;
-            obj_bonus_system = json_object_get(object, "bonus_system_active");
+            obj_bonus_system = json_object_get(object, "bonusSystemActive");
             bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
 
             json_t *obj_bonus_amount;

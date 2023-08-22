@@ -681,7 +681,7 @@ end
 
 get_QR = function()
     qr = hardware:GetQR();
-    if qr == nil or qr == '' then
+    if qr == nil or qr == '' or hardware:BonusSystemIsActive() == false then
         choose_method:Set("qr_pic.visible", "false")
         choose_method:Set("bonus_pic.visible", "false")
     else
