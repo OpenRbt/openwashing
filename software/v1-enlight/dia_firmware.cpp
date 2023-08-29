@@ -569,6 +569,10 @@ bool IsRemoteOrAllRelayBoardMode() {
     return _ServerRelayBoardMode == RelayBoardMode::DanBoard || _ServerRelayBoardMode == RelayBoardMode::All;
 }
 
+bool IsRemoteRelayBoardMode() {
+    return _ServerRelayBoardMode == RelayBoardMode::DanBoard;
+}
+
 bool IsLocalOrAllRelayBoardMode() {
     return _ServerRelayBoardMode == RelayBoardMode::LocalGPIO || _ServerRelayBoardMode == RelayBoardMode::All;
 }
@@ -1224,7 +1228,7 @@ int main(int argc, char **argv) {
     printf("Settings loaded...\n");
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Settings from server loaded");
     _ServerRelayBoardMode = config->GetServerRelayBoard();
-    if (IsRemoteOrAllRelayBoardMode()) {
+    if (IsRemoteRelayBoardMode()) {
         int err = 1;
         StartScreenMessage(STARTUP_MESSAGE::RELAY_CONTROL_BOARD, "Checking relay control server board");
         while (err) {
