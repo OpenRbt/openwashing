@@ -597,6 +597,21 @@ int RunProgram() {
         _IntervalsCountProgram = 0;
     }
 
+    if (IsLocalOrAllRelayBoardMode()) {
+        #ifdef USE_GPIO
+            DiaGpio *gpio = config->GetGpio();
+            if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
+                return 1;
+            }
+            if (gpio != nullptr) {
+                gpio->CurrentProgram = _CurrentProgram;
+                gpio->CurrentProgramIsPreflight = _IsPreflight;
+            } else {
+                printf("ERROR: trying to run program with null gpio object\n");
+            }
+        #endif
+    }
+
     if (_IntervalsCountPreflight > 0)
         _IntervalsCountPreflight--;
 
@@ -615,21 +630,6 @@ int RunProgram() {
         }
     }
     
-    if (IsLocalOrAllRelayBoardMode()) {
-        #ifdef USE_GPIO
-            DiaGpio *gpio = config->GetGpio();
-            if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
-                return 1;
-            }
-            if (gpio != nullptr) {
-                gpio->CurrentProgram = _CurrentProgram;
-                gpio->CurrentProgramIsPreflight = _IsPreflight;
-            } else {
-                printf("ERROR: trying to run program with null gpio object\n");
-            }
-        #endif
-    }
-
     if (_IntervalsCountProgram > 20 && _CurrentProgramID >= 0) {
         bool success = RunProgramOnServerWithRetry(_CurrentProgramID, _IsPreflight);
         if (success && _CurrentProgramID == 0)
