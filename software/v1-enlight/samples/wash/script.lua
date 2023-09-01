@@ -13,6 +13,8 @@ setup = function()
     max_electron_balance = 900
     electron_amount_step = 25
     electron_balance = min_electron_balance
+
+    sbp_balance = min_electron_balance
     
     balance_seconds = 0
     cash_balance = 0.0
@@ -65,6 +67,8 @@ setup = function()
     mode_select_price = 20
     mode_wait_for_card = 30
     mode_ask_for_money = 40
+    mode_sbp_select_price = 41
+    mode_sbp_payment = 42
     
     -- all these modes MUST follow each other
     mode_work = 50
@@ -141,6 +145,8 @@ run_mode = function(new_mode)
     if new_mode == mode_select_price then return select_price_mode() end
     if new_mode == mode_wait_for_card then return wait_for_card_mode() end
     if new_mode == mode_ask_for_money then return ask_for_money_mode() end
+    if new_mode == mode_sbp_select_price then return sbp_select_price_mode() end
+    if new_mode == mode_sbp_payment then return sbp_payment_mode() end
     
     if is_working_mode (new_mode) then return program_mode(new_mode) end
     if new_mode == mode_pause then return pause_mode() end
@@ -182,9 +188,13 @@ choose_method_mode = function()
     if pressed_key == 4 or pressed_key == 5 or pressed_key == 6 then
         return mode_select_price
     end
-    if pressed_key == 1 or pressed_key == 2 or pressed_key == 3 then
+    if pressed_key == 1 then
         return mode_ask_for_money
     end
+    if pressed_key == 2 then
+        return mode_sbp_select_price
+    end
+    
     
     -- if someone put some money let's switch the mode.
     -- this should be rebuilt
@@ -335,6 +345,61 @@ ask_for_money_mode = function()
     return mode_ask_for_money
 end
 
+sbp_select_price_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)    
+    show_sbp_select_price(sbp_balance)
+    run_stop()
+
+    -- check animation
+    turn_light(0, animation.idle)
+
+    pressed_key = get_key()
+    -- increase amount
+    if pressed_key == 1 then
+        sbp_balance = sbp_balance + electron_amount_step
+        if sbp_balance >= max_electron_balance then
+            sbp_balance = max_electron_balance
+        end
+    end
+    -- decrease amount
+    if pressed_key == 2 then
+        sbp_balance = sbp_balance - electron_amount_step
+        if sbp_balance <= min_electron_balance then
+            sbp_balance = min_electron_balance
+        end 
+    end
+    --return to choose method
+    if pressed_key == 3 then
+        return mode_choose_method
+    end
+    if pressed_key == 6 then
+        return mode_sbp_payment
+    end
+
+    return mode_sbp_select_price
+end
+
+sbp_payment_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)    
+    show_sbp_payment()
+    run_stop()
+
+    -- check animation
+    turn_light(0, animation.idle)
+
+    pressed_key = get_key()
+
+    if pressed_key > 0 and pressed_key < 7 then
+        return mode_choose_method
+    end
+
+    --smart_delay(100)
+   
+    return mode_sbp_payment
+end
+
 program_mode = function(working_mode)
     is_paused = false
   sub_mode = working_mode - mode_work
@@ -474,6 +539,17 @@ show_ask_for_money = function()
         ask_for_money:Set("return_background.visible", "true")
     end
     ask_for_money:Display()
+end
+
+show_sbp_select_price = function(balance_rur)
+    balance_int = math.ceil(balance_rur)
+    --printMessage(balance_int)
+    sbp_select_price:Set("sbp_balance.value", balance_int)
+    sbp_select_price:Display()
+end
+
+show_sbp_payment = function()
+    sbp_payment:Display()
 end
 
 show_choose_method = function()
@@ -631,6 +707,7 @@ update_balance = function()
     new_electronical = hardware:GetElectronical()
     new_service = hardware:GetService()
     new_bonuses = hardware:GetBonuses()
+    --new_sbp = hardware:GetSbpMoney()
 
     if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 or new_bonuses > 0 then
         is_money_added = true

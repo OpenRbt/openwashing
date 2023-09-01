@@ -15,6 +15,14 @@
       "src": "screens/4_working.json"
     },
     {
+      "id": "sbp_select_price",
+      "src": "screens/5_sbp_select_price.json"
+    },
+    {
+      "id": "sbp_payment",
+      "src": "screens/6_sbp_payment.json"
+    },
+    {
       "id": "thanks",
       "src": "screens/10_thanks.json"
     },

@@ -89,6 +89,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("GetBanknotes", &DiaRuntimeHardware::GetBanknotes)
         .addFunction("GetService", &DiaRuntimeHardware::GetService)
         .addFunction("GetBonuses", &DiaRuntimeHardware::GetBonuses)
+        .addFunction("GetSbpMoney", &DiaRuntimeHardware::GetSbpMoney)
         .addFunction("SetBonuses", &DiaRuntimeHardware::SetBonuses)
         .addFunction("GetIsPreflight", &DiaRuntimeHardware::GetIsPreflight)
         .addFunction("GetOpenLid", &DiaRuntimeHardware::GetOpenLid)

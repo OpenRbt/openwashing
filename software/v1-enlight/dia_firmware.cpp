@@ -75,6 +75,7 @@ int _DebugKey = 0;
 int _Balance = 0;
 int _OpenLid = 0;
 int _BalanceBonuses = 0;
+int _BalanceSbp = 0;
 int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
 
@@ -369,6 +370,10 @@ int get_bonuses() {
         SaveIncome(0, 0, 0, 0, 0, curMoney, getActiveSession());
     }
     return curMoney;
+}
+
+int get_sbp_money() {
+    return 0;
 }
 
 int get_is_preflight() {
@@ -1312,6 +1317,7 @@ int main(int argc, char **argv) {
     hardware->electronical_object = manager;
     hardware->get_service_function = get_service;
     hardware->get_bonuses_function = get_bonuses;
+    hardware->get_sbp_money_function = get_sbp_money;
     hardware->get_is_preflight_function = get_is_preflight;
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;

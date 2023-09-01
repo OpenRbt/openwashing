@@ -213,6 +213,16 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    int (*get_sbp_money_function)();
+    int GetSbpMoney() {
+        if (get_sbp_money_function) {
+            return get_sbp_money_function();
+        } else {
+            printf("error: NIL object or function GetSbpMoney\n");
+        }
+        return 0;
+    }
+
     int (*get_is_preflight_function)();
     int GetIsPreflight() {
         if (get_is_preflight_function) {

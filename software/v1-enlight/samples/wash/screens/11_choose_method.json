@@ -60,6 +60,23 @@
         "click_id":"5"
       },
       {
+        "id":"sbp_pic",
+        "type":"image",
+        "position": "450;730",
+        "size":"282;150",
+        "src":"pic/SBP.png",
+        "visible":"true"
+      },
+      {
+        "id":"sbp",
+        "type":"image",
+        "position": "525;950",
+        "size":"70;40",
+        "src":"pic/arrow.png",
+        "visible":"true",
+        "click_id":"5"
+      },
+      {
         "id":"post_number",
         "type": "digits",
         "position": "1880;10",
