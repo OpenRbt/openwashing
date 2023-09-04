@@ -25,6 +25,7 @@
 #include "cmsis_os.h"
 #include "app.h"
 #include <string.h>
+#include "menu.h"
 #include "bitmap.h"
 #include "shared.h"
 #include "esq500modbus.h"
@@ -35,6 +36,8 @@ int direction = 1;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
+
+menu main_menu;
 
 uint8_t usb_buf_cursor;
 char usb_buf[MAX_CMD_BUF + 1];
@@ -129,6 +132,7 @@ int main(void) {
 	set_incoming_byte_handler(1, receive_cmd);
 	set_incoming_byte_handler(2, receive_motor1);
 	set_state(ST_WAITING_FOR_CONNECTION);
+	menu_init(&main_menu);
 	usb_buf[0] = 0;
 	usb_buf_cursor = 0;
 	motor_cur = 0;
