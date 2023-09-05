@@ -752,7 +752,7 @@ int CentralServerDialog() {
         }
         _VisibleSessionID = visibleSessionID;
         _AuthorizedSessionID = authorizedSessionID;
-        _Qr = _VisibleSessionID.empty() ? "" : _ServerUrl + "/?sessionID=" + _VisibleSessionID;
+        _Qr = _VisibleSessionID.empty() ? "" : _ServerUrl + "/#/?sessionID=" + _VisibleSessionID;
     }
     if (buttonID != 0) {
         printf("BUTTON PRESSED %d \n", buttonID);
