@@ -543,7 +543,6 @@ end
 
 show_sbp_select_price = function(balance_rur)
     balance_int = math.ceil(balance_rur)
-    --printMessage(balance_int)
     sbp_select_price:Set("sbp_balance.value", balance_int)
     sbp_select_price:Display()
 end
