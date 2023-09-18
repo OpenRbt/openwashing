@@ -19,6 +19,7 @@ setup = function()
     balance_seconds = 0
     cash_balance = 0.0
     electronical_balance = 0.0
+    sbp_receipt_balance = 0.0
     bonuses_balance = 0.0
     post_position = 1
     money_wait_seconds = 0
@@ -93,6 +94,7 @@ setup = function()
     create_session()
 
     qr = "";
+    sbpQr = "";
     visible_session = "";
     
     forget_pressed_key();
@@ -185,13 +187,13 @@ choose_method_mode = function()
     init_discounts()
     
     pressed_key = get_key()
-    if pressed_key == 4 or pressed_key == 5 or pressed_key == 6 then
+    if pressed_key == 5 or pressed_key == 6 then
         return mode_select_price
     end
-    if pressed_key == 1 then
+    if pressed_key == 1 or pressed_key == 2 then
         return mode_ask_for_money
     end
-    if pressed_key == 2 then
+    if pressed_key == 3 or pressed_key == 4 then
         return mode_sbp_select_price
     end
     
@@ -374,6 +376,8 @@ sbp_select_price_mode = function()
         return mode_choose_method
     end
     if pressed_key == 6 then
+        hardware:CreateSbpPayment(sbp_balance)
+        sbp_balance = min_electron_balance
         return mode_sbp_payment
     end
 
@@ -383,6 +387,7 @@ end
 sbp_payment_mode = function()
     is_connected_to_bonus_system = false
     set_is_connected_to_bonus_system(false)    
+    get_sbp_qr()
     show_sbp_payment()
     run_stop()
 
@@ -396,7 +401,11 @@ sbp_payment_mode = function()
     end
 
     --smart_delay(100)
-   
+    update_balance()
+    if balance > 0.99 then
+        return mode_work
+    end
+
     return mode_sbp_payment
 end
 
@@ -509,10 +518,11 @@ thanks_mode = function()
         end
         waiting_loops = waiting_loops - 1
     else
-        send_receipt(post_position, cash_balance, electronical_balance)
+        send_receipt(post_position, cash_balance, electronical_balance, sbp_receipt_balance)
         cash_balance = 0
         bonuses_balance = 0
         electronical_balance = 0
+        sbp_receipt_balance = 0
         is_waiting_receipt = false
 
         if visible_session ~= "" then 
@@ -548,6 +558,7 @@ show_sbp_select_price = function(balance_rur)
 end
 
 show_sbp_payment = function()
+    sbp_payment:Set("qr_sbp.url", sbpQr)
     sbp_payment:Display()
 end
 
@@ -650,8 +661,8 @@ turn_light = function(rel_num, animation_code)
     hardware:TurnLight(rel_num, animation_code)
 end
 
-send_receipt = function(post_pos, cash, electronical)
-    hardware:SendReceipt(post_pos, cash, electronical)
+send_receipt = function(post_pos, cash, electronical, sbp_receipt_balance)
+    hardware:SendReceipt(post_pos, cash, electronical, sbp_receipt_balance)
 end
 
 increment_cars = function()
@@ -706,7 +717,7 @@ update_balance = function()
     new_electronical = hardware:GetElectronical()
     new_service = hardware:GetService()
     new_bonuses = hardware:GetBonuses()
-    --new_sbp = hardware:GetSbpMoney()
+    new_sbp = hardware:GetSbpMoney()
 
     if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 or new_bonuses > 0 then
         is_money_added = true
@@ -716,12 +727,14 @@ update_balance = function()
     cash_balance = cash_balance + new_coins
     cash_balance = cash_balance + new_banknotes
     electronical_balance = electronical_balance + new_electronical
+    sbp_receipt_balance = sbp_receipt_balance + new_sbp
     bonuses_balance = bonuses_balance + new_bonuses
     balance = balance + new_coins
     balance = balance + new_banknotes
     balance = balance + new_electronical
     balance = balance + new_service
     balance = balance + new_bonuses
+    balance = balance + new_sbp
 end
 
 charge_balance = function(price)
@@ -744,7 +757,6 @@ end
 
 is_authorized_function = function ()
     authorizedSessionID = hardware:AuthorizedSessionID();
-    printMessage("\n\n\nauthorizedSessionID: " .. authorizedSessionID)
     if authorizedSessionID ~= "" and authorizedSessionID ~= nil then
         return true
     end
@@ -772,5 +784,14 @@ get_QR = function()
     else
         choose_method:Set("qr_pic.visible", "true")
         choose_method:Set("bonus_pic.visible", "true")
+    end
+end
+
+get_sbp_qr = function()
+    sbpQr = hardware:GetSbpQR();
+    if sbpQr == nil or sbpQr == '' then
+        sbp_payment:Set("qr_sbp.visible", "false")
+    else
+        sbp_payment:Set("qr_sbp.visible", "true")
     end
 end

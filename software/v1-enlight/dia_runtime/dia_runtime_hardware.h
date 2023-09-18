@@ -44,11 +44,11 @@ class DiaRuntimeHardware {
         return 0;
     }
 
-    int (*send_receipt_function)(int postPosition, int cash, int electronical);
+    int (*send_receipt_function)(int postPosition, int cash, int electronical, int qrMoney);
 
-    int SendReceipt(int postPosition, int cash, int electronical) {
+    int SendReceipt(int postPosition, int cash, int electronical, int qrMoney) {
         if (send_receipt_function) {
-            send_receipt_function(postPosition, cash, electronical);
+            send_receipt_function(postPosition, cash, electronical, qrMoney);
         } else {
             printf("error: NIL function SendReceipt\n");
         }
@@ -115,6 +115,18 @@ class DiaRuntimeHardware {
         return "";
     }
 
+    std::string (*get_sbp_qr_function)();
+    std::string GetSbpQR() {
+        if(get_sbp_qr_function){
+            std::string QR = get_sbp_qr_function();
+            return QR;
+        }
+        else{
+            printf("error: NIL object or function get_sbp_qr_function\n");
+        }
+        return "";
+    }
+
     int (*sendPause_function)();
     int SendPause() {
         if(sendPause_function){
@@ -123,6 +135,18 @@ class DiaRuntimeHardware {
         }
         else{
             printf("error: NIL object or function sendPause_function\n");
+        }
+        return 0;
+    }
+
+    int (*create_sbp_payment_function)(int amount);
+    int CreateSbpPayment(int amount) {
+        if(create_sbp_payment_function){
+            int ans = create_sbp_payment_function(amount);
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function create_sbp_payment_function\n");
         }
         return 0;
     }

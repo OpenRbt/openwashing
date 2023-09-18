@@ -117,6 +117,7 @@ std::string _FileName;
 std::string _Qr = "";
 std::string _VisibleSessionID = "";
 
+std::string _SbpQr = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
@@ -224,6 +225,10 @@ std::string getQR() {
     return _Qr;
 }
 
+std::string getSbpQr() {
+    return _SbpQr;
+}
+
 std::string getVisibleSession() {
     return _VisibleSessionID;
 }
@@ -245,13 +250,14 @@ bool dirExists(const std::string& dirName_in)
 
 
 // Saves new income money and creates money report to Central Server.
-void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
+void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, int sbp_total, std::string session_id) {
     network->SendMoneyReport(cars_total,
                              coins_total,
                              banknotes_total,
                              cashless_total,
                              service_total,
                              bonuses_total,
+                             sbp_total,
                              session_id);
 }
 
@@ -280,14 +286,19 @@ int turn_light(void *object, int pin, int animation_id) {
 pthread_t pinging_thread;
 
 // Creates receipt request to Online Cash Register.
-int send_receipt(int postPosition, int cash, int electronical) {
-    return network->ReceiptRequest(postPosition, cash, electronical);
+int send_receipt(int postPosition, int cash, int electronical, int qrMoney) {
+    std::cout << "send_receipt electronical: " << electronical + qrMoney << "\n\n\n";
+    return network->ReceiptRequest(postPosition, cash, electronical + qrMoney);
+}
+
+int createSbpPayment(int amount) {
+    return network->CreateSbpPayment(amount * 100);
 }
 
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1, 0, 0, 0, 0, 0, getActiveSession());
+    SaveIncome(1, 0, 0, 0, 0, 0, 0, getActiveSession());
     return 0;
 }
 
@@ -356,7 +367,7 @@ int get_service() {
 
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, curMoney, 0, getActiveSession());
+        SaveIncome(0, 0, 0, 0, curMoney, 0, 0, getActiveSession());
     }
     return curMoney;
 }
@@ -367,13 +378,20 @@ int get_bonuses() {
 
     if (curMoney > 0) {
         printf("bonus %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, 0, curMoney, getActiveSession());
+        SaveIncome(0, 0, 0, 0, 0, curMoney, 0, getActiveSession());
     }
     return curMoney;
 }
 
 int get_sbp_money() {
-    return 0;
+    int curMoney = _BalanceSbp;
+    _BalanceSbp = 0;
+
+    if (curMoney > 0) {
+        printf("sbp money %d\n", curMoney);
+        SaveIncome(0, 0, 0, 0, 0, 0, curMoney, getActiveSession());
+    }
+    return curMoney;
 }
 
 int get_is_preflight() {
@@ -443,7 +461,7 @@ int get_coins(void *object) {
 
     int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
     if (totalMoney > 0) {
-        SaveIncome(0, totalMoney, 0, 0, 0, 0, getActiveSession());
+        SaveIncome(0, totalMoney, 0, 0, 0, 0, 0, getActiveSession());
     }
 
     return totalMoney;
@@ -472,7 +490,7 @@ int get_banknotes(void *object) {
     if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
     int totalMoney = curMoney + gpioBanknote;
     if (totalMoney > 0) {
-        SaveIncome(0, 0, totalMoney, 0, 0, 0, getActiveSession());
+        SaveIncome(0, 0, totalMoney, 0, 0, 0, 0, getActiveSession());
     }
     return totalMoney;
 }
@@ -482,7 +500,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney > 0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0, 0, 0, curMoney, 0, 0, getActiveSession());
+        SaveIncome(0, 0, 0, curMoney, 0, 0, 0, getActiveSession());
         manager->ElectronMoney = 0;
     }
     return curMoney;
@@ -708,7 +726,17 @@ int CentralServerDialog() {
     int discountLastUpdate = 0;
     std::string qrData = "";
 
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, visibleSessionID, bonusAmount);
+    std::string sbpUrl = "";
+    std::string sbpOrderId = "";
+
+    double sbpMoney = 0;
+    bool sbpQrFailed = true;
+
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, 
+    _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, 
+    authorizedSessionID, visibleSessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, 
+    sbpOrderId);
+
     network->GetServerInfo(_ServerUrl);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
@@ -727,11 +755,19 @@ int CentralServerDialog() {
         // TODO protect with mutex
         _BalanceBonuses += bonusAmount;
     }
+    if (sbpMoney > 0 && !sbpQrFailed && !sbpOrderId.empty()) {
+        // TODO protect with mutex
+        _BalanceSbp = sbpMoney / 100;
+        network->ConfirmSbpPayment(sbpOrderId);
+        std::cout<<"\n\n\nnetwork->ConfirmSbpPayment(sbpOrderId); " << sbpOrderId << "\n\n\n";
+    }
     if (openStation) {
         _OpenLid = _OpenLid + 1;
         printf("Door is going to be opened... \n");
         // TODO: add the function of turning on the relay, which will open the lock.
     }
+
+    _SbpQr = sbpUrl;
 
     if (bonusSystemActive != _BonusSystemIsActive) {
         _BonusSystemIsActive = bonusSystemActive;
@@ -896,10 +932,17 @@ int RecoverRegistry() {
     int discountLastUpdate = 0;
 
     std::string default_price = "15";
+    
     std::string qrData = "";
+
+    std::string sbpUrl = "";
+    std::string sbpOrderId = "";
+    double sbpMoney = 0;
+    bool sbpQrFailed = true;
+
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1288,7 +1331,11 @@ int main(int argc, char **argv) {
     hardware->getQR_function = getQR;
     hardware->SetBonuses_function = SetBonuses;
 
+    hardware->get_sbp_qr_function = getSbpQr;
+
     hardware->sendPause_function = sendPause;
+
+    hardware->create_sbp_payment_function = createSbpPayment;
 
     hardware->get_can_play_video_function = getCanPlayVideo;
     hardware->set_can_play_video_function = setCanPlayVideo;
