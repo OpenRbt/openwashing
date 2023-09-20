@@ -14,7 +14,7 @@ setup = function()
     electron_amount_step = 25
     electron_balance = min_electron_balance
 
-    sbp_balance = min_electron_balance
+    sbp_balance = 15
     
     balance_seconds = 0
     cash_balance = 0.0

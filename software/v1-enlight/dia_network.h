@@ -601,7 +601,7 @@ class DiaNetwork {
             //fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
-
+        std::cout<<"\n\n\nConfirmSbpPayment\n\n\n";
         return 0;
     }
 

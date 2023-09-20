@@ -76,6 +76,7 @@ int _Balance = 0;
 int _OpenLid = 0;
 int _BalanceBonuses = 0;
 int _BalanceSbp = 0;
+std::string _SbpOrderId = "";
 int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
 
@@ -755,11 +756,14 @@ int CentralServerDialog() {
         // TODO protect with mutex
         _BalanceBonuses += bonusAmount;
     }
-    if (sbpMoney > 0 && !sbpQrFailed && !sbpOrderId.empty()) {
+    std::cout<<"\n\n\nsbpMoney: " << sbpMoney << "\n\n\n";
+    std::cout<<"\n\n\nnetwork->ConfirmSbpPayment(sbpOrderId); " << sbpOrderId << "\n\n\n";
+    if (sbpMoney > 0 && !sbpQrFailed && !sbpOrderId.empty() && _SbpOrderId != sbpOrderId) {
         // TODO protect with mutex
-        _BalanceSbp = sbpMoney / 100;
-        network->ConfirmSbpPayment(sbpOrderId);
-        std::cout<<"\n\n\nnetwork->ConfirmSbpPayment(sbpOrderId); " << sbpOrderId << "\n\n\n";
+        _SbpOrderId = sbpOrderId;
+        if (!network->ConfirmSbpPayment(sbpOrderId)) {
+            _BalanceSbp = sbpMoney / 100;
+        }
     }
     if (openStation) {
         _OpenLid = _OpenLid + 1;
