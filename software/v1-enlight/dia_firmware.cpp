@@ -25,6 +25,7 @@
 #include <thread>
 #include <chrono>
 #include <wiringPi.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <list>
@@ -110,10 +111,11 @@ bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
 bool _IsDirExist = false;
-int _MaxAfkTime = 30;
+int _MaxAfkTime = 5;
 
 std::string _FlashName = "Flash";
 std::string _FileName;
+std::list<std::string> _FileNames;
 
 std::string _Qr = "";
 std::string _VisibleSessionID = "";
@@ -187,7 +189,7 @@ void *play_video_func(void *ptr) {
             _IsPlayingVideo = true;
             _CanPlayVideo = false;
             _CanPlayVideoTimer = 0;
-            int pid = system(("ffplay -loop 0 -exitonkeydown -exitonmousedown -fs " + _FileName).c_str());
+            int pid = system(("python ./player.py " + _FileName + " --repeat --mousebtn").c_str());
             printf("\n\n\n PlayVideo result: %d \n\n\n", pid);
         }
         _IsPlayingVideo = false;
@@ -243,12 +245,20 @@ std::string getActiveSession() {
 bool dirExists(const std::string& dirName_in)
 {
     fs::path dirNamePath(dirName_in);
+
     if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
         return true;
     }
     return false;
 }
 
+bool dirAccessRead(const std::string& dirName_in)
+{
+    if (access(dirName_in.c_str(), R_OK) != 0) {
+        return false;
+    }
+    return true;
+}
 
 // Saves new income money and creates money report to Central Server.
 void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, int sbp_total, std::string session_id) {
@@ -1432,7 +1442,7 @@ int main(int argc, char **argv) {
     printf("get_volume_func start...\n");
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
 
-/*
+
     std::list<std::string> directories;
     std::string directory;
     for (const auto &entry : fs::directory_iterator("/media")) {
@@ -1441,20 +1451,33 @@ int main(int argc, char **argv) {
         }
     }
 
+    bool found = false;
     for (auto const &i : directories) {
-        if (dirExists(i + "/openrbt_video")) {
-            directory = i + "/openrbt_video";
-            break;
+        if(dirAccessRead(i)){
+            for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
+                if (dirAccessRead(subEntry.path())){
+                        if (fs::is_directory(subEntry) && subEntry.path().filename() == "openrbt_video" && dirAccessRead(subEntry.path().string())) {
+                        directory = subEntry.path().string();
+                        found = true;
+                        break;
+                    }
+                }
+            }
         }
+        if (found) break;
     }
 
     if (!directory.empty()) {
-        for (const auto &entry : fs::directory_iterator(directory))
-            _FileName = entry.path();
+        for (const auto &entry : fs::directory_iterator(directory)){
+            _FileName += entry.path();
+            _FileName += " ";
+        }
+            
+        std::cout << "\n\n\n_FileName: " << _FileName << "\n\n\n";
 
         pthread_create(&play_video_thread, NULL, play_video_func, NULL);
     }
-*/
+
     while (!keypress) {
         // Call Lua loop function
         config->GetRuntime()->Loop();
