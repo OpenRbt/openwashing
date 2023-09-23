@@ -189,7 +189,18 @@ void *play_video_func(void *ptr) {
             _IsPlayingVideo = true;
             _CanPlayVideo = false;
             _CanPlayVideoTimer = 0;
-            int pid = system(("python ./player.py " + _FileName + " --repeat --mousebtn").c_str());
+
+            std::vector<std::string> files = split(_FileName, ' ');
+
+            std::string formattedFiles;
+            for (const std::string &file : files) {
+                if (!formattedFiles.empty()) {
+                    formattedFiles += " ";
+                }
+                formattedFiles += "\"" + file + "\"";
+            }
+
+            int pid = system(("python ./player.py " + formattedFiles + " --repeat --mousebtn").c_str());
             printf("\n\n\n PlayVideo result: %d \n\n\n", pid);
         }
         _IsPlayingVideo = false;
@@ -258,6 +269,16 @@ bool dirAccessRead(const std::string& dirName_in)
         return false;
     }
     return true;
+}
+
+std::vector<std::string> split(const std::string &s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
 }
 
 // Saves new income money and creates money report to Central Server.
