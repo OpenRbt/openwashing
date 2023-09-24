@@ -111,11 +111,9 @@ bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
 bool _IsDirExist = false;
-int _MaxAfkTime = 5;
+int _MaxAfkTime = 180;
 
-std::string _FlashName = "Flash";
 std::string _FileName;
-std::list<std::string> _FileNames;
 
 std::string _Qr = "";
 std::string _VisibleSessionID = "";
@@ -126,6 +124,7 @@ pthread_t run_program_thread;
 pthread_t get_volume_thread;
 pthread_t active_session_thread;
 pthread_t play_video_thread;
+pthread_t check_directory_thread;
 
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
@@ -179,32 +178,106 @@ bool getIsConnectedToBonusSystem() {
     return _IsConnectedToBonusSystem;
 }
 
+bool dirExists(const std::string& dirName_in)
+{
+    fs::path dirNamePath(dirName_in);
+
+    if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
+        return true;
+    }
+    return false;
+}
+
+bool dirAccessRead(const std::string& dirName_in)
+{
+    if (access(dirName_in.c_str(), R_OK) != 0) {
+        return false;
+    }
+    return true;
+}
+
+std::vector<std::string> split(const std::string &s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+void *check_directory_funk(void *ptr){
+    while (!_to_be_destroyed) {
+        delay(100);
+        std::list<std::string> directories;
+        std::string directory;
+        for (const auto &entry : fs::directory_iterator("/media")) {
+            if(fs::is_directory(entry.path())) {
+                directories.push_back(entry.path());
+            }
+        }
+
+        bool found = false;
+        for (auto const &i : directories) {
+            if(dirAccessRead(i)){
+                for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
+                    if (dirAccessRead(subEntry.path())){
+                            if (fs::is_directory(subEntry) && subEntry.path().filename() == "openrbt_video" && dirAccessRead(subEntry.path().string())) {
+                            directory = subEntry.path().string();
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (found) break;
+        }
+
+        if (!directory.empty()) {
+            for (const auto &entry : fs::directory_iterator(directory)){
+                _FileName += entry.path();
+                _FileName += " ";
+            }
+            _IsDirExist = true;
+            
+        }
+        else{
+            _IsDirExist = false;
+        }
+        delay(100);
+    }
+    pthread_exit(0);
+    return 0;
+}
+
 void *play_video_func(void *ptr) {
     while (!_to_be_destroyed) {
-        usleep(1 * 1000 * 1000);
-        if (_CanPlayVideo) {
-            _CanPlayVideoTimer++;
-        }
-        if (_CanPlayVideoTimer >= _MaxAfkTime) {
-            _IsPlayingVideo = true;
-            _CanPlayVideo = false;
-            _CanPlayVideoTimer = 0;
-
-            std::vector<std::string> files = split(_FileName, ' ');
-
-            std::string formattedFiles;
-            for (const std::string &file : files) {
-                if (!formattedFiles.empty()) {
-                    formattedFiles += " ";
-                }
-                formattedFiles += "\"" + file + "\"";
+        if(_IsDirExist){
+            usleep(1 * 1000 * 1000);
+            if (_CanPlayVideo) {
+                _CanPlayVideoTimer++;
             }
+            if (_CanPlayVideoTimer >= _MaxAfkTime) {
+                _IsPlayingVideo = true;
+                _CanPlayVideo = false;
+                _CanPlayVideoTimer = 0;
 
-            int pid = system(("python ./player.py " + formattedFiles + " --repeat --mousebtn").c_str());
-            printf("\n\n\n PlayVideo result: %d \n\n\n", pid);
+                std::vector<std::string> files = split(_FileName, ' ');
+
+                std::string formattedFiles;
+                for (const std::string &file : files) {
+                    if (!formattedFiles.empty()) {
+                        formattedFiles += " ";
+                    }
+                    formattedFiles += "\"" + file + "\"";
+                }
+
+                int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str());
+                printf("\nPlayVideo result: %d", pid);
+            }
+            _IsPlayingVideo = false;
+            delay(100);
         }
-        _IsPlayingVideo = false;
-        delay(100);
     }
     pthread_exit(0);
     return 0;
@@ -251,34 +324,6 @@ std::string getActiveSession() {
     if(_AuthorizedSessionID.empty())
         return _VisibleSessionID;
     return _AuthorizedSessionID;
-}
-
-bool dirExists(const std::string& dirName_in)
-{
-    fs::path dirNamePath(dirName_in);
-
-    if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
-        return true;
-    }
-    return false;
-}
-
-bool dirAccessRead(const std::string& dirName_in)
-{
-    if (access(dirName_in.c_str(), R_OK) != 0) {
-        return false;
-    }
-    return true;
-}
-
-std::vector<std::string> split(const std::string &s, char delimiter) {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter)) {
-        tokens.push_back(token);
-    }
-    return tokens;
 }
 
 // Saves new income money and creates money report to Central Server.
@@ -787,8 +832,6 @@ int CentralServerDialog() {
         // TODO protect with mutex
         _BalanceBonuses += bonusAmount;
     }
-    std::cout<<"\n\n\nsbpMoney: " << sbpMoney << "\n\n\n";
-    std::cout<<"\n\n\nnetwork->ConfirmSbpPayment(sbpOrderId); " << sbpOrderId << "\n\n\n";
     if (sbpMoney > 0 && !sbpQrFailed && !sbpOrderId.empty() && _SbpOrderId != sbpOrderId) {
         // TODO protect with mutex
         _SbpOrderId = sbpOrderId;
@@ -1463,41 +1506,8 @@ int main(int argc, char **argv) {
     printf("get_volume_func start...\n");
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
 
-
-    std::list<std::string> directories;
-    std::string directory;
-    for (const auto &entry : fs::directory_iterator("/media")) {
-        if(fs::is_directory(entry.path())) {
-            directories.push_back(entry.path());
-        }
-    }
-
-    bool found = false;
-    for (auto const &i : directories) {
-        if(dirAccessRead(i)){
-            for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
-                if (dirAccessRead(subEntry.path())){
-                        if (fs::is_directory(subEntry) && subEntry.path().filename() == "openrbt_video" && dirAccessRead(subEntry.path().string())) {
-                        directory = subEntry.path().string();
-                        found = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if (found) break;
-    }
-
-    if (!directory.empty()) {
-        for (const auto &entry : fs::directory_iterator(directory)){
-            _FileName += entry.path();
-            _FileName += " ";
-        }
-            
-        std::cout << "\n\n\n_FileName: " << _FileName << "\n\n\n";
-
-        pthread_create(&play_video_thread, NULL, play_video_func, NULL);
-    }
+    pthread_create(&check_directory_thread, NULL, check_directory_funk, NULL);
+    pthread_create(&play_video_thread, NULL, play_video_func, NULL);
 
     while (!keypress) {
         // Call Lua loop function
