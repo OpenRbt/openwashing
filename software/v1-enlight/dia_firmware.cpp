@@ -208,17 +208,19 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
 
 void *check_directory_funk(void *ptr){
     while (!_to_be_destroyed) {
-        delay(100);
+        delay(1000);
         std::list<std::string> directories;
         std::string directory;
         for (const auto &entry : fs::directory_iterator("/media")) {
-            if(fs::is_directory(entry.path())) {
+            delay(1000);
+            if(dirAccessRead(entry.path()) && fs::is_directory(entry.path())) {
                 directories.push_back(entry.path());
             }
         }
 
         bool found = false;
         for (auto const &i : directories) {
+            delay(1000);
             if(dirAccessRead(i)){
                 for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
                     if (dirAccessRead(subEntry.path())){
@@ -244,7 +246,7 @@ void *check_directory_funk(void *ptr){
         else{
             _IsDirExist = false;
         }
-        delay(100);
+        delay(1000);
     }
     pthread_exit(0);
     return 0;
