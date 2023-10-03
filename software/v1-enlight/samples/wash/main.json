@@ -45,6 +45,14 @@
     {
     	"id": "connected_to_bonus_system",
     	"src": "screens/15_connected_to_bonus_system.json"
+    },
+    {
+    	"id": "wait_for_QR",
+    	"src": "screens/16_wait_for_QR.json"
+    },
+    {
+    	"id": "sorry",
+    	"src": "screens/17_sorry.json"
     }
   ],
   "buttons": 6,

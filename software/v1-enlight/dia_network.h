@@ -582,7 +582,6 @@ class DiaNetwork {
         result = SendRequest(&json_create_sbp_payment_request, &answer, url);
 
         if ((result) || (answer != "")) {
-            //fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
 
@@ -598,10 +597,8 @@ class DiaNetwork {
         result = SendRequest(&json_confirm_sbp_payment_request, &answer, url);
 
         if ((result) || (answer != "")) {
-            //fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
-        std::cout<<"\n\n\nConfirmSbpPayment:" << orderIdUrl << "\n\n\n";
         return 0;
     }
 

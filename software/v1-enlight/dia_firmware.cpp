@@ -110,7 +110,7 @@ std::string _ServerUrl = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
-bool _IsDirExist = false;
+volatile bool _IsDirExist = false;
 int _MaxAfkTime = 180;
 
 std::string _FileName;
