@@ -12,6 +12,11 @@
 #define DIA_VENDOTEK_NO_ERROR 0
 #define DIA_VENDOTEK_NULL_PARAMETER 4
 
+
+enum class VendotekStage{
+    RC_IDL, RC_VRP, RC_FIN, RC_IDL_END, ALL
+}
+
 typedef struct payment_opts_s {
     vtk_t     *vtk;
     vtk_msg_t *mreq;
@@ -27,6 +32,7 @@ typedef struct payment_opts_s {
     ssize_t    price;
 } payment_opts_t;
 
+
 class DiaVendotek 
 {
 public: 
@@ -34,6 +40,7 @@ public:
 
     void * _Manager;
 
+    bool IsTransactionSeparated;
     pthread_t ExecuteDriverProgramThread;
     pthread_mutex_t MoneyLock = PTHREAD_MUTEX_INITIALIZER;
     pthread_t ExecutePingThread;
@@ -59,6 +66,7 @@ public:
     ~DiaVendotek() {
         ToBeDeleted = 1;
     }
+
 };
 
 void DiaVendotek_AbortTransaction(void * specificDriver);
@@ -68,7 +76,11 @@ int DiaVendotek_GetTransactionStatus(void * specificDriver);
 void* DiaVendotek_ExecuteDriverProgramThread(void * devicePtr);
 
 int DiaVendotek_PerformTransaction(void * specficDriver, int money);
+//---------------------------------------------------------------------------
+int DiaVendotek_ConfirmTransaction(void * specficDriver, int money);
+void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr);
 
+//---------------------------------------------------------------------------
 int DiaVendotek_StopDriver(void * specficDriver);
 
 int DiaVendotek_StartPing(void * specificDriver);

@@ -85,6 +85,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .beginClass<DiaRuntimeHardware>("DiaRuntimeHardware")
         .addConstructor<void (*)()>()
         .addFunction("TurnLight", &DiaRuntimeHardware::TurnLight)
+        .addFunction("DoPaymentFIN", &DiaRuntimeHardware::DoPaymentFIN)
         .addFunction("TurnProgram", &DiaRuntimeHardware::TurnProgram)
         .addFunction("GetCoins", &DiaRuntimeHardware::GetCoins)
         .addFunction("GetBanknotes", &DiaRuntimeHardware::GetBanknotes)

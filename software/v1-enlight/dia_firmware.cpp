@@ -198,6 +198,7 @@ void *play_video_func(void *ptr) {
     return 0;
 }
 
+
 int CreateSession() {
     std::string QR;
     std::string sessionID;
@@ -478,7 +479,24 @@ int get_electronical(void *object) {
 int request_transaction(void *object, int money) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     if (money > 0) {
-        DiaDeviceManager_PerformTransaction(manager, money);
+        DiaDeviceManager_PerformTransaction(manager, money, false);
+        return 0;
+    }
+    return 1;
+}
+
+int request_transaction_separated(void *object, int money){
+    DiaDeviceManager *manager = (DiaDeviceManager *)object;
+    if (money > 0) {
+        DiaDeviceManager_PerformTransaction(manager, money, true);
+        return 0;
+    }
+    return 1;
+}
+
+int confirm_transaction(DiaDeviceManager *manager, int money){
+    if (money > 0) {
+        DiaDeviceManager_ConfirmTransaction(manager, money);
         return 0;
     }
     return 1;
@@ -1283,6 +1301,10 @@ int main(int argc, char **argv) {
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;
     hardware->request_transaction_function = request_transaction;
+    //--------------------------------------------------------------------------
+    hardware->confirm_transaction_function = confirm_transaction;
+    //--------------------------------------------------------------------------
+    printf("HW init 8...\n");
     hardware->get_transaction_status_function = get_transaction_status;
     hardware->get_volume_function = get_volume;
     hardware->get_sensor_active_function = get_sensor_active;
@@ -1300,7 +1322,7 @@ int main(int argc, char **argv) {
 
     hardware->delay_object = &stored_time;
     hardware->smart_delay_function = smart_delay_function;
-    printf("HW init 8...\n");
+    
 
     hardware->has_card_reader = manager->_Vendotek || manager->_CardReader;
 
