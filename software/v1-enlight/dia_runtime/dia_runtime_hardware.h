@@ -358,6 +358,17 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    
+    int (*get_process_id_function)();
+    int GetProcessId() {
+        if (get_process_id_function) {
+            return get_process_id_function();
+        } else {
+            printf("error: NIL object or function GetProcessId\n");
+        }
+        return false;
+    }
+
     bool (*get_is_connected_to_bonus_system_function)();
     bool GetIsConnectedToBonusSystem() {
         if (get_is_connected_to_bonus_system_function) {

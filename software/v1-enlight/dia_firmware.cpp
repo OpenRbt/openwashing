@@ -99,8 +99,9 @@ bool _SensorActive = false;
 bool _SensorActiveUI = false;
 bool _SensorActivate = false;
 
-bool _CanPlayVideo = false;
-bool _IsPlayingVideo = false;
+volatile bool _CanPlayVideo = false;
+volatile bool _IsPlayingVideo = false;
+volatile int _ProcessId = 0;
 int _CanPlayVideoTimer = 0;
 
 bool _BonusSystemIsActive = false;
@@ -110,7 +111,6 @@ std::string _ServerUrl = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
-volatile bool _IsDirExist = false;
 int _MaxAfkTime = 180;
 
 std::string _FileName;
@@ -124,7 +124,6 @@ pthread_t run_program_thread;
 pthread_t get_volume_thread;
 pthread_t active_session_thread;
 pthread_t play_video_thread;
-pthread_t check_directory_thread;
 
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
@@ -160,6 +159,10 @@ void setCanPlayVideo(bool canPlayVideo) {
 
 bool getCanPlayVideo() {
     return _CanPlayVideo;
+}
+
+int getProcessId() {
+    return _ProcessId;
 }
 
 void setIsPlayingVideo(bool isPlayingVideo) {
@@ -206,64 +209,52 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     return tokens;
 }
 
-void *check_directory_funk(void *ptr){
-    while (!_to_be_destroyed) {
-        delay(1000);
-        std::list<std::string> directories;
-        std::string directory;
-        for (const auto &entry : fs::directory_iterator("/media")) {
-            delay(1000);
-            if(dirAccessRead(entry.path()) && fs::is_directory(entry.path())) {
-                directories.push_back(entry.path());
-            }
+bool check_directory() {
+    std::list<std::string> directories;
+    std::string directory;
+    for (const auto &entry : fs::directory_iterator("/media")) {
+        if(dirAccessRead(entry.path()) && fs::is_directory(entry.path())) {
+            directories.push_back(entry.path());
         }
+    }
 
-        bool found = false;
-        for (auto const &i : directories) {
-            delay(1000);
-            if(dirAccessRead(i)){
-                for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
-                    if (dirAccessRead(subEntry.path())){
-                            if (fs::is_directory(subEntry) && subEntry.path().filename() == "openrbt_video" && dirAccessRead(subEntry.path().string())) {
-                            directory = subEntry.path().string();
-                            found = true;
-                            break;
-                        }
+    bool found = false;
+    for (auto const &i : directories) {
+        if(dirAccessRead(i)){
+            for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
+                if (dirAccessRead(subEntry.path())){
+                        if (fs::is_directory(subEntry) && subEntry.path().filename() == "openrbt_video" && dirAccessRead(subEntry.path().string())) {
+                        directory = subEntry.path().string();
+                        found = true;
+                        break;
                     }
                 }
             }
-            if (found) break;
         }
+        if (found) break;
+    }
 
-        if (!directory.empty()) {
-            for (const auto &entry : fs::directory_iterator(directory)){
+    if (!directory.empty()) {
+        std::string extension;
+        for (const auto &entry : fs::directory_iterator(directory)){
+            //entry. Проверить расширение файла
+            extension = entry.path().extension();
+            if(extension == "mp4" || extension == "avi"){
                 _FileName += entry.path();
                 _FileName += " ";
             }
-            _IsDirExist = true;
             
         }
-        else{
-            _IsDirExist = false;
-        }
-        delay(1000);
+        return true;
+        
     }
-    pthread_exit(0);
-    return 0;
+    return false;
 }
 
 void *play_video_func(void *ptr) {
     while (!_to_be_destroyed) {
-        if(_IsDirExist){
-            usleep(1 * 1000 * 1000);
-            if (_CanPlayVideo) {
-                _CanPlayVideoTimer++;
-            }
-            if (_CanPlayVideoTimer >= _MaxAfkTime) {
-                _IsPlayingVideo = true;
-                _CanPlayVideo = false;
-                _CanPlayVideoTimer = 0;
-
+        if(_CanPlayVideo) {
+            if(check_directory()){
                 std::vector<std::string> files = split(_FileName, ' ');
 
                 std::string formattedFiles;
@@ -274,11 +265,17 @@ void *play_video_func(void *ptr) {
                     formattedFiles += "\"" + file + "\"";
                 }
 
+                _IsPlayingVideo = true;
                 int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str());
+                _IsPlayingVideo = false;
                 printf("\nPlayVideo result: %d", pid);
+                _ProcessId = pid;
+                delay(100);
             }
-            _IsPlayingVideo = false;
-            delay(100);
+            else{
+                delay(1000 * 30);
+            }
+            
         }
     }
     pthread_exit(0);
@@ -1421,6 +1418,7 @@ int main(int argc, char **argv) {
     hardware->set_can_play_video_function = setCanPlayVideo;
     hardware->get_is_playing_video_function = getIsPlayingVideo;
     hardware->set_is_playing_video_function = setIsPlayingVideo;
+    hardware->get_process_id_function = getProcessId;
 
     hardware->get_is_connected_to_bonus_system_function = getIsConnectedToBonusSystem;
     hardware->set_is_connected_to_bonus_system_function = setIsConnectedToBonusSystem;
@@ -1508,7 +1506,6 @@ int main(int argc, char **argv) {
     printf("get_volume_func start...\n");
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
 
-    pthread_create(&check_directory_thread, NULL, check_directory_funk, NULL);
     pthread_create(&play_video_thread, NULL, play_video_func, NULL);
 
     while (!keypress) {
