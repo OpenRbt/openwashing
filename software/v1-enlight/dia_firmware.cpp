@@ -237,9 +237,8 @@ bool check_directory() {
     if (!directory.empty()) {
         std::string extension;
         for (const auto &entry : fs::directory_iterator(directory)){
-            //entry. Проверить расширение файла
             extension = entry.path().extension();
-            if(extension == "mp4" || extension == "avi"){
+            if(extension == ".mp4" || extension == ".avi"){
                 _FileName += entry.path();
                 _FileName += " ";
             }
@@ -254,7 +253,7 @@ bool check_directory() {
 void *play_video_func(void *ptr) {
     while (!_to_be_destroyed) {
         if(_CanPlayVideo) {
-            if(check_directory()){
+            if(check_directory() && !_FileName.empty()){
                 std::vector<std::string> files = split(_FileName, ' ');
 
                 std::string formattedFiles;
@@ -264,9 +263,8 @@ void *play_video_func(void *ptr) {
                     }
                     formattedFiles += "\"" + file + "\"";
                 }
-
                 _IsPlayingVideo = true;
-                int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str());
+                int pid = system(("python3 ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str());
                 _IsPlayingVideo = false;
                 printf("\nPlayVideo result: %d", pid);
                 _ProcessId = pid;
@@ -276,7 +274,7 @@ void *play_video_func(void *ptr) {
                 delay(1000 * 30);
             }
             
-        }
+        }   
     }
     pthread_exit(0);
     return 0;

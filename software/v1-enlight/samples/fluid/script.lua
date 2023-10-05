@@ -30,7 +30,7 @@ setup = function()
     thanks_mode_seconds = 5
     apology_mode_seconds = 10
     wait_mode_seconds = 40
-    play_video_wait_time = 180
+    play_video_wait_time = 5
     
     is_transaction_started = false
     is_waiting_receipt = false
@@ -164,7 +164,7 @@ play_video_mode = function()
         if get_process_id() == 0 then
             waiting_loops = play_video_wait_time * 10
         else
-            waiting_loops = 0
+            waiting_loops = 30 * 10
         end
         return mode_choose
     end
