@@ -161,6 +161,8 @@ play_video_mode = function()
     is_playing_video = get_is_playing_video()
 
     if is_playing_video == false then
+        can_play_video = false
+        set_can_play_video(can_play_video)
         if get_process_id() == 0 then
             waiting_loops = play_video_wait_time * 10
         else

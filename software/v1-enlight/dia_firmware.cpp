@@ -209,6 +209,14 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     return tokens;
 }
 
+std::string toLowerCase(const std::string& input) {
+    std::string result = input;
+    for (char &c : result) {
+        c = std::tolower(static_cast<unsigned char>(c));
+    }
+    return result;
+}
+
 bool check_directory() {
     std::list<std::string> directories;
     std::string directory;
@@ -238,7 +246,7 @@ bool check_directory() {
         std::string extension;
         for (const auto &entry : fs::directory_iterator(directory)){
             extension = entry.path().extension();
-            if(extension == ".mp4" || extension == ".avi"){
+            if(toLowerCase(extension) == ".mp4" || toLowerCase(extension) == ".avi"){
                 _FileName += entry.path();
                 _FileName += " ";
             }
@@ -264,11 +272,13 @@ void *play_video_func(void *ptr) {
                     formattedFiles += "\"" + file + "\"";
                 }
                 _IsPlayingVideo = true;
-                int pid = system(("python3 ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str());
+                int pid = system(("python3 ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Ubuntu
+                //int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Raspberry Pi
                 _IsPlayingVideo = false;
-                printf("\nPlayVideo result: %d", pid);
                 _ProcessId = pid;
                 delay(100);
+                
+                printf("\nPlayVideo result: %d", pid);
             }
             else{
                 delay(1000 * 30);
@@ -361,7 +371,6 @@ pthread_t pinging_thread;
 
 // Creates receipt request to Online Cash Register.
 int send_receipt(int postPosition, int cash, int electronical, int qrMoney) {
-    std::cout << "send_receipt electronical: " << electronical + qrMoney << "\n\n\n";
     return network->ReceiptRequest(postPosition, cash, electronical + qrMoney);
 }
 
