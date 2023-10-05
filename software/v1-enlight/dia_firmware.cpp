@@ -272,8 +272,8 @@ void *play_video_func(void *ptr) {
                     formattedFiles += "\"" + file + "\"";
                 }
                 _IsPlayingVideo = true;
-                int pid = system(("python3 ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Ubuntu
-                //int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Raspberry Pi
+                //int pid = system(("python3 ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Ubuntu
+                int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Raspberry Pi
                 _IsPlayingVideo = false;
                 _ProcessId = pid;
                 delay(100);
