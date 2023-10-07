@@ -29,6 +29,10 @@ void setup() {
   cloopTime = currentTime;
 }
 
+char lastChar = 0;
+int cursor = 0;
+String str = "";
+
 void loop() {
   if (stat == LIQUID_ON) {
     int cur_state = digitalRead(flowsensor);
@@ -50,28 +54,39 @@ void loop() {
       }
     }
     currentTime = millis();
-    if (milliliters_from_pulses > number_of_pulses) {
+//    if (milliliters_from_pulses > number_of_pulses) {
       if (currentTime >= (cloopTime + timer)) {
         cloopTime = currentTime;
         Serial.println("P" + (String)(int)(number_of_pulses / coef_impuls * coef_litr) + ";");
       }
-    } else {
-      stat = SENDING_FINISH;
-    }
+    //} else {
+//      stat = SENDING_FINISH;
+   // }
   }
 
   if (stat == SENDING_FINISH) {
     Serial.println("F" + (String)(int)number_of_milliliters + ";");
     stat = IDL;
   }
-  if (Serial.available() > 0) {
-    String str = Serial.readString();
-    Serial.setTimeout(5);
+  while ((Serial.available() > 0) && (lastChar != ';') && (cursor <= 500)) {
+    lastChar = Serial.read();
+    str.concat(lastChar);
+    cursor++;
+  }
+  if (cursor >= 500) {
+    cursor = 0;
+    str = "";
+  }
+  if (lastChar == ';') {
+    lastChar = 0;
+    cursor = 0;
+    //Serial.println(str); //debug
+
     if (str[0] == 'S') {
       Serial.println("SOK;");
       str.remove(0, 1);
       for (int i = 0; i < total_count; i++) {
-        state[i] = 0;        
+        state[i] = 0;
       }
       stat = LIQUID_ON;
       number_of_pulses = 0;
@@ -80,6 +95,7 @@ void loop() {
       milliliters_from_pulses = number_of_milliliters / coef_litr * coef_impuls;
     } else {
       if (str == "UID;") {
+        stat = IDL;
         Serial.print("YF-S201;");
       }
       if (str == "PING;") {
@@ -93,7 +109,7 @@ void loop() {
         stat = IDL;
       }
     }
-    str = "";
-    Serial.flush();
+  str = "";
   }
+ // Serial.flush();
 }
