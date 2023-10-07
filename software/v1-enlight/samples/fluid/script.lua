@@ -344,7 +344,7 @@ thanks_mode = function()
 
         update_balance()
         if balance > 0.99 then
-            send_receipt(post_position, cash_balance, electronical_balance)
+            send_receipt(post_position, cash_balance, electronical_balance, 0)
             is_waiting_receipt = false
             increment_cars() 
             return mode_fundraising
@@ -352,7 +352,7 @@ thanks_mode = function()
         waiting_loops = waiting_loops - 1
     
     else
-        send_receipt(post_position, cash_balance, electronical_balance)
+        send_receipt(post_position, cash_balance, electronical_balance, 0)
         is_waiting_receipt = false
         increment_cars()
         waiting_loops = play_video_wait_time * 10
@@ -587,8 +587,8 @@ turn_light = function(rel_num, animation_code)
     hardware:TurnLight(rel_num, animation_code)
 end
 
-send_receipt = function(post_pos, cash, electronical)
-    hardware:SendReceipt(post_pos, cash, electronical)
+send_receipt = function(post_pos, cash, electronical, qrMoney)
+    hardware:SendReceipt(post_pos, cash, electronical, qrMoney)
     cash_balance = 0
     electronical_balance = 0
 end
