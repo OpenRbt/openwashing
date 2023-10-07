@@ -30,7 +30,7 @@ setup = function()
     thanks_mode_seconds = 5
     apology_mode_seconds = 10
     wait_mode_seconds = 40
-    play_video_wait_time = 5
+    play_video_wait_time = 180
     
     is_transaction_started = false
     is_waiting_receipt = false
