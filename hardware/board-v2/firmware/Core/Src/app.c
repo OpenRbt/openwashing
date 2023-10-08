@@ -253,6 +253,7 @@ void set_turn_on_func(void (*new_turn_on)(uint8_t)) {
 void set_turn_off_func(void (*new_turn_off)(uint8_t)) {
 	app_turn_off = new_turn_off;
 }
+
 void app_update_relays() {
 	// let's check timeout first
 	if (timeout_ms) {
@@ -343,8 +344,8 @@ void set_post_num(uint8_t new_post_num) {
 	uint8_t old_post_num = current_settings.main_post_number;
 
 	current_settings.main_post_number = new_post_num;
-	if(current_settings.main_post_number < MIN_POST_NUM) current_settings.main_post_number = MIN_POST_NUM;
-	if(current_settings.main_post_number > MAX_POST_NUM) current_settings.main_post_number = MAX_POST_NUM;
+	if(current_settings.main_post_number < MIN_POST_NUM) current_settings.main_post_number = MAX_POST_NUM;
+	if(current_settings.main_post_number > MAX_POST_NUM) current_settings.main_post_number = MIN_POST_NUM;
 	_update_post_num();
 	if (old_post_num != current_settings.main_post_number) {
 		write_settings((uint32_t *)&current_settings);

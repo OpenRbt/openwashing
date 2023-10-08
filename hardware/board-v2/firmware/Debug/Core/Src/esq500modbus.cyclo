@@ -1,0 +1,10 @@
+../Core/Src/esq500modbus.c:27:6:_set_cmd_crc	4
+../Core/Src/esq500modbus.c:44:6:esq_vars_init	1
+../Core/Src/esq500modbus.c:96:8:start_motor_cmd	1
+../Core/Src/esq500modbus.c:100:9:parse_start_motor_answer	1
+../Core/Src/esq500modbus.c:105:8:set_motor_speed_cmd	2
+../Core/Src/esq500modbus.c:117:9:parse_set_motor_speed_answer	1
+../Core/Src/esq500modbus.c:122:8:read_motor_info_cmd	1
+../Core/Src/esq500modbus.c:126:9:parse_motor_info_answer	1
+../Core/Src/esq500modbus.c:131:8:stop_motor_cmd	1
+../Core/Src/esq500modbus.c:135:9:parse_stop_motor_cmd_answer	1

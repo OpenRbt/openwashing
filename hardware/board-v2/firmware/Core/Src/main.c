@@ -38,6 +38,7 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
 menu main_menu;
+menu_supervisor main_menu_supervisor;
 
 uint8_t usb_buf_cursor;
 char usb_buf[MAX_CMD_BUF + 1];
@@ -132,7 +133,8 @@ int main(void) {
 	set_incoming_byte_handler(1, receive_cmd);
 	set_incoming_byte_handler(2, receive_motor1);
 	set_state(ST_WAITING_FOR_CONNECTION);
-	menu_init(&main_menu);
+	menu_init(&main_menu, &main_menu_supervisor);
+	menu_supervisor_init(&main_menu_supervisor, &main_menu);
 	usb_buf[0] = 0;
 	usb_buf_cursor = 0;
 	motor_cur = 0;
@@ -402,42 +404,90 @@ void Start_user_interface(void *argument) {
 	needToSend = 0;
 	uint16_t loop = 1000;
 	uint8_t frame = 0;
+	uint8_t mode = MODE_SCREENSAVER;
 	for(;;) {
-		loop++;
-		// Will be state machine later
-		if (is_dblclicked(0)) {
-			inc_post_num();
-			loop += 1000;
+		if (mode == MODE_SCREENSAVER) {
+			loop++;
+			// Will be state machine later
+
+
+			// cleaning states of the buttons:
+			is_dblclicked(0);
+			if(is_dblclicked(2)) {
+				const char * cmd = "RUN T60|1/900/900|2/850/850|3/800/800|4/750/750|5/725/725|6/700/700|7/650/650|8/630/630|9/600/600|10/550/550|11/500/500|;";
+				app_process_cmd(cmd);
+			}
+			is_clicked(0);
+			//is_clicked(2);
+
+			if(is_dblclicked(1)) {
+				mode = MODE_MENU;
+				loop = 0;
+				continue;
+			}
+
+			if (loop>1000) {
+				loop = 0;
+				if (frame == 0) {
+					display_connection(get_state() != ST_WAITING_FOR_CONNECTION);
+				}
+				if (frame == 1) {
+					display_post_num();
+				}
+				if (frame == 2) {
+					display_motor_status();
+				}
+				if (frame == 3) {
+					SSD1306_Clear();
+					SSD1306_UpdateScreen();
+				}
+				if (frame == 3) {
+					SSD1306_Clear();
+					SSD1306_UpdateScreen();
+				}
+
+				frame++;
+				if(frame >= 3) frame = 0;
+			}
 		}
-		if(is_dblclicked(1)) {
-			char * cmd = "RUN T60|1/900/900|2/850/850|3/800/800|4/750/750|5/725/725|6/700/700|7/650/650|8/630/630|9/600/600|10/550/550|11/500/500|;";
-			app_process_cmd(cmd);
-		}
-		if (is_dblclicked(2)) {
-			dec_post_num();
-			loop += 1000;
-		}
-		if (loop>1000) {
-			loop = 0;
-			frame++;
-			if(frame > 3) frame = 0;
-			if (frame == 0) {
-				display_connection(get_state() != ST_WAITING_FOR_CONNECTION);
+		if (mode == MODE_MENU) {
+			if (loop == 0) {
+				display_menu_supervisor(&main_menu_supervisor);
 			}
-			if (frame == 1) {
-				display_post_num();
+			if(main_menu_supervisor.exit) {
+				main_menu_reset();
+				mode = MODE_SCREENSAVER;
 			}
-			if (frame == 2) {
-				display_motor_status();
+			loop++;
+			if (loop > 10000) {
+				main_menu_reset();
+				mode = MODE_SCREENSAVER;
 			}
-			if (frame == 3) {
-				SSD1306_Clear();
-				SSD1306_UpdateScreen();
+			if (is_clicked(0)) {
+				loop = 0;
+				menu_supervisor_up(&main_menu_supervisor);
 			}
+			if (is_clicked(1)) {
+				loop = 0;
+				menu_supervisor_center(&main_menu_supervisor);
+			}
+			if (is_clicked(2)) {
+				loop = 0;
+				menu_supervisor_down(&main_menu_supervisor);
+			}
+
 		}
 		osDelay(1);
 	}
 }
+
+void main_menu_reset() {
+	main_menu_supervisor.exit = 0; // Let's reset the flag
+	main_menu_supervisor.cursor = 0;
+	main_menu_supervisor.cur_item = &main_menu;
+	main_menu_supervisor.start_item = 0;
+}
+
 void start_animation() {
 	SSD1306_Clear();
 	SSD1306_GotoXY(0,0);
@@ -545,6 +595,7 @@ uint8_t is_clicked(uint8_t key) {
 
 uint8_t is_dblclicked(uint8_t key) {
 	if(btns.btn[key].is_dblclicked) {
+		btns.btn[key].is_clicked = 0;
 		btns.btn[key].is_dblclicked = 0;
 		return 1;
 	}
