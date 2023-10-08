@@ -9,12 +9,12 @@ setup = function()
     -- program to turn on when user paid money but has not selected a program
     default_paid_program = 6
 
-    min_electron_balance = 11
+    min_electron_balance = 50
     max_electron_balance = 900
     electron_amount_step = 25
     electron_balance = min_electron_balance
 
-    sbp_balance = 15
+    sbp_balance = 50
     
     balance_seconds = 0
     cash_balance = 0.0
@@ -98,6 +98,7 @@ setup = function()
 
     qr = "";
     sbpQr = "";
+    sbpQrTemp = "";
     visible_session = "";
     
     forget_pressed_key();
@@ -396,7 +397,7 @@ wait_for_QR_mode = function()
     run_stop()
     get_sbp_qr()
     pressed_key = get_key()
-    if sbpQr == '' or sbpQr == nil then
+    if sbpQr == '' or sbpQr == nil or sbpQr == sbpQrTemp then
         if waiting_loops > 0 then
             show_wait_for_QR(waiting_loops/10)
             waiting_loops = waiting_loops - 1
@@ -404,6 +405,7 @@ wait_for_QR_mode = function()
             return mode_sorry
         end
     else
+        sbpQrTemp = sbpQr
         return mode_sbp_payment
     end
 
