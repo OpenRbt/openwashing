@@ -457,11 +457,13 @@ void Start_user_interface(void *argument) {
 			if(main_menu_supervisor.exit) {
 				main_menu_reset();
 				mode = MODE_SCREENSAVER;
+				loop+=1000;
 			}
 			loop++;
 			if (loop > 10000) {
 				main_menu_reset();
 				mode = MODE_SCREENSAVER;
+				loop+=1000;
 			}
 			if (is_clicked(0)) {
 				loop = 0;
@@ -482,6 +484,12 @@ void Start_user_interface(void *argument) {
 }
 
 void main_menu_reset() {
+	is_clicked(0);
+	is_clicked(1);
+	is_clicked(2);
+	is_dblclicked(0);
+	is_dblclicked(1);
+	is_dblclicked(2);
 	main_menu_supervisor.exit = 0; // Let's reset the flag
 	main_menu_supervisor.cursor = 0;
 	main_menu_supervisor.cur_item = &main_menu;
