@@ -13,9 +13,6 @@
 #define DIA_VENDOTEK_NULL_PARAMETER 4
 
 
-enum class VendotekStage{
-    RC_IDL, RC_VRP, RC_FIN, RC_IDL_END, ALL
-}
 
 typedef struct payment_opts_s {
     vtk_t     *vtk;
@@ -32,6 +29,10 @@ typedef struct payment_opts_s {
     ssize_t    price;
 } payment_opts_t;
 
+
+enum VendotekStage{
+    RC_IDL, RC_VRP, RC_FIN, RC_IDL_END, ALL
+};
 
 class DiaVendotek 
 {
@@ -54,6 +55,7 @@ public:
     std::string Port = "";
     vtk_t *_Vtk = NULL;
     payment_opts_t *_PaymentOpts = NULL;
+
     DiaVendotek(void * manager, void (*incomingMoneyHandler)(void * vendotek, int moneyType, int newMoney), std::string host, std::string port) {
         _Manager = manager;
         IncomingMoneyHandler = incomingMoneyHandler;
@@ -78,7 +80,7 @@ void* DiaVendotek_ExecuteDriverProgramThread(void * devicePtr);
 int DiaVendotek_PerformTransaction(void * specficDriver, int money);
 //---------------------------------------------------------------------------
 int DiaVendotek_ConfirmTransaction(void * specficDriver, int money);
-void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr);
+void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr, int money);
 
 //---------------------------------------------------------------------------
 int DiaVendotek_StopDriver(void * specficDriver);

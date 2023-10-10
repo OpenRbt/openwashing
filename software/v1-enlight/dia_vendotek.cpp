@@ -145,74 +145,13 @@ int do_stage(stage_opts_t *opts, stage_req_t *req, stage_resp_t *resp)
     return 0;
 }
 
-int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
-{
-    vtk_loge("Card reader executes program thread...\n");
+int exec_idl_stage(void * driverPtr,payment_t payment, stage_opts_t stopts){
+    vtk_loge("Exec_idl_stage thread...\n");
     if (!driverPtr) {
          vtk_loge("%s", "Card reader driver is empty. Panic!\n");
     }
 
     DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(driverPtr);
-    
-
-    /*
-     * common state
-     */
-    payment_t payment;
-    payment.evnum     = opts->evnum;
-    payment.evname    = opts->evname;
-    payment.prodid    = opts->prodid;
-    payment.prodname  = opts->prodname;
-    payment.price     = opts->price;
-    payment.timeout   = opts->timeout;
-     
-    stage_opts_t stopts;
-        stopts.vtk     = opts->vtk;
-        stopts.timeout = opts->timeout * 1000;
-        stopts.verbose = opts->verbose;
-        stopts.mreq    = opts->mreq;
-        stopts.mresp   = opts->mresp;
-        stopts.allow_eof = 0;
-
-    switch (key)
-    {
-        case VendotekStage::RC_IDL:
-            
-            return exec_idl_stage(payment,stopts);
-            
-        case VendotekStage::RC_VRP:
-            return exec_vrp_stage(payment,stopts);
-        case VendotekStage::RC_FIN:
-            return exec_fin_stage(payment,stopts);
-            
-        case VendotekStage::RC_IDL_END:
-            return exec_idl_final_stage(payment,stopts);
-        case VendotekStage::ALL:
-            int rc_idl = 0, rc_vrp = 0, rc_fin = 0;
-
-            rc_idl = exec_idl_stage(payment,stopts);
-            if(rc_idl == -1)
-               return -1;
-
-            rc_vrp = exec_vrp_stage(payment,stopts);
-            if(rc_vrp == -1)
-                return -1;
-            
-            rc_fin = exec_fin_stage(payment,stopts);
-            if(rc_fin == -1)
-                return -1;
-
-            exec_idl_final_stage(payment, stopts);
-
-            return 0;
-        default:
-            return -1;
-            
-    }
-}
-
-int exec_idl_stage(payment_t payment, stage_opts_t stopts){
-    
     int rc_idl = 0;
             pthread_mutex_lock(&driver->StateLock);
             int state = driver->PaymentStage;
@@ -255,7 +194,13 @@ int exec_idl_stage(payment_t payment, stage_opts_t stopts){
             return rc_idl ? 0 : -1;
 }
 
-int exec_vrp_stage(payment_t payment, stage_opts_t stopts){
+int exec_vrp_stage(void * driverPtr,payment_t payment, stage_opts_t stopts){
+    vtk_loge("Exec_vrp_stage thread...\n");
+    if (!driverPtr) {
+         vtk_loge("%s", "Card reader driver is empty. Panic!\n");
+    }
+
+    DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(driverPtr);
     int rc_vrp = 0;
     pthread_mutex_lock(&driver->StateLock);
     int state = driver->PaymentStage;
@@ -297,7 +242,13 @@ int exec_vrp_stage(payment_t payment, stage_opts_t stopts){
             return rc_vrp ? 0 : -1;
 }
 
-int exec_fin_stage(payment_t payment, stage_opts_t stopts){
+int exec_fin_stage(void * driverPtr,payment_t payment, stage_opts_t stopts){
+    vtk_loge("Exec_fin_stage thread...\n");
+    if (!driverPtr) {
+         vtk_loge("%s", "Card reader driver is empty. Panic!\n");
+    }
+
+    DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(driverPtr);
     int rc_fin = 0;
             pthread_mutex_lock(&driver->StateLock);
             int state = driver->PaymentStage;
@@ -335,7 +286,13 @@ int exec_fin_stage(payment_t payment, stage_opts_t stopts){
             return rc_fin ? 0 : -1;
 }
 
-int exec_idl_final_stage(payment_t payment, stage_opts_t stopts){
+int exec_idl_final_stage(void * driverPtr,payment_t payment, stage_opts_t stopts){
+    vtk_loge("Exec_idl_final_stage thread...\n");
+    if (!driverPtr) {
+         vtk_loge("%s", "Card reader driver is empty. Panic!\n");
+    }
+
+    DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(driverPtr);
     vtk_logi("IDL Fini stage");
             stage_req_t idl2_req[2] = {};
                 idl2_req[0].id = 0x1;
@@ -354,6 +311,89 @@ int exec_idl_final_stage(payment_t payment, stage_opts_t stopts){
 
             return 0;
 }
+
+int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
+{
+    vtk_loge("Card reader executes program thread...\n");
+    if (!driverPtr) {
+         vtk_loge("%s", "Card reader driver is empty. Panic!\n");
+    }
+    
+    /*
+     * common state
+     */
+    payment_t payment;
+    payment.evnum     = opts->evnum;
+    payment.evname    = opts->evname;
+    payment.prodid    = opts->prodid;
+    payment.prodname  = opts->prodname;
+    payment.price     = opts->price;
+    payment.timeout   = opts->timeout;
+     
+    stage_opts_t stopts;
+        stopts.vtk     = opts->vtk;
+        stopts.timeout = opts->timeout * 1000;
+        stopts.verbose = opts->verbose;
+        stopts.mreq    = opts->mreq;
+        stopts.mresp   = opts->mresp;
+        stopts.allow_eof = 0;
+        int result = 0;
+    switch (key)
+    {
+        case VendotekStage::RC_IDL:
+            {
+                result = exec_idl_stage(driverPtr,payment,stopts);
+                break;
+            }
+            
+        case VendotekStage::RC_VRP:
+            {
+                result = exec_vrp_stage(driverPtr,payment,stopts);
+                break;
+            }
+
+        case VendotekStage::RC_FIN:
+            {
+                result = exec_fin_stage(driverPtr,payment,stopts);
+                break;
+            }
+            
+        case VendotekStage::RC_IDL_END:
+            {
+                result = exec_idl_final_stage(driverPtr,payment,stopts);
+                break;
+            }
+
+        case VendotekStage::ALL:
+            {
+                int rc_idl = 0, rc_vrp = 0, rc_fin = 0;
+
+                rc_idl = exec_idl_stage(driverPtr,payment,stopts);
+                if(rc_idl == -1)
+                   result = -1;
+
+                rc_vrp = exec_vrp_stage(driverPtr,payment,stopts);
+                if(rc_vrp == -1)
+                    result = -1;
+                
+                rc_fin = exec_fin_stage(driverPtr,payment,stopts);
+                if(rc_fin == -1)
+                    result = -1;
+
+                exec_idl_final_stage(driverPtr,payment, stopts);
+
+                result = 0;
+                break;
+            }
+        default:
+            {
+                result = -1;
+            }
+    }
+    return result;
+}
+
+
 
 int do_ping(payment_opts_t *opts)
 {
@@ -488,7 +528,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 }
 
 
-void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr){
+void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr,int money){
     vtk_logi("Card reader executes program thread...\n");
     if (!driverPtr) {
          vtk_loge("%s", "Card reader driver is empty. Panic!\n");
@@ -497,7 +537,7 @@ void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr
     DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(driverPtr);
 
     if(!driver->IsTransactionSeparated)
-        return -1;
+        return NULL;
         
     pthread_mutex_lock(&driver->MoneyLock);
     int sum = driver->RequestedMoney ;
@@ -676,7 +716,7 @@ int DiaVendotek_PerformTransaction(void * specificDriver, int money) {
     return DIA_VENDOTEK_NO_ERROR;
 }
 
-int DiaVendotek_ConfirmTransaction(void * specficDriver, int money){
+int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
     DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(specificDriver);
     if (specificDriver == NULL || money == 0) {
         vtk_loge("DiaVendotek Confirm Transaction got NULL driver");

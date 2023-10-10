@@ -494,7 +494,8 @@ int request_transaction_separated(void *object, int money){
     return 1;
 }
 
-int confirm_transaction(DiaDeviceManager *manager, int money){
+int confirm_transaction(void *object, int money){
+    DiaDeviceManager *manager = (DiaDeviceManager *)object;
     if (money > 0) {
         DiaDeviceManager_ConfirmTransaction(manager, money);
         return 0;
