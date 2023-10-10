@@ -80,7 +80,7 @@ void* DiaVendotek_ExecuteDriverProgramThread(void * devicePtr);
 int DiaVendotek_PerformTransaction(void * specficDriver, int money);
 //---------------------------------------------------------------------------
 int DiaVendotek_ConfirmTransaction(void * specficDriver, int money);
-void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr, int money);
+void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr);
 
 //---------------------------------------------------------------------------
 int DiaVendotek_StopDriver(void * specficDriver);

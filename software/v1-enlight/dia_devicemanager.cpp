@@ -285,7 +285,7 @@ void DiaDeviceManager_ConfirmTransaction(void *manager, int money){
         DiaCardReader_PerformTransaction(Manager->_CardReader, money);
     } else if (Manager->_Vendotek) {
         printf("DiaDeviceManager Confirm Transaction Vendotek\n");
-        DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(Manager, money);
+        DiaVendotek_ConfirmTransaction(Manager, money);
     }
 }
 

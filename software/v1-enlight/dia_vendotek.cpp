@@ -528,7 +528,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 }
 
 
-void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr,int money){
+void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr){
     vtk_logi("Card reader executes program thread...\n");
     if (!driverPtr) {
          vtk_loge("%s", "Card reader driver is empty. Panic!\n");
@@ -730,7 +730,7 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
 
     int err = pthread_create(&driver->ExecuteDriverProgramThread,
         NULL,
-        DiaVendotek_ExecuteDriverProgramThread,
+        DiaVendotek_ExecutePaymentConfirmationDriverProgramThread,
         driver);
     if (err != 0) {
         vtk_loge("can't create thread :[%s]", strerror(err));
