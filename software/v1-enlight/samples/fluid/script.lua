@@ -196,7 +196,7 @@ wait_mode = function()
     if is_transaction_started == false then
         waiting_loops = wait_mode_seconds * 10;
 
-        request_transaction(electron_balance)
+        request_transaction_separated(electron_balance)
         print("\n\n\n electron_balance: ", electron_balance)
         is_transaction_started = true
     end
@@ -266,7 +266,7 @@ start_filling_mode = function()
 
     return mode_start_filling
 end
-
+-- ---------------------------------------- Filing is pause here
 filling_mode = function()
 
     check_open_lid()
@@ -274,13 +274,15 @@ filling_mode = function()
     pressed_key = get_key()
 
     if pressed_key == button_pause then
-        is_paused = not is_paused
-        if is_paused == false then 
-            start_fluid_flow_sensor(volume * 1000)
-        else
-            volume = volume - get_volume() / 1000
-            hardware:SendPause()
-        end
+        is_waiting_receipt = false
+        return mode_thanks
+        -- is_paused = not is_paused
+        -- if is_paused == false then 
+        --     start_fluid_flow_sensor(volume * 1000)
+        -- else
+        --     volume = volume - get_volume() / 1000
+        --     hardware:SendPause()
+        -- end
 
     end
 
@@ -303,13 +305,14 @@ filling_mode = function()
 
     return mode_filling
 end
-
+-----------------------------------------
 thanks_mode = function()
     check_open_lid()
     run_stop()
     show_thanks()
 
     if is_waiting_receipt == false then
+        confirm_transaction(balance)
         balance = 0
         turn_light(1, animation.one_button)
         waiting_loops = thanks_mode_seconds * 10;
@@ -587,6 +590,14 @@ end
 
 request_transaction = function(money)
     return hardware:RequestTransaction(money)
+end
+
+request_transaction_separated = function(money)
+    return hardware:RequestTransactionSeparated(money)
+end
+
+confirm_transaction = function(money)
+    return hardware:ConfirmTransaction(money)
 end
 
 get_transaction_status = function()
