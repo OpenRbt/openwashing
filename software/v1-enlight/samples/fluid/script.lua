@@ -266,6 +266,9 @@ start_filling_mode = function()
 
     return mode_start_filling
 end
+-- 60 
+-- start_filling
+--90 appologise
 -- ---------------------------------------- Filing is pause here
 filling_mode = function()
 
@@ -297,11 +300,11 @@ filling_mode = function()
         return mode_thanks
     end
     
-    if get_sensor_active() == false then
-        balance = 0
-        waiting_loops = 0
-        return mode_apology
-    end
+    -- if get_sensor_active() == false then
+    --     balance = 0
+    --     waiting_loops = 0
+    --     return mode_apology
+    -- end
 
     return mode_filling
 end
