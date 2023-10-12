@@ -377,10 +377,10 @@ int DiaConfiguration::LoadDiscounts() {
             }
         }
     }
-    json_decref(station_discounts_json);
-    json_decref(button_discount_json);
-    json_decref(button_id_json);
-    json_decref(button_discount_value_json);
+    station_discounts_json = NULL;
+    button_discount_json = NULL;
+    button_id_json = NULL;
+    button_discount_value_json = NULL;
     return 0;
 }
 

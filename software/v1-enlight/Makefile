@@ -15,7 +15,7 @@ FLGS=-I. -I/usr/include/SDL -I./dia_screen -I./3rd/LuaBridge -I./3rd/lua53/inclu
 FLGS+=-I./dia_configuration -I./dia_configuration/storage
 
 LIBS= -DCURL_STATICLIB -l:libevent.a -lwiringPi -lpthread `sdl-config --cflags` `sdl-config --libs` -lSDL -lSDL_image -lSDL_ttf -l:libcrypto.a
-LIBS+=-l:libjansson.a `curl-config --static-libs` ./3rd/lua53/src/liblua.a -ldl -Wall -lstdc++fs
+LIBS+=-l:libjansson.a `curl-config --static-libs` ./3rd/lua53/src/liblua.a -ldl -Wall -lstdc++fs -latomic
 
 prod:
 	$(CC) -o firmware.exe $(SRC) $(FLGS) $(LIBS) -DSCAN_DEVICES -DUSE_GPIO -O3
