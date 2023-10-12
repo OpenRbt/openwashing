@@ -591,16 +591,16 @@ run_program = function(program_num)
     hardware:TurnProgram(program_num)
 end
 
-request_transaction = function(money)
-    return hardware:RequestTransaction(money)
+request_transaction = function(balance)
+    return hardware:RequestTransaction(balance)
 end
 
-request_transaction_separated = function(money)
-    return hardware:RequestTransactionSeparated(money)
+request_transaction_separated = function(balance)
+    return hardware:RequestTransactionSeparated(balance)
 end
 
-confirm_transaction = function(money)
-    return hardware:ConfirmTransaction(money)
+confirm_transaction = function(balance)
+    return hardware:ConfirmTransaction(balance)
 end
 
 get_transaction_status = function()

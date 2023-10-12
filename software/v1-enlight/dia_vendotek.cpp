@@ -718,7 +718,7 @@ int DiaVendotek_PerformTransaction(void * specificDriver, int money) {
 
 int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
     DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(specificDriver);
-    if (specificDriver == NULL || money == 0) {
+    if (specificDriver == NULL) {
         vtk_loge("DiaVendotek Confirm Transaction got NULL driver");
         return DIA_VENDOTEK_NULL_PARAMETER;
     }
@@ -727,6 +727,10 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
     pthread_mutex_lock(&driver->MoneyLock);
     driver->RequestedMoney -= money;
     pthread_mutex_unlock(&driver->MoneyLock);
+    if(driver->RequestedMoney < 0){
+        vtk_loge("DiaVendotek Confirm Transaction requested money < 0");
+        return DIA_VENDOTEK_NULL_PARAMETER;
+    }
 
     int err = pthread_create(&driver->ExecuteDriverProgramThread,
         NULL,
