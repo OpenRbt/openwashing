@@ -725,7 +725,7 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
 
     vtk_logi("DiaVendotek started Confirm Transaction, money = %d", money);
 
-    int remains = driver->MoneyLock - money;
+    int remains = driver->RequestedMoney - money;
     if (remains < 0){
         pthread_mutex_lock(&driver->MoneyLock);
         driver->RequestedMoney = 0;
