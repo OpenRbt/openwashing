@@ -272,7 +272,7 @@ void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTrasac
     }
 }
 
-void DiaDeviceManager_ConfirmTransaction(void *manager, int money){
+int DiaDeviceManager_ConfirmTransaction(void *manager, int money){
 
     if (manager == NULL) {
         printf("DiaDeviceManager Confirm Transaction got NULL driver\n");
@@ -283,9 +283,10 @@ void DiaDeviceManager_ConfirmTransaction(void *manager, int money){
     if (Manager->_CardReader) {
         printf("DiaDeviceManager Confirm Transaction CardReader\n");
         DiaCardReader_PerformTransaction(Manager->_CardReader, money);
+        return 0;
     } else if (Manager->_Vendotek) {
         printf("DiaDeviceManager Confirm Transaction Vendotek\n");
-        DiaVendotek_ConfirmTransaction(Manager, money);
+        return DiaVendotek_ConfirmTransaction(Manager, money);
     }
 }
 

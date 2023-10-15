@@ -496,11 +496,14 @@ int request_transaction_separated(void *object, int money){
 
 int confirm_transaction(void *object, int money){
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
-    if (money > 0) {
-        DiaDeviceManager_ConfirmTransaction(manager, money);
-        return 0;
+    int bonuses = 0;
+    bonuses = DiaDeviceManager_ConfirmTransaction(manager, money);
+
+    if (bonuses > 0){
+        SetBonuses(bonuses);
     }
-    return 1;
+
+    return 0;
 }
 
 // Returns a status of NFC transaction.

@@ -726,12 +726,17 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
     vtk_logi("DiaVendotek started Confirm Transaction, money = %d", money);
 
     int remains = driver->RequestedMoney - money;
+
     if (remains < 0){
+
+        remains = money - driver->RequestedMoney;
         pthread_mutex_lock(&driver->MoneyLock);
         driver->RequestedMoney = 0;
         pthread_mutex_unlock(&driver->MoneyLock);
+        
     }
     else{
+        remains = 0;
         pthread_mutex_lock(&driver->MoneyLock);
         driver->RequestedMoney -= money;
         pthread_mutex_unlock(&driver->MoneyLock);
@@ -743,9 +748,9 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
         driver);
     if (err != 0) {
         vtk_loge("can't create thread :[%s]", strerror(err));
-        return 1;
+        return 0;
     }
-    return DIA_VENDOTEK_NO_ERROR;
+    return remains;
 }
 
 
