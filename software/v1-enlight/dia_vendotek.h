@@ -41,12 +41,15 @@ public:
 
     void * _Manager;
 
-    bool IsTransactionSeparated;
+    
     pthread_t ExecuteDriverProgramThread;
+    pthread_t ExecutePaymentConfirmationDriverProgramThread;
     pthread_mutex_t MoneyLock = PTHREAD_MUTEX_INITIALIZER;
     pthread_t ExecutePingThread;
     pthread_mutex_t OperationLock = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_t StateLock = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t RefundsLock = PTHREAD_MUTEX_INITIALIZER;
+    bool IsTransactionSeparated;
     int ToBeDeleted = 0;
     int RequestedMoney;
     int Available = 0;
@@ -77,7 +80,7 @@ int DiaVendotek_GetTransactionStatus(void * specificDriver);
 
 void* DiaVendotek_ExecuteDriverProgramThread(void * devicePtr);
 
-int DiaVendotek_PerformTransaction(void * specficDriver, int money);
+int DiaVendotek_PerformTransaction(void * specficDriver, int money, bool isTrasactionSeparated);
 //---------------------------------------------------------------------------
 int DiaVendotek_ConfirmTransaction(void * specficDriver, int money);
 void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr);

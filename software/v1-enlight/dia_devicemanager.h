@@ -39,7 +39,7 @@ void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortNam
 void DiaDeviceManager_ReportMoney(void *manager, int moneyType, int Money);
 void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTransactionSeparated);
 //-------------------------------------------------------------------------------
-void DiaDeviceManager_ConfirmTransaction(void* manager, int money);
+int DiaDeviceManager_ConfirmTransaction(void* manager, int money);
 //--------------------------------------------------------------------------------
 void DiaDeviceManager_AbortTransaction(void *manager);
 int DiaDeviceManager_GetTransactionStatus(void *manager);

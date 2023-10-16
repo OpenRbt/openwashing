@@ -461,6 +461,10 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
     pthread_mutex_unlock(&driver->MoneyLock);
 
     vtk_logi("reader request %d RUB...", sum);
+
+    vtk_logd("isSeparated %d", driver->IsTransactionSeparated);
+
+
     payment_opts_t popts;
     popts.timeout   = 2;
     popts.verbose   = LOG_DEBUG;
@@ -529,7 +533,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 
 
 void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr){
-    vtk_logi("Card reader executes program thread...\n");
+    vtk_logi("Vendotek executes program thread...\n");
     if (!driverPtr) {
          vtk_loge("%s", "Card reader driver is empty. Panic!\n");
     }
@@ -689,7 +693,7 @@ int DiaVendotek_StartPing(void * specificDriver) {
 
 // Entry point function
 // Creates task thread with requested parameter (money amount) and exits
-int DiaVendotek_PerformTransaction(void * specificDriver, int money) {
+int DiaVendotek_PerformTransaction(void * specificDriver, int money, bool isTrasactionSeparated) {
     DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(specificDriver);
 
     if (specificDriver == NULL || money == 0) {
@@ -704,6 +708,12 @@ int DiaVendotek_PerformTransaction(void * specificDriver, int money) {
     pthread_mutex_lock(&driver->MoneyLock);
     driver->RequestedMoney = money;
     pthread_mutex_unlock(&driver->MoneyLock);
+
+    vtk_logi("DiaVendotek isTrasactionSeparated, isSeparated = %d", isTrasactionSeparated);
+    pthread_mutex_lock(&driver->RefundsLock);
+    driver->IsTransactionSeparated = isTrasactionSeparated;
+    pthread_mutex_unlock(&driver->RefundsLock);
+
 
     int err = pthread_create(&driver->ExecuteDriverProgramThread,
         NULL,
@@ -725,12 +735,15 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
 
     vtk_logi("DiaVendotek started Confirm Transaction, money = %d", money);
 
+    pthread_mutex_lock(&driver->MoneyLock);
     int remains = driver->RequestedMoney - money;
+    pthread_mutex_unlock(&driver->MoneyLock);
+
+    vtk_logi("DiaVendotek Confirm Transaction, remains = %d", remains);
 
     if (remains < 0){
-
-        remains = money - driver->RequestedMoney;
         pthread_mutex_lock(&driver->MoneyLock);
+        remains = money - driver->RequestedMoney;
         driver->RequestedMoney = 0;
         pthread_mutex_unlock(&driver->MoneyLock);
         
@@ -742,7 +755,7 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
         pthread_mutex_unlock(&driver->MoneyLock);
     }
     
-    int err = pthread_create(&driver->ExecuteDriverProgramThread,
+    int err = pthread_create(&driver->ExecutePaymentConfirmationDriverProgramThread,
         NULL,
         DiaVendotek_ExecutePaymentConfirmationDriverProgramThread,
         driver);

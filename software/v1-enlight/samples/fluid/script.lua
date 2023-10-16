@@ -266,10 +266,7 @@ start_filling_mode = function()
 
     return mode_start_filling
 end
--- 60 
--- start_filling
---90 appologise
--- ---------------------------------------- Filing is pause here
+
 filling_mode = function()
 
     check_open_lid()
@@ -277,7 +274,7 @@ filling_mode = function()
     pressed_key = get_key()
 
     if pressed_key == button_pause then
-        is_waiting_receipt = false
+        --is_waiting_receipt = false
         return mode_thanks
         -- is_paused = not is_paused
         -- if is_paused == false then 
@@ -308,7 +305,7 @@ filling_mode = function()
 
     return mode_filling
 end
------------------------------------------
+
 thanks_mode = function()
     check_open_lid()
     run_stop()

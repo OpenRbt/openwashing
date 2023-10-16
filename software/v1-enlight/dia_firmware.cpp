@@ -1305,6 +1305,7 @@ int main(int argc, char **argv) {
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;
     hardware->request_transaction_function = request_transaction;
+    hardware->request_transaction_separated_function = request_transaction_separated;
     //--------------------------------------------------------------------------
     hardware->confirm_transaction_function = confirm_transaction;
     //--------------------------------------------------------------------------
