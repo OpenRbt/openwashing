@@ -402,6 +402,7 @@ wait_for_QR_mode = function()
             show_wait_for_QR(waiting_loops/10)
             waiting_loops = waiting_loops - 1
         else
+            waiting_loops = 10 * 10
             return mode_sorry
         end
     else
@@ -420,6 +421,12 @@ sorry_mode = function()
 
     pressed_key = get_key()
     if pressed_key > 0 and pressed_key < 7 then
+        return mode_choose_method
+    end
+    
+    if waiting_loops > 0 then
+        waiting_loops = waiting_loops - 1
+    else
         return mode_choose_method
     end
 
