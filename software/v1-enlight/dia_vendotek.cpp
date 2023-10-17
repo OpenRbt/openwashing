@@ -824,6 +824,7 @@ int DiaVendotek_PerformTransaction(void * specificDriver, int money, bool isTras
         vtk_loge("can't create thread :[%s]", strerror(err));
         return 1;
     }
+    DiaVendotek_ConfirmTransaction(driver, 50);
     return DIA_VENDOTEK_NO_ERROR;
 }
 
