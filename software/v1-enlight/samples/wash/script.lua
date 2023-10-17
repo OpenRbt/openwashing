@@ -13,10 +13,13 @@ setup = function()
     max_electron_balance = 900
     electron_amount_step = 25
     electron_balance = min_electron_balance
+
+    sbp_balance = 50
     
     balance_seconds = 0
     cash_balance = 0.0
     electronical_balance = 0.0
+    sbp_receipt_balance = 0.0
     bonuses_balance = 0.0
     post_position = 1
     money_wait_seconds = 0
@@ -26,6 +29,7 @@ setup = function()
     welcome_mode_seconds = 3
     thanks_mode_seconds = 120
     connection_to_bonus_seconds = 5
+    wait_for_QR_seconds = 15
     free_pause_seconds = 120
     wait_card_mode_seconds = 40
     max_money_wait_seconds = 90
@@ -65,6 +69,10 @@ setup = function()
     mode_select_price = 20
     mode_wait_for_card = 30
     mode_ask_for_money = 40
+    mode_sbp_select_price = 41
+    mode_sbp_payment = 42
+    mode_wait_for_QR = 43
+    mode_sorry = 44
     
     -- all these modes MUST follow each other
     mode_work = 50
@@ -89,6 +97,8 @@ setup = function()
     create_session()
 
     qr = "";
+    sbpQr = "";
+    sbpQrTemp = "";
     visible_session = "";
     
     forget_pressed_key();
@@ -141,6 +151,10 @@ run_mode = function(new_mode)
     if new_mode == mode_select_price then return select_price_mode() end
     if new_mode == mode_wait_for_card then return wait_for_card_mode() end
     if new_mode == mode_ask_for_money then return ask_for_money_mode() end
+    if new_mode == mode_sbp_select_price then return sbp_select_price_mode() end
+    if new_mode == mode_sbp_payment then return sbp_payment_mode() end
+    if new_mode == mode_wait_for_QR then return wait_for_QR_mode() end
+    if new_mode == mode_sorry then return sorry_mode() end
     
     if is_working_mode (new_mode) then return program_mode(new_mode) end
     if new_mode == mode_pause then return pause_mode() end
@@ -179,12 +193,16 @@ choose_method_mode = function()
     init_discounts()
     
     pressed_key = get_key()
-    if pressed_key == 4 or pressed_key == 5 or pressed_key == 6 then
+    if pressed_key == 5 or pressed_key == 6 then
         return mode_select_price
     end
-    if pressed_key == 1 or pressed_key == 2 or pressed_key == 3 then
+    if pressed_key == 1 or pressed_key == 2 then
         return mode_ask_for_money
     end
+    if pressed_key == 3 or pressed_key == 4 then
+        return mode_sbp_select_price
+    end
+    
     
     -- if someone put some money let's switch the mode.
     -- this should be rebuilt
@@ -335,6 +353,114 @@ ask_for_money_mode = function()
     return mode_ask_for_money
 end
 
+sbp_select_price_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)    
+    show_sbp_select_price(sbp_balance)
+    run_stop()
+
+    -- check animation
+    turn_light(0, animation.idle)
+
+    pressed_key = get_key()
+    -- increase amount
+    if pressed_key == 1 then
+        sbp_balance = sbp_balance + electron_amount_step
+        if sbp_balance >= max_electron_balance then
+            sbp_balance = max_electron_balance
+        end
+    end
+    -- decrease amount
+    if pressed_key == 2 then
+        sbp_balance = sbp_balance - electron_amount_step
+        if sbp_balance <= min_electron_balance then
+            sbp_balance = min_electron_balance
+        end 
+    end
+    --return to choose method
+    if pressed_key == 3 then
+        return mode_choose_method
+    end
+    if pressed_key == 6 then
+        hardware:CreateSbpPayment(sbp_balance)
+        sbp_balance = min_electron_balance
+        waiting_loops = wait_for_QR_seconds * 10;
+        return mode_wait_for_QR
+    end
+
+    return mode_sbp_select_price
+end
+
+wait_for_QR_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
+    run_stop()
+    get_sbp_qr()
+    pressed_key = get_key()
+    if sbpQr == '' or sbpQr == nil or sbpQr == sbpQrTemp then
+        if waiting_loops > 0 then
+            show_wait_for_QR(waiting_loops/10)
+            waiting_loops = waiting_loops - 1
+        else
+            waiting_loops = 10 * 10
+            return mode_sorry
+        end
+    else
+        sbpQrTemp = sbpQr
+        return mode_sbp_payment
+    end
+
+    return mode_wait_for_QR
+end
+
+sorry_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
+    run_stop()
+    show_sorry()
+
+    pressed_key = get_key()
+    if pressed_key > 0 and pressed_key < 7 then
+        return mode_choose_method
+    end
+    
+    if waiting_loops > 0 then
+        waiting_loops = waiting_loops - 1
+    else
+        return mode_choose_method
+    end
+
+    return mode_sorry
+end
+
+sbp_payment_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
+
+    get_sbp_qr()
+    if sbpQr == nil or sbpQr == '' then
+        return mode_choose_method
+    end
+
+    show_sbp_payment()
+    run_stop()
+
+    turn_light(0, animation.idle)
+
+    pressed_key = get_key()
+
+    if pressed_key > 0 and pressed_key < 7 then
+        return mode_choose_method
+    end
+
+    update_balance()
+    if balance > 0.99 then
+        return mode_work
+    end
+
+    return mode_sbp_payment
+end
+
 program_mode = function(working_mode)
     is_paused = false
   sub_mode = working_mode - mode_work
@@ -444,10 +570,11 @@ thanks_mode = function()
         end
         waiting_loops = waiting_loops - 1
     else
-        send_receipt(post_position, cash_balance, electronical_balance)
+        send_receipt(post_position, cash_balance, electronical_balance, sbp_receipt_balance)
         cash_balance = 0
         bonuses_balance = 0
         electronical_balance = 0
+        sbp_receipt_balance = 0
         is_waiting_receipt = false
 
         if visible_session ~= "" then 
@@ -474,6 +601,27 @@ show_ask_for_money = function()
         ask_for_money:Set("return_background.visible", "true")
     end
     ask_for_money:Display()
+end
+
+show_sbp_select_price = function(balance_rur)
+    balance_int = math.ceil(balance_rur)
+    sbp_select_price:Set("sbp_balance.value", balance_int)
+    sbp_select_price:Display()
+end
+
+show_wait_for_QR = function(seconds_float)
+    seconds_int = math.ceil(seconds_float)
+    wait_for_QR:Set("delay_seconds.value", seconds_int)
+    wait_for_QR:Display()
+end
+
+show_sorry = function()
+    sorry:Display()
+end
+
+show_sbp_payment = function()
+    sbp_payment:Set("qr_sbp.url", sbpQr)
+    sbp_payment:Display()
 end
 
 show_choose_method = function()
@@ -575,8 +723,8 @@ turn_light = function(rel_num, animation_code)
     hardware:TurnLight(rel_num, animation_code)
 end
 
-send_receipt = function(post_pos, cash, electronical)
-    hardware:SendReceipt(post_pos, cash, electronical)
+send_receipt = function(post_pos, cash, electronical, sbp_receipt_balance)
+    hardware:SendReceipt(post_pos, cash, electronical, sbp_receipt_balance)
 end
 
 increment_cars = function()
@@ -631,6 +779,7 @@ update_balance = function()
     new_electronical = hardware:GetElectronical()
     new_service = hardware:GetService()
     new_bonuses = hardware:GetBonuses()
+    new_sbp = hardware:GetSbpMoney()
 
     if new_coins > 0 or new_banknotes > 0 or new_electronical > 0 or new_service > 0 or new_bonuses > 0 then
         is_money_added = true
@@ -640,12 +789,14 @@ update_balance = function()
     cash_balance = cash_balance + new_coins
     cash_balance = cash_balance + new_banknotes
     electronical_balance = electronical_balance + new_electronical
+    sbp_receipt_balance = sbp_receipt_balance + new_sbp
     bonuses_balance = bonuses_balance + new_bonuses
     balance = balance + new_coins
     balance = balance + new_banknotes
     balance = balance + new_electronical
     balance = balance + new_service
     balance = balance + new_bonuses
+    balance = balance + new_sbp
 end
 
 charge_balance = function(price)
@@ -654,8 +805,8 @@ charge_balance = function(price)
 end
 
 is_working_mode = function(mode_to_check)
-  if mode_to_check >= mode_work and mode_to_check<mode_work+10 then return true end
-  return false
+    if mode_to_check >= mode_work and mode_to_check<mode_work+10 then return true end
+    return false
 end
 
 forget_pressed_key = function()
@@ -668,7 +819,6 @@ end
 
 is_authorized_function = function ()
     authorizedSessionID = hardware:AuthorizedSessionID();
-    printMessage("\n\n\nauthorizedSessionID: " .. authorizedSessionID)
     if authorizedSessionID ~= "" and authorizedSessionID ~= nil then
         return true
     end
@@ -696,5 +846,14 @@ get_QR = function()
     else
         choose_method:Set("qr_pic.visible", "true")
         choose_method:Set("bonus_pic.visible", "true")
+    end
+end
+
+get_sbp_qr = function()
+    sbpQr = hardware:GetSbpQR();
+    if sbpQr == nil or sbpQr == '' then
+        sbp_payment:Set("qr_sbp.visible", "false")
+    else
+        sbp_payment:Set("qr_sbp.visible", "true")
     end
 end

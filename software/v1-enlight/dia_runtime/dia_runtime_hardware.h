@@ -44,11 +44,11 @@ class DiaRuntimeHardware {
         return 0;
     }
 
-    int (*send_receipt_function)(int postPosition, int cash, int electronical);
+    int (*send_receipt_function)(int postPosition, int cash, int electronical, int qrMoney);
 
-    int SendReceipt(int postPosition, int cash, int electronical) {
+    int SendReceipt(int postPosition, int cash, int electronical, int qrMoney) {
         if (send_receipt_function) {
-            send_receipt_function(postPosition, cash, electronical);
+            send_receipt_function(postPosition, cash, electronical, qrMoney);
         } else {
             printf("error: NIL function SendReceipt\n");
         }
@@ -115,6 +115,18 @@ class DiaRuntimeHardware {
         return "";
     }
 
+    std::string (*get_sbp_qr_function)();
+    std::string GetSbpQR() {
+        if(get_sbp_qr_function){
+            std::string QR = get_sbp_qr_function();
+            return QR;
+        }
+        else{
+            printf("error: NIL object or function get_sbp_qr_function\n");
+        }
+        return "";
+    }
+
     int (*sendPause_function)();
     int SendPause() {
         if(sendPause_function){
@@ -123,6 +135,18 @@ class DiaRuntimeHardware {
         }
         else{
             printf("error: NIL object or function sendPause_function\n");
+        }
+        return 0;
+    }
+
+    int (*create_sbp_payment_function)(int amount);
+    int CreateSbpPayment(int amount) {
+        if(create_sbp_payment_function){
+            int ans = create_sbp_payment_function(amount);
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function create_sbp_payment_function\n");
         }
         return 0;
     }
@@ -209,6 +233,16 @@ class DiaRuntimeHardware {
             return get_bonuses_function();
         } else {
             printf("error: NIL object or function GetBonuses\n");
+        }
+        return 0;
+    }
+
+    int (*get_sbp_money_function)();
+    int GetSbpMoney() {
+        if (get_sbp_money_function) {
+            return get_sbp_money_function();
+        } else {
+            printf("error: NIL object or function GetSbpMoney\n");
         }
         return 0;
     }
@@ -322,6 +356,17 @@ class DiaRuntimeHardware {
             printf("error: NIL object or function SetIsPlayingVideo\n");
         }
         return 0;
+    }
+
+    
+    int (*get_process_id_function)();
+    int GetProcessId() {
+        if (get_process_id_function) {
+            return get_process_id_function();
+        } else {
+            printf("error: NIL object or function GetProcessId\n");
+        }
+        return false;
     }
 
     bool (*get_is_connected_to_bonus_system_function)();
