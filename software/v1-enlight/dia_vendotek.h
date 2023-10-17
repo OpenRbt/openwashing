@@ -31,7 +31,7 @@ typedef struct payment_opts_s {
 
 
 enum VendotekStage{
-    RC_IDL, RC_VRP, RC_FIN, RC_IDL_END, ALL
+    RC_IDL_VRP, RC_FIN_IDL_END, ALL
 };
 
 class DiaVendotek 
