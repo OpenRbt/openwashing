@@ -196,7 +196,7 @@ wait_mode = function()
     if is_transaction_started == false then
         waiting_loops = wait_mode_seconds * 10;
 
-        request_transaction(electron_balance)
+        request_transaction_separated(electron_balance)
         print("\n\n\n electron_balance: ", electron_balance)
         is_transaction_started = true
     end
@@ -312,7 +312,7 @@ thanks_mode = function()
     show_thanks()
 
     if is_waiting_receipt == false then
-        --confirm_transaction(balance)
+        confirm_transaction(balance)
         balance = 0
         turn_light(1, animation.one_button)
         waiting_loops = thanks_mode_seconds * 10;
