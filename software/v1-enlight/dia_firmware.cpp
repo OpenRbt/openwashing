@@ -25,6 +25,7 @@
 #include <thread>
 #include <chrono>
 #include <wiringPi.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <list>
@@ -75,6 +76,8 @@ int _DebugKey = 0;
 int _Balance = 0;
 int _OpenLid = 0;
 int _BalanceBonuses = 0;
+int _BalanceSbp = 0;
+std::string _SbpOrderId = "";
 int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
 
@@ -96,8 +99,9 @@ bool _SensorActive = false;
 bool _SensorActiveUI = false;
 bool _SensorActivate = false;
 
-bool _CanPlayVideo = false;
-bool _IsPlayingVideo = false;
+volatile bool _CanPlayVideo = false;
+volatile bool _IsPlayingVideo = false;
+volatile int _ProcessId = 0;
 int _CanPlayVideoTimer = 0;
 
 bool _BonusSystemIsActive = false;
@@ -107,15 +111,14 @@ std::string _ServerUrl = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
-bool _IsDirExist = false;
-int _MaxAfkTime = 30;
+int _MaxAfkTime = 180;
 
-std::string _FlashName = "Flash";
 std::string _FileName;
 
 std::string _Qr = "";
 std::string _VisibleSessionID = "";
 
+std::string _SbpQr = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
@@ -158,6 +161,10 @@ bool getCanPlayVideo() {
     return _CanPlayVideo;
 }
 
+int getProcessId() {
+    return _ProcessId;
+}
+
 void setIsPlayingVideo(bool isPlayingVideo) {
     _IsPlayingVideo = isPlayingVideo;
 }
@@ -174,21 +181,110 @@ bool getIsConnectedToBonusSystem() {
     return _IsConnectedToBonusSystem;
 }
 
+bool dirExists(const std::string& dirName_in)
+{
+    fs::path dirNamePath(dirName_in);
+
+    if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
+        return true;
+    }
+    return false;
+}
+
+bool dirAccessRead(const std::string& dirName_in)
+{
+    if (access(dirName_in.c_str(), R_OK) != 0) {
+        return false;
+    }
+    return true;
+}
+
+std::vector<std::string> split(const std::string &s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+std::string toLowerCase(const std::string& input) {
+    std::string result = input;
+    for (char &c : result) {
+        c = std::tolower(static_cast<unsigned char>(c));
+    }
+    return result;
+}
+
+bool check_directory() {
+    std::list<std::string> directories;
+    std::string directory;
+    for (const auto &entry : fs::directory_iterator("/media")) {
+        if(dirAccessRead(entry.path()) && fs::is_directory(entry.path())) {
+            directories.push_back(entry.path());
+        }
+    }
+
+    bool found = false;
+    for (auto const &i : directories) {
+        if(dirAccessRead(i)){
+            for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
+                if (dirAccessRead(subEntry.path())){
+                        if (fs::is_directory(subEntry) && subEntry.path().filename() == "openrbt_video" && dirAccessRead(subEntry.path().string())) {
+                        directory = subEntry.path().string();
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (found) break;
+    }
+
+    if (!directory.empty()) {
+        std::string extension;
+        for (const auto &entry : fs::directory_iterator(directory)){
+            extension = entry.path().extension();
+            if(toLowerCase(extension) == ".mp4" || toLowerCase(extension) == ".avi"){
+                _FileName += entry.path();
+                _FileName += " ";
+            }
+            
+        }
+        return true;
+        
+    }
+    return false;
+}
+
 void *play_video_func(void *ptr) {
     while (!_to_be_destroyed) {
-        usleep(1 * 1000 * 1000);
-        if (_CanPlayVideo) {
-            _CanPlayVideoTimer++;
-        }
-        if (_CanPlayVideoTimer >= _MaxAfkTime) {
-            _IsPlayingVideo = true;
-            _CanPlayVideo = false;
-            _CanPlayVideoTimer = 0;
-            int pid = system(("ffplay -loop 0 -exitonkeydown -exitonmousedown -fs " + _FileName).c_str());
-            printf("\n\n\n PlayVideo result: %d \n\n\n", pid);
-        }
-        _IsPlayingVideo = false;
-        delay(100);
+        if(_CanPlayVideo) {
+            if(check_directory() && !_FileName.empty()){
+                std::vector<std::string> files = split(_FileName, ' ');
+
+                std::string formattedFiles;
+                for (const std::string &file : files) {
+                    if (!formattedFiles.empty()) {
+                        formattedFiles += " ";
+                    }
+                    formattedFiles += "\"" + file + "\"";
+                }
+                _IsPlayingVideo = true;
+                //int pid = system(("python3 ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Ubuntu
+                int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Raspberry Pi
+                _IsPlayingVideo = false;
+                _ProcessId = pid;
+                delay(100);
+                
+                printf("\nPlayVideo result: %d", pid);
+            }
+            else{
+                delay(1000 * 30);
+            }
+            
+        }   
     }
     pthread_exit(0);
     return 0;
@@ -223,6 +319,10 @@ std::string getQR() {
     return _Qr;
 }
 
+std::string getSbpQr() {
+    return _SbpQr;
+}
+
 std::string getVisibleSession() {
     return _VisibleSessionID;
 }
@@ -233,24 +333,15 @@ std::string getActiveSession() {
     return _AuthorizedSessionID;
 }
 
-bool dirExists(const std::string& dirName_in)
-{
-    fs::path dirNamePath(dirName_in);
-    if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
-        return true;
-    }
-    return false;
-}
-
-
 // Saves new income money and creates money report to Central Server.
-void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
+void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, int sbp_total, std::string session_id) {
     network->SendMoneyReport(cars_total,
                              coins_total,
                              banknotes_total,
                              cashless_total,
                              service_total,
                              bonuses_total,
+                             sbp_total,
                              session_id);
 }
 
@@ -279,14 +370,18 @@ int turn_light(void *object, int pin, int animation_id) {
 pthread_t pinging_thread;
 
 // Creates receipt request to Online Cash Register.
-int send_receipt(int postPosition, int cash, int electronical) {
-    return network->ReceiptRequest(postPosition, cash, electronical);
+int send_receipt(int postPosition, int cash, int electronical, int qrMoney) {
+    return network->ReceiptRequest(postPosition, cash, electronical + qrMoney);
+}
+
+int createSbpPayment(int amount) {
+    return network->CreateSbpPayment(amount * 100);
 }
 
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1, 0, 0, 0, 0, 0, getActiveSession());
+    SaveIncome(1, 0, 0, 0, 0, 0, 0, getActiveSession());
     return 0;
 }
 
@@ -355,7 +450,7 @@ int get_service() {
 
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, curMoney, 0, getActiveSession());
+        SaveIncome(0, 0, 0, 0, curMoney, 0, 0, getActiveSession());
     }
     return curMoney;
 }
@@ -366,7 +461,18 @@ int get_bonuses() {
 
     if (curMoney > 0) {
         printf("bonus %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, 0, curMoney, getActiveSession());
+        SaveIncome(0, 0, 0, 0, 0, curMoney, 0, getActiveSession());
+    }
+    return curMoney;
+}
+
+int get_sbp_money() {
+    int curMoney = _BalanceSbp;
+    _BalanceSbp = 0;
+
+    if (curMoney > 0) {
+        printf("sbp money %d\n", curMoney);
+        SaveIncome(0, 0, 0, 0, 0, 0, curMoney, getActiveSession());
     }
     return curMoney;
 }
@@ -438,7 +544,7 @@ int get_coins(void *object) {
 
     int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
     if (totalMoney > 0) {
-        SaveIncome(0, totalMoney, 0, 0, 0, 0, getActiveSession());
+        SaveIncome(0, totalMoney, 0, 0, 0, 0, 0, getActiveSession());
     }
 
     return totalMoney;
@@ -467,7 +573,7 @@ int get_banknotes(void *object) {
     if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
     int totalMoney = curMoney + gpioBanknote;
     if (totalMoney > 0) {
-        SaveIncome(0, 0, totalMoney, 0, 0, 0, getActiveSession());
+        SaveIncome(0, 0, totalMoney, 0, 0, 0, 0, getActiveSession());
     }
     return totalMoney;
 }
@@ -477,7 +583,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney > 0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0, 0, 0, curMoney, 0, 0, getActiveSession());
+        SaveIncome(0, 0, 0, curMoney, 0, 0, 0, getActiveSession());
         manager->ElectronMoney = 0;
     }
     return curMoney;
@@ -713,7 +819,17 @@ int CentralServerDialog() {
     int discountLastUpdate = 0;
     std::string qrData = "";
 
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, visibleSessionID, bonusAmount);
+    std::string sbpUrl = "";
+    std::string sbpOrderId = "";
+
+    double sbpMoney = 0;
+    bool sbpQrFailed = true;
+
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, 
+    _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, 
+    authorizedSessionID, visibleSessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, 
+    sbpOrderId);
+
     network->GetServerInfo(_ServerUrl);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
@@ -732,11 +848,20 @@ int CentralServerDialog() {
         // TODO protect with mutex
         _BalanceBonuses += bonusAmount;
     }
+    if (sbpMoney > 0 && !sbpQrFailed && !sbpOrderId.empty() && _SbpOrderId != sbpOrderId) {
+        // TODO protect with mutex
+        _SbpOrderId = sbpOrderId;
+        if (!network->ConfirmSbpPayment(sbpOrderId)) {
+            _BalanceSbp = sbpMoney / 100;
+        }
+    }
     if (openStation) {
         _OpenLid = _OpenLid + 1;
         printf("Door is going to be opened... \n");
         // TODO: add the function of turning on the relay, which will open the lock.
     }
+
+    _SbpQr = sbpUrl;
 
     if (bonusSystemActive != _BonusSystemIsActive) {
         _BonusSystemIsActive = bonusSystemActive;
@@ -901,10 +1026,17 @@ int RecoverRegistry() {
     int discountLastUpdate = 0;
 
     std::string default_price = "15";
+    
     std::string qrData = "";
+
+    std::string sbpUrl = "";
+    std::string sbpOrderId = "";
+    double sbpMoney = 0;
+    bool sbpQrFailed = true;
+
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId);
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1293,12 +1425,17 @@ int main(int argc, char **argv) {
     hardware->getQR_function = getQR;
     hardware->SetBonuses_function = SetBonuses;
 
+    hardware->get_sbp_qr_function = getSbpQr;
+
     hardware->sendPause_function = sendPause;
+
+    hardware->create_sbp_payment_function = createSbpPayment;
 
     hardware->get_can_play_video_function = getCanPlayVideo;
     hardware->set_can_play_video_function = setCanPlayVideo;
     hardware->get_is_playing_video_function = getIsPlayingVideo;
     hardware->set_is_playing_video_function = setIsPlayingVideo;
+    hardware->get_process_id_function = getProcessId;
 
     hardware->get_is_connected_to_bonus_system_function = getIsConnectedToBonusSystem;
     hardware->set_is_connected_to_bonus_system_function = setIsConnectedToBonusSystem;
@@ -1322,6 +1459,7 @@ int main(int argc, char **argv) {
     hardware->electronical_object = manager;
     hardware->get_service_function = get_service;
     hardware->get_bonuses_function = get_bonuses;
+    hardware->get_sbp_money_function = get_sbp_money;
     hardware->get_is_preflight_function = get_is_preflight;
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;
@@ -1385,29 +1523,8 @@ int main(int argc, char **argv) {
     printf("get_volume_func start...\n");
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
 
-/*
-    std::list<std::string> directories;
-    std::string directory;
-    for (const auto &entry : fs::directory_iterator("/media")) {
-        if(fs::is_directory(entry.path())) {
-            directories.push_back(entry.path());
-        }
-    }
+    pthread_create(&play_video_thread, NULL, play_video_func, NULL);
 
-    for (auto const &i : directories) {
-        if (dirExists(i + "/openrbt_video")) {
-            directory = i + "/openrbt_video";
-            break;
-        }
-    }
-
-    if (!directory.empty()) {
-        for (const auto &entry : fs::directory_iterator(directory))
-            _FileName = entry.path();
-
-        pthread_create(&play_video_thread, NULL, play_video_func, NULL);
-    }
-*/
     while (!keypress) {
         // Call Lua loop function
         config->GetRuntime()->Loop();
