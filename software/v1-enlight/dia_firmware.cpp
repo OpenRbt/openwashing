@@ -496,6 +496,7 @@ int request_transaction_separated(void *object, int money){
 
 int confirm_transaction(void *object, int money){
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
+    //printf("Manager Electronical:    %d",manager->ElectronMoney);
     int bonuses = 0;
     bonuses = DiaDeviceManager_ConfirmTransaction(manager, money);
 
@@ -519,6 +520,7 @@ int get_transaction_status(void *object) {
 // Deletes actual NFC transaction.
 int abort_transaction(void *object) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
+    printf("ABORT_TRANSACTION Manager Electronical:    %d",manager->ElectronMoney);
     DiaDeviceManager_AbortTransaction(manager);
     return 0;
 }
