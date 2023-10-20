@@ -285,7 +285,7 @@ int DiaDeviceManager_ConfirmTransaction(void *manager, int money){
         
     } else if (Manager->_Vendotek) {
         printf("DiaDeviceManager Confirm Transaction Vendotek\n");
-        bonuses = DiaVendotek_ConfirmTransaction(Manager, money);
+        bonuses = DiaVendotek_ConfirmTransaction(Manager->_Vendotek, money);
     }
     return bonuses;
 }
