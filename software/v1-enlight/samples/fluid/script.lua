@@ -297,11 +297,12 @@ filling_mode = function()
         return mode_thanks
     end
     
-    -- if get_sensor_active() == false then
-    --     balance = 0
-    --     waiting_loops = 0
-    --     return mode_apology
-    -- end
+    if get_sensor_active() == false then
+        balance = 0
+        waiting_loops = 0
+        confirm_transaction(balance)
+        return mode_apology
+    end
 
     return mode_filling
 end
