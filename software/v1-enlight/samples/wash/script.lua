@@ -40,6 +40,7 @@ setup = function()
     is_connected_to_bonus_system = false
     is_waiting_receipt = false
     is_money_added = false
+    is_connected_to_sbp = false
 
     price_p = {}
     
@@ -173,14 +174,12 @@ welcome_mode = function()
     smart_delay(1000 * welcome_mode_seconds)
     forget_pressed_key()
     
-    if hascardreader() then
-        return mode_choose_method
-    end
-    return mode_ask_for_money
+    return mode_choose_method
 end
 
 choose_method_mode = function()
     visible_session = hardware:GetVisibleSession();
+    is_connected_to_sbp = get_is_connected_to_sbp_system()
     get_QR()
     
     show_choose_method()
@@ -193,13 +192,13 @@ choose_method_mode = function()
     init_discounts()
     
     pressed_key = get_key()
-    if pressed_key == 5 or pressed_key == 6 then
+    if hascardreader() and (pressed_key == 5 or pressed_key == 6) then
         return mode_select_price
     end
-    if pressed_key == 1 or pressed_key == 2 then
+    if  pressed_key == 1 or pressed_key == 2 then
         return mode_ask_for_money
     end
-    if pressed_key == 3 or pressed_key == 4 then
+    if is_connected_to_sbp and (pressed_key == 3 or pressed_key == 4) then
         return mode_sbp_select_price
     end
     
@@ -402,6 +401,7 @@ wait_for_QR_mode = function()
             show_wait_for_QR(waiting_loops/10)
             waiting_loops = waiting_loops - 1
         else
+            waiting_loops = 10 * 10
             return mode_sorry
         end
     else
@@ -420,6 +420,12 @@ sorry_mode = function()
 
     pressed_key = get_key()
     if pressed_key > 0 and pressed_key < 7 then
+        return mode_choose_method
+    end
+    
+    if waiting_loops > 0 then
+        waiting_loops = waiting_loops - 1
+    else
         return mode_choose_method
     end
 
@@ -575,10 +581,7 @@ thanks_mode = function()
             hardware:EndSession();
         end
         hardware:CreateSession();
-	    if hascardreader() then
-        	return mode_choose_method
-    	end
-        return mode_ask_for_money
+        return mode_choose_method
     end
 
     return mode_thanks
@@ -618,6 +621,21 @@ show_sbp_payment = function()
 end
 
 show_choose_method = function()
+    if hascardreader() then
+        choose_method:Set("card_pic.visible", "true")
+        choose_method:Set("card.visible", "true")
+    else
+        choose_method:Set("card_pic.visible", "false")
+        choose_method:Set("card.visible", "false")
+    end
+    if is_connected_to_sbp then
+        choose_method:Set("sbp_pic.visible", "true")
+        choose_method:Set("sbp.visible", "true")
+    else
+        choose_method:Set("sbp_pic.visible", "false")
+        choose_method:Set("sbp.visible", "false")
+    end
+
     choose_method:Set("post_number.value", post_position)
     choose_method:Set("qr_pic.url", qr)
     choose_method:Display()
@@ -825,6 +843,10 @@ end
 
 get_is_connected_to_bonus_system = function()
     return hardware:GetIsConnectedToBonusSystem();
+end
+
+get_is_connected_to_sbp_system = function()
+    return hardware:SbpSystemIsActive();
 end
 
 set_is_connected_to_bonus_system = function(connectedToBonusSystem)

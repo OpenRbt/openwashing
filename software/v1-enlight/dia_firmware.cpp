@@ -105,6 +105,7 @@ volatile int _ProcessId = 0;
 int _CanPlayVideoTimer = 0;
 
 bool _BonusSystemIsActive = false;
+bool _SbpSystemActive = false;
 bool _IsConnectedToBonusSystem = false;
 std::string _AuthorizedSessionID = "";
 std::string _ServerUrl = "";
@@ -272,8 +273,7 @@ void *play_video_func(void *ptr) {
                     formattedFiles += "\"" + file + "\"";
                 }
                 _IsPlayingVideo = true;
-                //int pid = system(("python3 ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Ubuntu
-                int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str()); //Для Raspberry Pi
+                int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str());
                 _IsPlayingVideo = false;
                 _ProcessId = pid;
                 delay(100);
@@ -284,7 +284,8 @@ void *play_video_func(void *ptr) {
                 delay(1000 * 30);
             }
             
-        }   
+        }
+        delay(1000);
     }
     pthread_exit(0);
     return 0;
@@ -422,6 +423,10 @@ int start_fluid_flow_sensor(int volume) {
 
 bool bonus_system_is_active() {
     return _BonusSystemIsActive;
+}
+
+bool sbp_system_is_active() {
+    return _SbpSystemActive;
 }
 
 std::string authorized_session_ID() {
@@ -804,6 +809,7 @@ int CentralServerDialog() {
     std::string authorizedSessionID = "";
     std::string visibleSessionID = "";
     bool bonusSystemActive = false;
+    bool sbpSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
@@ -816,9 +822,9 @@ int CentralServerDialog() {
     bool sbpQrFailed = true;
 
     network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, 
-    _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, 
-    authorizedSessionID, visibleSessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, 
-    sbpOrderId);
+    _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, sbpSystemActive, 
+    qrData, authorizedSessionID, visibleSessionID, bonusAmount, sbpMoney, sbpUrl, 
+    sbpQrFailed, sbpOrderId);
 
     network->GetServerInfo(_ServerUrl);
     if (config) {
@@ -857,9 +863,9 @@ int CentralServerDialog() {
         _BonusSystemIsActive = bonusSystemActive;
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
-    if (bonusSystemActive != _BonusSystemIsActive) {
-        _BonusSystemIsActive = bonusSystemActive;
-        printf("Bonus system activated: %d\n", bonusSystemActive);
+    if(sbpSystemActive != _SbpSystemActive){
+        _SbpSystemActive = sbpSystemActive;
+        printf("SBP system activated: %d\n", sbpSystemActive);
     }
     if(_BonusSystemIsActive){
         if (_VisibleSessionID == authorizedSessionID) {
@@ -1008,6 +1014,7 @@ int RecoverRegistry() {
     int bonusAmount = 0;
     bool openStation = false;
     bool bonusSystemActive = false;
+    bool sbpSystemActive = false;
     std::string authorizedSessionID = "";
     std::string sessionID = "";
     int buttonID = 0;
@@ -1026,7 +1033,9 @@ int RecoverRegistry() {
 
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, 
+        bonusSystemActive, sbpSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId);
+
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1463,6 +1472,7 @@ int main(int argc, char **argv) {
     printf("HW init 7...\n");
 
     hardware->bonus_system_is_active_function = bonus_system_is_active;
+    hardware->sbp_system_is_active_function = sbp_system_is_active;
     hardware->authorized_session_ID_function = authorized_session_ID;
     hardware->bonus_system_refresh_active_qr_function = bonus_system_refresh_active_qr;
     hardware->bonus_system_start_session_function = bonus_system_start_session;

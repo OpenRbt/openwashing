@@ -614,7 +614,9 @@ class DiaNetwork {
     // PING request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, std::string &authorizedSessionID, std::string &sessionID, int &bonusAmount, double& qrMoney, std::string &qrUrl, bool& qrFailed, std::string &qrOrderId) {
+    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, 
+    int &lastDiscountUpdate, bool &bonus_system_active, bool &sbp_system_active, std::string &qrData, std::string &authorizedSessionID, 
+    std::string &sessionID, int &bonusAmount, double& qrMoney, std::string &qrUrl, bool& qrFailed, std::string &qrOrderId) {
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 
@@ -627,6 +629,7 @@ class DiaNetwork {
             return 3;
         }
         if (result) {
+            sbp_system_active = false;
             return 1;
         }
 
@@ -670,6 +673,10 @@ class DiaNetwork {
             json_t *obj_bonus_system;
             obj_bonus_system = json_object_get(object, "bonusSystemActive");
             bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
+
+            json_t *obj_sbp_system;
+            obj_sbp_system = json_object_get(object, "sbpSystemActive");
+            sbp_system_active = (bool)json_boolean_value(obj_sbp_system);
 
             json_t *obj_bonus_amount;
             obj_bonus_amount = json_object_get(object, "bonusAmount");
@@ -730,6 +737,7 @@ class DiaNetwork {
             json_decref(obj_last_update);
             json_decref(obj_last_discount_update);
             json_decref(obj_bonus_system);
+            json_decref(obj_sbp_system);
             json_decref(obj_bonus_amount);
             json_decref(obj_authorized_session_ID);
             json_decref(obj_session_ID);

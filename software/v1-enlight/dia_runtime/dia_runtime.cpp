@@ -121,6 +121,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("GetSensorActive", &DiaRuntimeHardware::GetSensorActive)
         .addFunction("StartFluidFlowSensor", &DiaRuntimeHardware::StartFluidFlowSensor)
         .addFunction("BonusSystemIsActive", &DiaRuntimeHardware::BonusSystemIsActive)
+        .addFunction("SbpSystemIsActive", &DiaRuntimeHardware::SbpSystemIsActive)
         .addFunction("AuthorizedSessionID", &DiaRuntimeHardware::AuthorizedSessionID)
         .addFunction("BonusSystemRefreshActiveQR", &DiaRuntimeHardware::BonusSystemRefreshActiveQR)
         .addFunction("BonusSystemConfirmSession", &DiaRuntimeHardware::BonusSystemConfirmSession)
