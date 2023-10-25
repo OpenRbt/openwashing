@@ -300,7 +300,7 @@ filling_mode = function()
     if get_sensor_active() == false then
         balance = 0
         waiting_loops = 0
-        confirm_transaction(balance)
+        confirm_transaction(math.ceil(balance))
         return mode_apology
     end
 
@@ -313,7 +313,7 @@ thanks_mode = function()
     show_thanks()
 
     if is_waiting_receipt == false then
-        confirm_transaction(balance)
+        confirm_transaction(math.ceil(balance))
         balance = 0
         turn_light(1, animation.one_button)
         waiting_loops = thanks_mode_seconds * 10;
