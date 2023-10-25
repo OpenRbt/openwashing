@@ -614,9 +614,11 @@ class DiaNetwork {
     // PING request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
+
     int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, 
     int &lastDiscountUpdate, bool &bonus_system_active, bool &sbp_system_active, std::string &qrData, std::string &authorizedSessionID, 
     std::string &sessionID, int &bonusAmount, double& qrMoney, std::string &qrUrl, bool& qrFailed, std::string &qrOrderId) {
+
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 

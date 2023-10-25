@@ -192,6 +192,7 @@ choose_method_mode = function()
     init_discounts()
     
     pressed_key = get_key()
+
     if hascardreader() and (pressed_key == 5 or pressed_key == 6) then
         return mode_select_price
     end
