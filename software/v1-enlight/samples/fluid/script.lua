@@ -298,9 +298,9 @@ filling_mode = function()
     end
     
     if get_sensor_active() == false then
+        confirm_transaction(math.ceil(balance))
         balance = 0
         waiting_loops = 0
-        confirm_transaction(math.ceil(balance))
         return mode_apology
     end
 
