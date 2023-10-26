@@ -402,6 +402,17 @@ class DiaRuntimeHardware {
         return false;
     }
 
+    bool (*sbp_system_is_active_function)();
+    bool SbpSystemIsActive() {
+        if (sbp_system_is_active_function) {
+            return sbp_system_is_active_function();
+        }
+        printf("error: NIL object or function GetSbpSystemActive\n");
+        return false;
+    }
+
+    
+
     std::string (*authorized_session_ID_function)();
     std::string AuthorizedSessionID() {
         if (authorized_session_ID_function) {
