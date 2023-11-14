@@ -274,16 +274,14 @@ filling_mode = function()
     pressed_key = get_key()
 
     if pressed_key == button_pause then
-        --is_waiting_receipt = false
+        is_paused = not is_paused
+        if is_paused == false then 
+            start_fluid_flow_sensor(volume * 1000)
+        else
+            volume = volume - get_volume() / 1000
+            hardware:SendPause()
+        end
         return mode_thanks
-        -- is_paused = not is_paused
-        -- if is_paused == false then 
-        --     start_fluid_flow_sensor(volume * 1000)
-        -- else
-        --     volume = volume - get_volume() / 1000
-        --     hardware:SendPause()
-        -- end
-
     end
 
     if is_paused == false then 

@@ -582,8 +582,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
                        
         }
         else{
-             rcode = do_payment(driverPtr, &popts, VendotekStage::RC_IDL_VRP);
-             
+            rcode = do_payment(driverPtr, &popts, VendotekStage::RC_IDL_VRP);    
         }
 
         vtk_msg_free(popts.mreq);
@@ -684,7 +683,7 @@ void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr
         vtk_msg_init(&popts.mreq,  popts.vtk);
         vtk_msg_init(&popts.mresp, popts.vtk);
 
-        rcode = do_payment(driverPtr, &popts, VendotekStage::RC_FIN_IDL_END);      
+        rcode = do_payment(driverPtr, &popts, VendotekStage::RC_FIN_IDL_END);     
     
         driver->_PaymentOpts = NULL;
 
@@ -909,7 +908,6 @@ int DiaVendotek_StopDriver(void * specificDriver) {
     pthread_mutex_unlock(&driver->MoneyLock);
 
     pthread_join(driver->ExecuteDriverProgramThread, NULL);
-    pthread_join(driver->ExecutePaymentConfirmationDriverProgramThread,NULL);
     vtk_logi("Vendotek thread killed");
     return DIA_VENDOTEK_NO_ERROR;
 }
