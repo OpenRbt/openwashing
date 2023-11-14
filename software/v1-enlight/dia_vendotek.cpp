@@ -909,7 +909,6 @@ int DiaVendotek_StopDriver(void * specificDriver) {
     pthread_mutex_unlock(&driver->MoneyLock);
 
     pthread_join(driver->ExecuteDriverProgramThread, NULL);
-    pthread_join(driver->ExecutePaymentConfirmationDriverProgramThread,NULL);
     vtk_logi("Vendotek thread killed");
     return DIA_VENDOTEK_NO_ERROR;
 }
