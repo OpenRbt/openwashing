@@ -520,7 +520,7 @@ int get_transaction_status(void *object) {
 // Deletes actual NFC transaction.
 int abort_transaction(void *object) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
-    printf("ABORT_TRANSACTION Manager Electronical:    %d",manager->ElectronMoney);
+   
     DiaDeviceManager_AbortTransaction(manager);
     return 0;
 }

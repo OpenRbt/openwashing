@@ -119,11 +119,11 @@ int dia_screen_item_image_array_display(DiaScreenItem * base_item, void * image_
                 screen->Canvas,
                 image_array->OutputRectangle);
 
-    printf("img displayed at (%d, %d) size (%d, %d) \n",
-    image_array->OutputRectangle->x,
-    image_array->OutputRectangle->y,
-    image_array->OutputRectangle->w,
-    image_array->OutputRectangle->h);
+    // printf("img displayed at (%d, %d) size (%d, %d) \n",
+    // image_array->OutputRectangle->x,
+    // image_array->OutputRectangle->y,
+    // image_array->OutputRectangle->w,
+    // image_array->OutputRectangle->h);
     
     return 0;
 }

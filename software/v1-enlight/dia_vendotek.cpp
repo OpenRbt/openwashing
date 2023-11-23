@@ -158,7 +158,7 @@ int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
     
     /*
      * common state
-     */
+     */ 
     payment_t payment;
     payment.evnum     = opts->evnum;
     payment.evname    = opts->evname;
@@ -267,7 +267,7 @@ int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
 
         case VendotekStage::RC_FIN_IDL_END:
             {
-                int rc_fin;
+                int rc_fin = 0;
                 pthread_mutex_lock(&driver->StateLock);
                 state = driver->PaymentStage;
                 if (state > 0) {
@@ -276,6 +276,23 @@ int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
                 pthread_mutex_unlock(&driver->StateLock);
 
                 if (state>0) {
+                    stage_req_t idl1_req[2] = {};
+                    idl1_req[0].id = 0x1;
+                    idl1_req[0].valstr = (char*)"IDL";
+                    idl1_req[1].id = 0;
+
+                    stage_resp_t idl1_resp[5] = {};
+                    idl1_resp[0].id = 0x1;
+                    idl1_resp[0].expstr = (char*)"IDL";
+                    idl1_resp[1].id = 0x3;
+                    idl1_resp[1].valint = &payment.opnum;
+                    idl1_resp[2].id = 0x6;
+                    idl1_resp[2].valint = &payment.timeout;
+                    idl1_resp[3].id = 0x8;
+                    idl1_resp[3].valint = &payment.evnum;
+                    idl1_resp[4].id = 0;
+
+                    do_stage(&stopts, idl1_req, idl1_resp);
                 
                     vtk_logi("FIN stage");
 
@@ -579,10 +596,10 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
         if(!driver->IsTransactionSeparated){
             
             rcode = do_payment(driverPtr, &popts, VendotekStage::ALL);
-                       
+
         }
         else{
-            rcode = do_payment(driverPtr, &popts, VendotekStage::RC_IDL_VRP);    
+            rcode = do_payment(driverPtr, &popts, VendotekStage::RC_IDL_VRP);   
         }
 
         vtk_msg_free(popts.mreq);
@@ -591,7 +608,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
     }
     
     vtk_free(popts.vtk);
-
+ 
     pthread_mutex_lock(&driver->StateLock);
     driver->_PaymentOpts = NULL;
     pthread_mutex_unlock(&driver->StateLock);
@@ -698,22 +715,11 @@ void * DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void *driverPtr
 
 
     vtk_logi("Card reader returned status code: %d", rcode);
-    if (rcode == 0) {
-        if (driver->IncomingMoneyHandler != NULL) {
-            pthread_mutex_lock(&driver->MoneyLock);
-            int sum = driver->RequestedMoney;
-            driver->IncomingMoneyHandler(driver->_Manager, DIA_ELECTRON, sum);
-            driver->RequestedMoney = 0;
-            pthread_mutex_unlock(&driver->MoneyLock);
-            vtk_logi("Reported money: %d", sum);
-        } else {
-            vtk_loge("No handler to report: %d", sum);
-        }
-    } else {
-        pthread_mutex_lock(&driver->MoneyLock);
-        driver->RequestedMoney = 0;
-        pthread_mutex_unlock(&driver->MoneyLock);
-    }
+ 
+    pthread_mutex_lock(&driver->MoneyLock);
+    driver->RequestedMoney = 0;
+    pthread_mutex_unlock(&driver->MoneyLock);
+
 
     pthread_exit(NULL);
     return NULL;
@@ -845,15 +851,12 @@ int DiaVendotek_ConfirmTransaction(void * specificDriver, int money){
 
     vtk_logi("DiaVendotek started Confirm Transaction, money = %d", money);
 
-    
-
     pthread_mutex_lock(&driver->MoneyLock);
     vtk_logi("DiaVendotek started Confirm Transaction, RequestedMoney = %d", driver->RequestedMoney);
     int remains = driver->RequestedMoney - money;
     pthread_mutex_unlock(&driver->MoneyLock);
 
     vtk_logi("DiaVendotek Confirm Transaction, remains = %d", remains);
-
 
     if (remains < 0){
         pthread_mutex_lock(&driver->MoneyLock);

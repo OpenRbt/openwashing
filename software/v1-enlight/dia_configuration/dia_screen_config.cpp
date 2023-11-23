@@ -36,7 +36,7 @@ int DiaScreenConfig::Display(DiaScreen * screen) {
             }
         }
 
-        printf("--item '%s' of type '%s' --- \n", currentItem->id.c_str(), currentItem->type.c_str());
+        //printf("--item '%s' of type '%s' --- \n", currentItem->id.c_str(), currentItem->type.c_str());
         if (currentItem->visible.value) {
             int err = currentItem->display_ptr(currentItem, currentItem->specific_object_ptr, screen);
             if (err!=0) {
