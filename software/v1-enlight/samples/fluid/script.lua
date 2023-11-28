@@ -281,7 +281,6 @@ filling_mode = function()
             volume = volume - get_volume() / 1000
             hardware:SendPause()
         end
-        return mode_thanks
     end
 
     if is_paused == false then 
