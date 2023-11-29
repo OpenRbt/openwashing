@@ -368,10 +368,6 @@ confirm_end_mode = function ()
     end
 
     if pressed_key == 6 then
-        hardware:SetBonuses(math.ceil(balance)) --- Начислить бонусы
-        -------------------------------------------------
-        confirm_transaction(balance)
-        -------------------------------------------------
         money_wait_seconds = 0
         return mode_thanks
     end
@@ -384,8 +380,8 @@ thanks_mode = function()
 
     if is_waiting_receipt == false then
         update_balance()
-        balance = 0
         confirm_transaction(balance)
+        balance = 0
         show_thanks(thanks_mode_seconds)
         turn_light(1, animation.one_button)
         run_pause()
@@ -627,7 +623,7 @@ is_authorized_function = function ()
 end
 
 confirm_transaction = function(balance)
-    return hardware:ConfirmTransaction(balance)
+    return hardware:ConfirmTransaction(math.floor(balance))
 end
 
 create_session = function()
