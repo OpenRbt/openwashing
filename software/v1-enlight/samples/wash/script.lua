@@ -142,10 +142,9 @@ run_mode = function(new_mode)
     if new_mode == mode_wait_for_card then return wait_for_card_mode() end
     if new_mode == mode_ask_for_money then return ask_for_money_mode() end
     
-    if is_working_mode (new_mode) then return program_mode(new_mode) end --is_working_mode work_mode
+    if is_working_mode (new_mode) then return program_mode(new_mode) end
     if new_mode == mode_pause then return pause_mode() end
     if new_mode == mode_confirm_end then return confirm_end_mode() end
-    
     
     if new_mode == mode_thanks then return thanks_mode() end
 end
@@ -236,7 +235,7 @@ wait_for_card_mode = function()
     if is_transaction_started == false then
         waiting_loops = wait_card_mode_seconds * 10;
 
-        request_transaction_separated(electron_balance)
+        request_transaction(electron_balance)
         electron_balance = min_electron_balance
         is_transaction_started = true
     end
@@ -246,11 +245,11 @@ wait_for_card_mode = function()
         waiting_loops = 0
     end
 
-    status = get_transaction_status() --Сколько внес денег с карты!
+    status = get_transaction_status()
     update_balance()
 
     if balance > 0.99 then
-        if status ~= 0 then -- !=
+        if status ~= 0 then
             abort_transaction()
         end
         is_transaction_started = false
@@ -368,6 +367,7 @@ confirm_end_mode = function ()
     end
 
     if pressed_key == 6 then
+        hardware:SetBonuses(math.ceil(balance))
         money_wait_seconds = 0
         return mode_thanks
     end
@@ -379,8 +379,6 @@ thanks_mode = function()
     set_current_state(0)
 
     if is_waiting_receipt == false then
-        update_balance()
-        confirm_transaction(balance)
         balance = 0
         show_thanks(thanks_mode_seconds)
         turn_light(1, animation.one_button)
@@ -396,7 +394,6 @@ thanks_mode = function()
         if pressed_key > 0 and pressed_key < 7 then
             waiting_loops = 0
         end
-        
         update_balance()
         if balance > 0.99 then
             is_waiting_receipt = false
@@ -550,10 +547,6 @@ request_transaction = function(money)
     return hardware:RequestTransaction(money)
 end
 
-request_transaction_separated = function(money)
-    return hardware:RequestTransactionSeparated(money)
-end
-
 get_transaction_status = function()
     return hardware:GetTransactionStatus()
 end
@@ -620,10 +613,6 @@ end
 
 is_authorized_function = function ()
     return hardware:IsAuthorized()
-end
-
-confirm_transaction = function(balance)
-    return hardware:ConfirmTransaction(math.floor(balance))
 end
 
 create_session = function()
