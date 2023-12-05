@@ -44,11 +44,11 @@ class DiaRuntimeHardware {
         return 0;
     }
 
-    int (*send_receipt_function)(int postPosition, int cash, int electronical);
+    int (*send_receipt_function)(int postPosition, int cash, int electronical, int qrMoney);
 
-    int SendReceipt(int postPosition, int cash, int electronical) {
+    int SendReceipt(int postPosition, int cash, int electronical, int qrMoney) {
         if (send_receipt_function) {
-            send_receipt_function(postPosition, cash, electronical);
+            send_receipt_function(postPosition, cash, electronical, qrMoney);
         } else {
             printf("error: NIL function SendReceipt\n");
         }
@@ -79,6 +79,18 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    int(*CloseVisibleSession_function)();
+    int CloseVisibleSession() {
+        if(CloseVisibleSession_function){
+            int ans = CloseVisibleSession_function();
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function CloseVisibleSession_function\n");
+        }
+        return 0;
+    }
+
     int (*SetBonuses_function)(int bonuses);
     int SetBonuses(int bonuses) {
         if(SetBonuses_function){
@@ -103,6 +115,18 @@ class DiaRuntimeHardware {
         return "";
     }
 
+    std::string (*get_sbp_qr_function)();
+    std::string GetSbpQR() {
+        if(get_sbp_qr_function){
+            std::string QR = get_sbp_qr_function();
+            return QR;
+        }
+        else{
+            printf("error: NIL object or function get_sbp_qr_function\n");
+        }
+        return "";
+    }
+
     int (*sendPause_function)();
     int SendPause() {
         if(sendPause_function){
@@ -115,14 +139,38 @@ class DiaRuntimeHardware {
         return 0;
     }
 
-    std::string (*getSessionID_function)();
-    std::string GetSessionID() {
-        if(getSessionID_function){
-            std::string sessionID = getSessionID_function();
+    int (*create_sbp_payment_function)(int amount);
+    int CreateSbpPayment(int amount) {
+        if(create_sbp_payment_function){
+            int ans = create_sbp_payment_function(amount);
+            return ans;
+        }
+        else{
+            printf("error: NIL object or function create_sbp_payment_function\n");
+        }
+        return 0;
+    }
+
+    std::string (*getVisibleSession_function)();
+    std::string GetVisibleSession() {
+        if(getVisibleSession_function){
+            std::string sessionID = getVisibleSession_function();
             return sessionID;
         }
         else{
-            printf("error: NIL object or function getSessionID_function\n");
+            printf("error: NIL object or function getVisibleSession_function\n");
+        }
+        return "";
+    }
+
+    std::string (*getActiveSession_function)();
+    std::string GetActiveSession() {
+        if(getActiveSession_function){
+            std::string sessionID = getActiveSession_function();
+            return sessionID;
+        }
+        else{
+            printf("error: NIL object or function getActiveSession_function\n");
         }
         return "";
     }
@@ -185,6 +233,16 @@ class DiaRuntimeHardware {
             return get_bonuses_function();
         } else {
             printf("error: NIL object or function GetBonuses\n");
+        }
+        return 0;
+    }
+
+    int (*get_sbp_money_function)();
+    int GetSbpMoney() {
+        if (get_sbp_money_function) {
+            return get_sbp_money_function();
+        } else {
+            printf("error: NIL object or function GetSbpMoney\n");
         }
         return 0;
     }
@@ -320,6 +378,37 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    
+    int (*get_process_id_function)();
+    int GetProcessId() {
+        if (get_process_id_function) {
+            return get_process_id_function();
+        } else {
+            printf("error: NIL object or function GetProcessId\n");
+        }
+        return false;
+    }
+
+    bool (*get_is_connected_to_bonus_system_function)();
+    bool GetIsConnectedToBonusSystem() {
+        if (get_is_connected_to_bonus_system_function) {
+            return get_is_connected_to_bonus_system_function();
+        } else {
+            printf("error: NIL object or function GetIsConnectedToBonusSystem\n");
+        }
+        return false;
+    }
+
+    void (*set_is_connected_to_bonus_system_function)(bool isConnectedToBonusSystem);
+    int SetIsConnectedToBonusSystem(bool isConnectedToBonusSystem) {
+        if (set_is_connected_to_bonus_system_function) {
+            set_is_connected_to_bonus_system_function(isConnectedToBonusSystem);
+        } else {
+            printf("error: NIL object or function SetIsConnectedToBonusSystem\n");
+        }
+        return 0;
+    }
+
     // StopProgramOnServer
 
     // Bonus system
@@ -333,13 +422,24 @@ class DiaRuntimeHardware {
         return false;
     }
 
-    bool (*is_athorized_function)();
-    bool IsAuthorized() {
-        if (is_athorized_function) {
-            return is_athorized_function();
+    bool (*sbp_system_is_active_function)();
+    bool SbpSystemIsActive() {
+        if (sbp_system_is_active_function) {
+            return sbp_system_is_active_function();
+        }
+        printf("error: NIL object or function GetSbpSystemActive\n");
+        return false;
+    }
+
+    
+
+    std::string (*authorized_session_ID_function)();
+    std::string AuthorizedSessionID() {
+        if (authorized_session_ID_function) {
+            return authorized_session_ID_function();
         }
         printf("error: NIL object or function IsAuthorized\n");
-        return false;
+        return "";
     }
 
     int (*bonus_system_refresh_active_qr_function)();

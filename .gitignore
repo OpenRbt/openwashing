@@ -40,4 +40,5 @@
 # IDEs
 software/v1-enlight/.vscode/*
 software/v1-enlight/.vscode/settings.json
-
+software/v1-enlight/.vscode
+/.vscode

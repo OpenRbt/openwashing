@@ -79,7 +79,7 @@ DiaConfiguration::DiaConfiguration(std::string folder, DiaNetwork *newNet) {
     _ProgramsNumber = 0;
     _RelaysNumber = 0;
     _PreflightSec = 0;
-    _ServerRelayBoard = 0;
+    _ServerRelayBoard = RelayBoardMode::LocalGPIO;
 
     // Must be rearranged
     registry = new DiaRuntimeRegistry(newNet);
@@ -91,6 +91,7 @@ DiaConfiguration::DiaConfiguration(std::string folder, DiaNetwork *newNet) {
     _Storage = CreateEmptyInterface();
     _Net = newNet;
 }
+
 int DiaConfiguration::InitFromJson(json_t * configuration_json) {
     if (configuration_json == 0) {
          return CONFIGURATION_STATUS::ERROR_JSON;
@@ -247,7 +248,11 @@ int DiaConfiguration::LoadConfig() {
         std::string board = json_string_value(relay_board_json);
         printf("LoadConfig relay board %s\n", board.c_str());
         if (board == "danBoard") {
-            _ServerRelayBoard = 1;
+            _ServerRelayBoard = RelayBoardMode::DanBoard;
+        } else if (board == "all") {
+            _ServerRelayBoard = RelayBoardMode::All;
+        } else {
+            _ServerRelayBoard = RelayBoardMode::LocalGPIO;
         }
     }
     
@@ -372,10 +377,10 @@ int DiaConfiguration::LoadDiscounts() {
             }
         }
     }
-    json_decref(station_discounts_json);
-    json_decref(button_discount_json);
-    json_decref(button_id_json);
-    json_decref(button_discount_value_json);
+    station_discounts_json = NULL;
+    button_discount_json = NULL;
+    button_id_json = NULL;
+    button_discount_value_json = NULL;
     return 0;
 }
 

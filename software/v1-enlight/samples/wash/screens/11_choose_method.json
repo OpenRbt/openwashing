@@ -34,12 +34,12 @@
         "visible":"true"
       },
       {
-      	"id":"qr",
-        "type":"image",
+      	"id":"qr_pic",
+        "type":"qr",
         "position": "1298;177",
         "size":"460;460",
         "src":"pic/qr.png",
-        "is_qr": true,
+        "url":"",
         "visible":"true"
       },
       {
@@ -54,6 +54,23 @@
         "id":"card",
         "type":"image",
         "position": "1600;950",
+        "size":"70;40",
+        "src":"pic/arrow.png",
+        "visible":"true",
+        "click_id":"5"
+      },
+      {
+        "id":"sbp_pic",
+        "type":"image",
+        "position": "820;730",
+        "size":"282;150",
+        "src":"pic/SBP.png",
+        "visible":"true"
+      },
+      {
+        "id":"sbp",
+        "type":"image",
+        "position": "926;950",
         "size":"70;40",
         "src":"pic/arrow.png",
         "visible":"true",

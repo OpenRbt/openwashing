@@ -15,6 +15,14 @@
       "src": "screens/4_working.json"
     },
     {
+      "id": "sbp_select_price",
+      "src": "screens/5_sbp_select_price.json"
+    },
+    {
+      "id": "sbp_payment",
+      "src": "screens/6_sbp_payment.json"
+    },
+    {
       "id": "thanks",
       "src": "screens/10_thanks.json"
     },
@@ -33,6 +41,18 @@
     {
     	"id": "confirm_end",
     	"src": "screens/14_confirm_wash_end.json"
+    },
+    {
+    	"id": "connected_to_bonus_system",
+    	"src": "screens/15_connected_to_bonus_system.json"
+    },
+    {
+    	"id": "wait_for_QR",
+    	"src": "screens/16_wait_for_QR.json"
+    },
+    {
+    	"id": "sorry",
+    	"src": "screens/17_sorry.json"
     }
   ],
   "buttons": 6,

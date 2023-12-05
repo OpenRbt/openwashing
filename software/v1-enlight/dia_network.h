@@ -68,6 +68,7 @@ typedef struct money_report {
     int cashless_total;
     int service_total;
     int bonuses_total;
+    int sbp_total;
     std::string session_id;
 } money_report_t;
 
@@ -402,6 +403,39 @@ class DiaNetwork {
         return 0;
     }
 
+    int GetServerInfo(std::string &serverHost) {
+        std::string url = _Host + _Port + "/server/info";
+
+        std::string answer;
+        int result;
+        result = SendRequestGet(&answer, url, 0);
+        if ((result) || (answer == "")) {
+            return 1;
+        }
+
+        json_error_t error;
+        json_t *json = json_loads(answer.c_str(), 0, &error);
+
+        if (!json_is_object(json)) {
+            json_decref(json);
+            return 1;
+        }
+
+        json_t *url_json = json_object_get(json, "bonusServiceURL");
+
+        if (!(json_is_string(url_json))) {
+            json_decref(json);
+            json_decref(url_json);
+            return 1;
+        }
+
+        serverHost = json_string_value(url_json);
+        json_decref(json);
+        json_decref(url_json);
+
+        return 0;
+    }
+
     // RunProgramOnServer request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     int RunProgramOnServer(int programID, int preflight) {
@@ -412,7 +446,7 @@ class DiaNetwork {
         std::string json_run_program_request = json_create_run_program(programID, preflight);
         result = SendRequest(&json_run_program_request, &answer, url);
         if ((result) || (answer != "")) {
-            fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
+            //fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
         return 0;
@@ -539,6 +573,35 @@ class DiaNetwork {
         return err;
     }
 
+    int CreateSbpPayment(int amount) {
+        std::string url = _Host + _Port + "/pay";
+        std::string answer;
+
+        int result;
+        std::string json_create_sbp_payment_request = json_create_sbp_payment(amount);
+        result = SendRequest(&json_create_sbp_payment_request, &answer, url);
+
+        if ((result) || (answer != "")) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    int ConfirmSbpPayment(std::string orderIdUrl) {
+        std::string url = _Host + _Port + "/pay/received";
+        std::string answer;
+
+        int result;
+        std::string json_confirm_sbp_payment_request = json_create_confirm_sbp_payment(orderIdUrl);
+        result = SendRequest(&json_confirm_sbp_payment_request, &answer, url);
+
+        if ((result) || (answer != "")) {
+            return 1;
+        }
+        return 0;
+    }
+
     // PING request to specified URL with method GET.
     // Returns 0, if request was OK, other value - in case of failure.
     int SendPingRequestGet(std::string url) {
@@ -551,7 +614,11 @@ class DiaNetwork {
     // PING request to specified URL with method POST.
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
-    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, int &lastDiscountUpdate, bool &bonus_system_active, std::string &qrData, bool &isAuthorized, int &bonusAmount) {
+
+    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, 
+    int &lastDiscountUpdate, bool &bonus_system_active, bool &sbp_system_active, std::string &qrData, std::string &authorizedSessionID, 
+    std::string &sessionID, int &bonusAmount, double& qrMoney, std::string &qrUrl, bool& qrFailed, std::string &qrOrderId) {
+
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 
@@ -564,6 +631,7 @@ class DiaNetwork {
             return 3;
         }
         if (result) {
+            sbp_system_active = false;
             return 1;
         }
 
@@ -605,17 +673,61 @@ class DiaNetwork {
             lastDiscountUpdate = (int)json_integer_value(obj_last_discount_update);
 
             json_t *obj_bonus_system;
-            obj_bonus_system = json_object_get(object, "bonus_system_active");
+            obj_bonus_system = json_object_get(object, "bonusSystemActive");
             bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
+
+            json_t *obj_sbp_system;
+            obj_sbp_system = json_object_get(object, "sbpSystemActive");
+            sbp_system_active = (bool)json_boolean_value(obj_sbp_system);
 
             json_t *obj_bonus_amount;
             obj_bonus_amount = json_object_get(object, "bonusAmount");
             bonusAmount = (int)json_integer_value(obj_bonus_amount);
 
-            json_t *obj_is_authorized;
-            obj_is_authorized = json_object_get(object, "isAuthorized");
-            isAuthorized = (bool)json_boolean_value(obj_is_authorized);
+            json_t *obj_qr_money;
+            obj_qr_money = json_object_get(object, "qrMoney");
+            qrMoney = (double)json_number_value(obj_qr_money);
 
+            json_t *obj_qr_url;
+            obj_qr_url = json_object_get(object, "qrUrl");
+            if (json_is_string(obj_qr_url)) {
+                qrUrl = (std::string)json_string_value(obj_qr_url);
+            }
+            else{
+                qrUrl = "";
+            }
+
+            json_t *obj_qr_failed;
+            obj_qr_failed = json_object_get(object, "qrFailed");
+            qrFailed = (bool)json_boolean_value(obj_qr_failed);
+
+            json_t *obj_qr_order_id;
+            obj_qr_order_id = json_object_get(object, "qrOrderId");
+            if (json_is_string(obj_qr_order_id)) {
+                qrOrderId = (std::string)json_string_value(obj_qr_order_id);
+            }
+            else{
+                qrOrderId = "";
+            }
+
+            json_t *obj_authorized_session_ID;
+            obj_authorized_session_ID = json_object_get(object, "AuthorizedSessionID");
+            
+            if (json_is_string(obj_authorized_session_ID)) {
+                authorizedSessionID = (std::string)json_string_value(obj_authorized_session_ID);
+            }
+            else{
+                authorizedSessionID = "";
+            }
+            json_t *obj_session_ID;
+            obj_session_ID = json_object_get(object, "sessionID");
+            
+            if (json_is_string(obj_session_ID)) {
+                sessionID = (std::string)json_string_value(obj_session_ID);
+            }
+            else{
+                sessionID = "";
+            }
             json_t *obj_qr_data;
             obj_qr_data = json_object_get(object, "qr_data");
             if (json_is_string(obj_qr_data)) {
@@ -627,9 +739,15 @@ class DiaNetwork {
             json_decref(obj_last_update);
             json_decref(obj_last_discount_update);
             json_decref(obj_bonus_system);
+            json_decref(obj_sbp_system);
             json_decref(obj_bonus_amount);
-            json_decref(obj_is_authorized);
+            json_decref(obj_authorized_session_ID);
+            json_decref(obj_session_ID);
             json_decref(obj_qr_data);
+            json_decref(obj_qr_money);
+            json_decref(obj_qr_url);
+            json_decref(obj_qr_failed);
+            json_decref(obj_qr_order_id);
         } while (0);
         json_decref(object);
         return err;
@@ -756,8 +874,8 @@ class DiaNetwork {
     }
 
     // Encodes money report data and sends it to Central Server via SAVE request.
-    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
-        money_report_t money_report_data = {0, 0, 0, 0, 0, 0, ""};
+    int SendMoneyReport(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, int sbp_total, std::string session_id) {
+        money_report_t money_report_data = {0, 0, 0, 0, 0, 0, 0, ""};
 
         money_report_data.cars_total = cars_total;
         money_report_data.coins_total = coins_total;
@@ -765,6 +883,7 @@ class DiaNetwork {
         money_report_data.cashless_total = cashless_total;
         money_report_data.service_total = service_total;
         money_report_data.bonuses_total = bonuses_total;
+        money_report_data.sbp_total = sbp_total;
         money_report_data.session_id = session_id;
 
         printf("Sending money report...\n");
@@ -1173,6 +1292,34 @@ class DiaNetwork {
         return res;
     }
 
+    std::string json_create_sbp_payment(int amount){
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "amount", json_integer(amount));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_create_confirm_sbp_payment(std::string sbpOrderId) {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "qrOrderId", json_string(sbpOrderId.c_str()));
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
     std::string json_create_card_reader_config() {
         json_t *object = json_object();
 
@@ -1288,13 +1435,15 @@ class DiaNetwork {
         json_object_set_new(object, "Electronical", json_integer(s->cashless_total));
         json_object_set_new(object, "Service", json_integer(s->service_total));
         json_object_set_new(object, "Bonuses", json_integer(s->bonuses_total));
-        json_object_set_new(object, "SessionID", json_string(s->session_id.c_str()));
+        json_object_set_new(object, "qrMoney", json_integer(s->sbp_total));
+        json_object_set_new(object, "SessionId", json_string(s->session_id.c_str()));
 
         char *str = json_dumps(object, 0);
         std::string res = str;
         free(str);
         str = 0;
         json_decref(object);
+        std::cout<< "\nMoney Report Json: " << res << "\n";
         return res;
     }
 

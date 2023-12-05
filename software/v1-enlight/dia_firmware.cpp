@@ -22,7 +22,10 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <thread>
+#include <chrono>
 #include <wiringPi.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <list>
@@ -33,12 +36,13 @@
 #include "dia_devicemanager.h"
 #include "dia_functions.h"
 #include "dia_gpio.h"
-#include "dia_network.h"
+#include "dia_firmware.h"
 #include "dia_runtime.h"
 #include "dia_runtime_registry.h"
 #include "dia_screen.h"
 #include "dia_screen_item.h"
 #include "dia_screen_item_image.h"
+#include "dia_screen_item_qr.h"
 #include "dia_security.h"
 #include "dia_startscreen.h"
 
@@ -72,6 +76,8 @@ int _DebugKey = 0;
 int _Balance = 0;
 int _OpenLid = 0;
 int _BalanceBonuses = 0;
+int _BalanceSbp = 0;
+std::string _SbpOrderId = "";
 int _BalanceCoins = 0;
 int _BalanceBanknotes = 0;
 
@@ -82,40 +88,43 @@ int _CurrentProgram = -1;
 int _CurrentProgramID = 0;
 int _OldProgram = -1;
 int _IsPreflight = 0;
-int _IsServerRelayBoard = 0;
+RelayBoardMode _ServerRelayBoardMode = RelayBoardMode::LocalGPIO;
 int _IntervalsCountProgram = 0;
 int _IntervalsCountPreflight = 0;
 
+int _WaitSecondsForNextSession = 180;
 int _Volume = 0;
 int _SensorVolume = 0;
 bool _SensorActive = false;
 bool _SensorActiveUI = false;
 bool _SensorActivate = false;
 
-bool _CanPlayVideo = false;
-bool _IsPlayingVideo = false;
+volatile bool _CanPlayVideo = false;
+volatile bool _IsPlayingVideo = false;
+volatile int _ProcessId = 0;
 int _CanPlayVideoTimer = 0;
 
 bool _BonusSystemIsActive = false;
-bool _IsAuthorized = false;
+bool _SbpSystemActive = false;
+bool _IsConnectedToBonusSystem = false;
+std::string _AuthorizedSessionID = "";
+std::string _ServerUrl = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
-bool _IsDirExist = false;
-int _MaxAfkTime = 30;
-//std::string str(s)
-//std::string _UserName;
-//char* login = getlogin();
+int _MaxAfkTime = 180;
 
-std::string _FlashName = "Flash";
 std::string _FileName;
 
 std::string _Qr = "";
-std::string _SessionID = "";
+std::string _VisibleSessionID = "";
+
+std::string _SbpQr = "";
 
 pthread_t run_program_thread;
 pthread_t get_volume_thread;
-//pthread_t play_video_thread;
+pthread_t active_session_thread;
+pthread_t play_video_thread;
 
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
@@ -145,29 +154,16 @@ int set_current_state(int balance) {
     return 0;
 }
 
-int set_QR(std::string address) {
-    if(!address.empty()){                  // User-supplied text
-        const QrCode::Ecc errCorLvl = QrCode::Ecc::HIGHERR;  // Error correction level
-        const QrCode qr = QrCode::encodeText(address.c_str(), errCorLvl);
-        SDL_Surface *qrSurface = dia_QRToSurface(qr);
-        std::map<std::string, DiaScreenConfig *>::iterator it;
-        for (it = config->ScreenConfigs.begin(); it != config->ScreenConfigs.end(); it++) {
-            it->second->SetQr(qrSurface);
-        }
-
-        if (qrSurface!=0) {
-            SDL_FreeSurface(qrSurface);
-        }
-    }
-    return 0;
-}
-
 void setCanPlayVideo(bool canPlayVideo) {
     _CanPlayVideo = canPlayVideo;
 }
 
 bool getCanPlayVideo() {
     return _CanPlayVideo;
+}
+
+int getProcessId() {
+    return _ProcessId;
 }
 
 void setIsPlayingVideo(bool isPlayingVideo) {
@@ -178,21 +174,118 @@ bool getIsPlayingVideo() {
     return _IsPlayingVideo;
 }
 
+void setIsConnectedToBonusSystem(bool isConnectedToBonusSystem) {
+    _IsConnectedToBonusSystem = isConnectedToBonusSystem;
+}
+
+bool getIsConnectedToBonusSystem() {
+    return _IsConnectedToBonusSystem;
+}
+
+bool dirExists(const std::string& dirName_in)
+{
+    fs::path dirNamePath(dirName_in);
+
+    if (fs::exists(dirNamePath) && fs::is_directory(dirNamePath)) {
+        return true;
+    }
+    return false;
+}
+
+bool dirAccessRead(const std::string& dirName_in)
+{
+    if (access(dirName_in.c_str(), R_OK) != 0) {
+        return false;
+    }
+    return true;
+}
+
+std::vector<std::string> split(const std::string &s, char delimiter) {
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+std::string toLowerCase(const std::string& input) {
+    std::string result = input;
+    for (char &c : result) {
+        c = std::tolower(static_cast<unsigned char>(c));
+    }
+    return result;
+}
+
+bool check_directory() {
+    std::list<std::string> directories;
+    std::string directory;
+    for (const auto &entry : fs::directory_iterator("/media")) {
+        if(dirAccessRead(entry.path()) && fs::is_directory(entry.path())) {
+            directories.push_back(entry.path());
+        }
+    }
+
+    bool found = false;
+    for (auto const &i : directories) {
+        if(dirAccessRead(i)){
+            for (const auto &subEntry : fs::recursive_directory_iterator(i)) {
+                if (dirAccessRead(subEntry.path())){
+                        if (fs::is_directory(subEntry) && subEntry.path().filename() == "openrbt_video" && dirAccessRead(subEntry.path().string())) {
+                        directory = subEntry.path().string();
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (found) break;
+    }
+
+    if (!directory.empty()) {
+        std::string extension;
+        for (const auto &entry : fs::directory_iterator(directory)){
+            extension = entry.path().extension();
+            if(toLowerCase(extension) == ".mp4" || toLowerCase(extension) == ".avi"){
+                _FileName += entry.path();
+                _FileName += " ";
+            }
+            
+        }
+        return true;
+        
+    }
+    return false;
+}
+
 void *play_video_func(void *ptr) {
     while (!_to_be_destroyed) {
-        usleep(1 * 1000 * 1000);
-        if (_CanPlayVideo) {
-            _CanPlayVideoTimer++;
+        if(_CanPlayVideo) {
+            if(check_directory() && !_FileName.empty()){
+                std::vector<std::string> files = split(_FileName, ' ');
+
+                std::string formattedFiles;
+                for (const std::string &file : files) {
+                    if (!formattedFiles.empty()) {
+                        formattedFiles += " ";
+                    }
+                    formattedFiles += "\"" + file + "\"";
+                }
+                _IsPlayingVideo = true;
+                int pid = system(("python ./video/player.py " + formattedFiles + " --repeat --mousebtn").c_str());
+                _IsPlayingVideo = false;
+                _ProcessId = pid;
+                delay(100);
+                
+                printf("\nPlayVideo result: %d", pid);
+            }
+            else{
+                delay(1000 * 30);
+            }
+            
         }
-        if (_CanPlayVideoTimer >= _MaxAfkTime) {
-            _IsPlayingVideo = true;
-            _CanPlayVideo = false;
-            _CanPlayVideoTimer = 0;
-            int pid = system(("ffplay -loop 0 -exitonkeydown -exitonmousedown -fs " + _FileName).c_str());
-            printf("\n\n\n PlayVideo result: %d \n\n\n", pid);
-        }
-        _IsPlayingVideo = false;
-        delay(100);
+        delay(1000);
     }
     pthread_exit(0);
     return 0;
@@ -203,49 +296,58 @@ int CreateSession() {
     std::string QR;
     std::string sessionID;
     int answer = network->CreateSession(sessionID, QR);
-    if (!answer) {
-        _Qr = QR;
-        _SessionID = sessionID;
-    }
+    _VisibleSessionID = sessionID;
+    _Qr = QR;
     return answer;
 }
 
 int EndSession() {
-    return network->EndSession(_SessionID);
+    if(_AuthorizedSessionID != ""){
+        int answer = network->EndSession(_AuthorizedSessionID);
+        return answer;
+    }
+    return 1;
+}
+
+int CloseVisibleSession() {
+    if(_VisibleSessionID != ""){
+        int answer = network->EndSession(_VisibleSessionID);
+        return answer;
+    }
+    return 1;
 }
 
 std::string getQR() {
     return _Qr;
 }
 
-std::string getSessionID() {
-    return _SessionID;
+std::string getSbpQr() {
+    return _SbpQr;
 }
 
-int dirExists(const char *path) {
-    struct stat info;
+std::string getVisibleSession() {
+    return _VisibleSessionID;
+}
 
-    if (stat(path, &info) != 0)
-        return 0;
-    else if (info.st_mode & S_IFDIR)
-        return 1;
-    else
-        return 0;
+std::string getActiveSession() {
+    if(_AuthorizedSessionID.empty())
+        return _VisibleSessionID;
+    return _AuthorizedSessionID;
 }
 
 // Saves new income money and creates money report to Central Server.
-void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, std::string session_id) {
+void SaveIncome(int cars_total, int coins_total, int banknotes_total, int cashless_total, int service_total, int bonuses_total, int sbp_total, std::string session_id) {
     network->SendMoneyReport(cars_total,
                              coins_total,
                              banknotes_total,
                              cashless_total,
                              service_total,
                              bonuses_total,
+                             sbp_total,
                              session_id);
 }
 
 int SetBonuses(int bonuses) {
-    std::cout << "\n bonuses: " << bonuses << "\n";
     return network->SetBonuses(bonuses);
 }
 
@@ -270,14 +372,18 @@ int turn_light(void *object, int pin, int animation_id) {
 pthread_t pinging_thread;
 
 // Creates receipt request to Online Cash Register.
-int send_receipt(int postPosition, int cash, int electronical) {
-    return network->ReceiptRequest(postPosition, cash, electronical);
+int send_receipt(int postPosition, int cash, int electronical, int qrMoney) {
+    return network->ReceiptRequest(postPosition, cash, electronical + qrMoney);
+}
+
+int createSbpPayment(int amount) {
+    return network->CreateSbpPayment(amount * 100);
 }
 
 // Increases car counter in config
 int increment_cars() {
     printf("Cars incremented\n");
-    SaveIncome(1, 0, 0, 0, 0, 0, getSessionID());
+    SaveIncome(1, 0, 0, 0, 0, 0, 0, getActiveSession());
     return 0;
 }
 
@@ -320,8 +426,12 @@ bool bonus_system_is_active() {
     return _BonusSystemIsActive;
 }
 
-bool is_athorized() {
-    return _IsAuthorized;
+bool sbp_system_is_active() {
+    return _SbpSystemActive;
+}
+
+std::string authorized_session_ID() {
+    return _AuthorizedSessionID;
 }
 
 int bonus_system_refresh_active_qr() {
@@ -346,7 +456,7 @@ int get_service() {
 
     if (curMoney > 0) {
         printf("service %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, curMoney, 0, getSessionID());
+        SaveIncome(0, 0, 0, 0, curMoney, 0, 0, getActiveSession());
     }
     return curMoney;
 }
@@ -357,7 +467,18 @@ int get_bonuses() {
 
     if (curMoney > 0) {
         printf("bonus %d\n", curMoney);
-        SaveIncome(0, 0, 0, 0, 0, curMoney, getSessionID());
+        SaveIncome(0, 0, 0, 0, 0, curMoney, 0, getActiveSession());
+    }
+    return curMoney;
+}
+
+int get_sbp_money() {
+    int curMoney = _BalanceSbp;
+    _BalanceSbp = 0;
+
+    if (curMoney > 0) {
+        printf("sbp money %d\n", curMoney);
+        SaveIncome(0, 0, 0, 0, 0, 0, curMoney, getActiveSession());
     }
     return curMoney;
 }
@@ -429,7 +550,7 @@ int get_coins(void *object) {
 
     int totalMoney = curMoney + gpioCoin + gpioCoinAdditional;
     if (totalMoney > 0) {
-        SaveIncome(0, totalMoney, 0, 0, 0, 0, getSessionID());
+        SaveIncome(0, totalMoney, 0, 0, 0, 0, 0, getActiveSession());
     }
 
     return totalMoney;
@@ -458,7 +579,7 @@ int get_banknotes(void *object) {
     if (gpioBanknote > 0) printf("banknotes from GPIO %d\n", gpioBanknote);
     int totalMoney = curMoney + gpioBanknote;
     if (totalMoney > 0) {
-        SaveIncome(0, 0, totalMoney, 0, 0, 0, getSessionID());
+        SaveIncome(0, 0, totalMoney, 0, 0, 0, 0, getActiveSession());
     }
     return totalMoney;
 }
@@ -468,7 +589,7 @@ int get_electronical(void *object) {
     int curMoney = manager->ElectronMoney;
     if (curMoney > 0) {
         printf("electron %d\n", curMoney);
-        SaveIncome(0, 0, 0, curMoney, 0, 0, getSessionID());
+        SaveIncome(0, 0, 0, curMoney, 0, 0, 0, getActiveSession());
         manager->ElectronMoney = 0;
     }
     return curMoney;
@@ -579,73 +700,89 @@ int smart_delay_function(void *arg, int ms) {
 }
 /////// End of Runtime functions ///////
 
-int RunProgram() {
-    if ((_IsServerRelayBoard) && (_IsPreflight == 0)) {
-        _IntervalsCountProgram++;
+bool IsRemoteOrAllRelayBoardMode() {
+    return _ServerRelayBoardMode == RelayBoardMode::DanBoard || _ServerRelayBoardMode == RelayBoardMode::All;
+}
+
+bool IsRemoteRelayBoardMode() {
+    return _ServerRelayBoardMode == RelayBoardMode::DanBoard;
+}
+
+bool IsLocalOrAllRelayBoardMode() {
+    return _ServerRelayBoardMode == RelayBoardMode::LocalGPIO || _ServerRelayBoardMode == RelayBoardMode::All;
+}
+
+bool RunProgramOnServerWithRetry(int programID, bool isPreflight) {
+    int count = 0;
+    int err = 1;
+    while (err && count < DIA_REQUEST_RETRY_ATTEMPTS) {
+        count++;
+        printf("relay control server board: run program%s programID=%d\n", isPreflight ? " preflight" : "", programID);
+        err = network->RunProgramOnServer(programID, isPreflight);
+        if (err != 0) {
+            fprintf(stderr, "relay control server board: run program error\n");
+            delay(100);
+        }
     }
+    return err == 0;
+}
+
+bool RunProgramOnServer(int programID, bool isPreflight) {
+    int err = 1;
+    printf("relay control server board: run program%s programID=%d\n", isPreflight ? " preflight" : "", programID);
+    err = network->RunProgramOnServer(programID, isPreflight);
+    return err == 0;
+}
+
+int RunProgram() {
+    if (IsRemoteOrAllRelayBoardMode())
+        _IntervalsCountProgram++;
+
     if (_IntervalsCountProgram < 0) {
         printf("Memory corruption on _IntervalsCountProgram\n");
         _IntervalsCountProgram = 0;
     }
-    if (_IntervalsCountPreflight > 0) {
-        _IntervalsCountPreflight--;
-    }
+
     if (_CurrentProgram != _OldProgram) {
-        if (_IsPreflight) {
-            if (_IsServerRelayBoard) {
-                int count = 0;
-                int err = 1;
-                while ((err) && (count < 4)) {
-                    count++;
-                    printf("relay control server board: run program preflight programID=%d\n", _CurrentProgramID);
-                    err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
-                    if (err != 0) {
-                        fprintf(stderr, "relay control server board: run program error\n");
-                        delay(500);
-                    }
-                }
-            }
-        }
         _OldProgram = _CurrentProgram;
+        if (IsRemoteOrAllRelayBoardMode())
+            _IntervalsCountProgram = 1000;
     }
-    if ((_IntervalsCountPreflight == 0) && (_IsPreflight)) {
+
+    if (_IntervalsCountPreflight > 0)
+        _IntervalsCountPreflight--;
+
+    if (_IntervalsCountPreflight == 0 && _IsPreflight) {
         _IsPreflight = 0;
-        if (_IsServerRelayBoard) {
+        if (IsRemoteOrAllRelayBoardMode()) {
             _IntervalsCountProgram = 1000;
         }
     }
-    if (_IsServerRelayBoard == 0) {
-#ifdef USE_GPIO
-        DiaGpio *gpio = config->GetGpio();
-        if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
-            return 1;
-        }
-        if (gpio != 0) {
-            gpio->CurrentProgram = _CurrentProgram;
-            gpio->CurrentProgramIsPreflight = _IsPreflight;
-        } else {
-            printf("ERROR: trying to run program with null gpio object\n");
-        }
-#endif
-    }
 
-    if (_IntervalsCountProgram > 20) {
-        int count = 0;
-        int err = 1;
-        while ((err) && (count < 4) && (_CurrentProgramID >= 0)) {
-            count++;
-            printf("relay control server board: run program programID=%d\n", _CurrentProgramID);
-            err = network->RunProgramOnServer(_CurrentProgramID, _IsPreflight);
-            if (err != 0) {
-                fprintf(stderr, "relay control server board: run program error\n");
-                delay(500);
+    if (IsLocalOrAllRelayBoardMode()) {
+        #ifdef USE_GPIO
+            DiaGpio *gpio = config->GetGpio();
+            if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
+                return 1;
             }
-            if ((err == 0) && (_CurrentProgramID == 0)) {
-                _CurrentProgramID = -1;
+            if (gpio != nullptr) {
+                gpio->CurrentProgram = _CurrentProgram;
+                gpio->CurrentProgramIsPreflight = _IsPreflight;
+            } else {
+                printf("ERROR: trying to run program with null gpio object\n");
             }
-        }
-        _IntervalsCountProgram = 0;
+        #endif
     }
+   
+    if (_IntervalsCountProgram > 20 && _CurrentProgramID >= 0) {
+        bool success = RunProgramOnServer(_CurrentProgramID, _IsPreflight);
+        if (success && _CurrentProgramID == 0)
+            _CurrentProgramID = -1;
+        _IntervalsCountProgram = 0;
+        if (!success && IsRemoteOrAllRelayBoardMode())
+            _IntervalsCountProgram = 1000;
+    }
+    
     return 0;
 }
 
@@ -703,14 +840,27 @@ int CentralServerDialog() {
     int serviceMoney = 0;
     int bonusAmount = 0;
     bool openStation = false;
-    bool isAuthorized = false;
+    std::string authorizedSessionID = "";
+    std::string visibleSessionID = "";
     bool bonusSystemActive = false;
+    bool sbpSystemActive = false;
     int buttonID = 0;
     int lastUpdate = 0;
     int discountLastUpdate = 0;
     std::string qrData = "";
 
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, isAuthorized, bonusAmount);
+    std::string sbpUrl = "";
+    std::string sbpOrderId = "";
+
+    double sbpMoney = 0;
+    bool sbpQrFailed = true;
+
+    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, 
+    _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, sbpSystemActive, 
+    qrData, authorizedSessionID, visibleSessionID, bonusAmount, sbpMoney, sbpUrl, 
+    sbpQrFailed, sbpOrderId);
+
+    network->GetServerInfo(_ServerUrl);
     if (config) {
         if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
             config->LoadConfig();
@@ -726,7 +876,14 @@ int CentralServerDialog() {
     }
     if (bonusAmount > 0) {
         // TODO protect with mutex
-        _Balance += bonusAmount;
+        _BalanceBonuses += bonusAmount;
+    }
+    if (sbpMoney > 0 && !sbpQrFailed && !sbpOrderId.empty() && _SbpOrderId != sbpOrderId) {
+        // TODO protect with mutex
+        _SbpOrderId = sbpOrderId;
+        if (!network->ConfirmSbpPayment(sbpOrderId)) {
+            _BalanceSbp = sbpMoney / 100;
+        }
     }
     if (openStation) {
         _OpenLid = _OpenLid + 1;
@@ -734,16 +891,29 @@ int CentralServerDialog() {
         // TODO: add the function of turning on the relay, which will open the lock.
     }
 
+    _SbpQr = sbpUrl;
+
     if (bonusSystemActive != _BonusSystemIsActive) {
         _BonusSystemIsActive = bonusSystemActive;
         printf("Bonus system activated: %d\n", bonusSystemActive);
     }
-
-    if (isAuthorized != _IsAuthorized) {
-        _IsAuthorized = isAuthorized;
-        printf("User authorized: %d\n", isAuthorized);
+    if(sbpSystemActive != _SbpSystemActive){
+        _SbpSystemActive = sbpSystemActive;
+        printf("SBP system activated: %d\n", sbpSystemActive);
     }
-
+    if(_BonusSystemIsActive){
+        if (_VisibleSessionID == authorizedSessionID) {
+            _IsConnectedToBonusSystem = !authorizedSessionID.empty();
+            CreateSession();
+            visibleSessionID = _VisibleSessionID;
+        }
+        if (_AuthorizedSessionID != authorizedSessionID) {
+            EndSession();
+        }
+        _VisibleSessionID = visibleSessionID;
+        _AuthorizedSessionID = authorizedSessionID;
+        _Qr = _VisibleSessionID.empty() ? "" : _ServerUrl + "/#/?sessionID=" + _VisibleSessionID;
+    }
     if (buttonID != 0) {
         printf("BUTTON PRESSED %d \n", buttonID);
     }
@@ -878,17 +1048,28 @@ int RecoverRegistry() {
     int bonusAmount = 0;
     bool openStation = false;
     bool bonusSystemActive = false;
-    bool isAuthorized = false;
+    bool sbpSystemActive = false;
+    std::string authorizedSessionID = "";
+    std::string sessionID = "";
     int buttonID = 0;
 
     int lastUpdate = 0;
     int discountLastUpdate = 0;
 
     std::string default_price = "15";
+    
     std::string qrData = "";
+
+    std::string sbpUrl = "";
+    std::string sbpOrderId = "";
+    double sbpMoney = 0;
+    bool sbpQrFailed = true;
+
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, bonusSystemActive, qrData, isAuthorized, bonusAmount);
+        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, 
+        bonusSystemActive, sbpSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId);
+
         if (err) {
             printf("waiting for server proper answer \n");
             sleep(5);
@@ -1217,8 +1398,8 @@ int main(int argc, char **argv) {
 
     printf("Settings loaded...\n");
     StartScreenMessage(STARTUP_MESSAGE::SETTINGS, "Settings from server loaded");
-    _IsServerRelayBoard = config->GetServerRelayBoard();
-    if (config->GetServerRelayBoard()) {
+    _ServerRelayBoardMode = config->GetServerRelayBoard();
+    if (IsRemoteRelayBoardMode()) {
         int err = 1;
         StartScreenMessage(STARTUP_MESSAGE::RELAY_CONTROL_BOARD, "Checking relay control server board");
         while (err) {
@@ -1255,7 +1436,6 @@ int main(int argc, char **argv) {
         screen->object = (void *)it->second;
         screen->set_value_function = dia_screen_config_set_value_function;
         screen->screen_object = config->GetScreen();
-        screen->set_QR_function = set_QR;
         screen->display_screen = dia_screen_display_screen;
         config->GetRuntime()->AddScreen(screen);
     }
@@ -1272,17 +1452,26 @@ int main(int argc, char **argv) {
 
     hardware->CreateSession_function = CreateSession;
     hardware->EndSession_function = EndSession;
+    hardware->CloseVisibleSession_function = CloseVisibleSession;
 
-    hardware->getSessionID_function = getSessionID;
+    hardware->getVisibleSession_function = getVisibleSession;
     hardware->getQR_function = getQR;
     hardware->SetBonuses_function = SetBonuses;
 
+    hardware->get_sbp_qr_function = getSbpQr;
+
     hardware->sendPause_function = sendPause;
+
+    hardware->create_sbp_payment_function = createSbpPayment;
 
     hardware->get_can_play_video_function = getCanPlayVideo;
     hardware->set_can_play_video_function = setCanPlayVideo;
     hardware->get_is_playing_video_function = getIsPlayingVideo;
     hardware->set_is_playing_video_function = setIsPlayingVideo;
+    hardware->get_process_id_function = getProcessId;
+
+    hardware->get_is_connected_to_bonus_system_function = getIsConnectedToBonusSystem;
+    hardware->set_is_connected_to_bonus_system_function = setIsConnectedToBonusSystem;
 
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
@@ -1303,6 +1492,7 @@ int main(int argc, char **argv) {
     hardware->electronical_object = manager;
     hardware->get_service_function = get_service;
     hardware->get_bonuses_function = get_bonuses;
+    hardware->get_sbp_money_function = get_sbp_money;
     hardware->get_is_preflight_function = get_is_preflight;
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;
@@ -1321,7 +1511,8 @@ int main(int argc, char **argv) {
     printf("HW init 7...\n");
 
     hardware->bonus_system_is_active_function = bonus_system_is_active;
-    hardware->is_athorized_function = is_athorized;
+    hardware->sbp_system_is_active_function = sbp_system_is_active;
+    hardware->authorized_session_ID_function = authorized_session_ID;
     hardware->bonus_system_refresh_active_qr_function = bonus_system_refresh_active_qr;
     hardware->bonus_system_start_session_function = bonus_system_start_session;
     hardware->bonus_system_confirm_session_function = bonus_system_confirm_session;
@@ -1371,27 +1562,8 @@ int main(int argc, char **argv) {
     printf("get_volume_func start...\n");
     pthread_create(&get_volume_thread, NULL, get_volume_func, NULL);
 
-/*
-    std::list<std::string> directories;
-    std::string directory;
-    for (const auto &entry : fs::directory_iterator(("/media/" + _UserName).c_str()))
-        directories.push_back(entry.path());
+    pthread_create(&play_video_thread, NULL, play_video_func, NULL);
 
-    for (auto const &i : directories) {
-        _IsDirExist = dirExists((i + "/openrbt_video").c_str());
-        if (_IsDirExist) {
-            directory = (i + "/openrbt_video").c_str();
-            break;
-        }
-    }
-
-    if (_IsDirExist) {
-        for (const auto &entry : fs::directory_iterator(directory))
-            _FileName = entry.path();
-
-        pthread_create(&play_video_thread, NULL, play_video_func, NULL);
-    }
-*/
     while (!keypress) {
         // Call Lua loop function
         config->GetRuntime()->Loop();

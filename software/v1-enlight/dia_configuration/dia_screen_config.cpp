@@ -121,20 +121,6 @@ int DiaScreenConfig::AddItem(DiaScreenItem * item) {
     return 0;
 }
 
-int DiaScreenConfig::SetQr(SDL_Surface * qr){
-    std::map<std::string, DiaScreenItem *>::iterator it;
-    for (it=items_map.begin(); it!=items_map.end(); it++) {
-        if (it->second->isQr) {
-            SDL_Surface * scaledSurface = dia_ScaleSurface(qr, it->second->specific_object_ptr->getSize().x, it->second->specific_object_ptr->getSize().y);
-            SDL_Surface * scaledQR = SDL_DisplayFormat(scaledSurface);
-            it->second->specific_object_ptr->SetScaledPicture(scaledQR);
-            SDL_FreeSurface(scaledSurface);
-        }
-    }
-    
-    return 0;
-}
-
 DiaScreenConfig::~DiaScreenConfig() {
     printf("Destroying screen config '%s'... \n", this->id.c_str());
     for (std::list<DiaScreenItem *>::iterator it=items_list.begin(); it != items_list.end(); ++it) {

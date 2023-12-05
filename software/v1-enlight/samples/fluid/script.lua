@@ -30,6 +30,7 @@ setup = function()
     thanks_mode_seconds = 5
     apology_mode_seconds = 10
     wait_mode_seconds = 40
+    play_video_wait_time = 180
     
     is_transaction_started = false
     is_waiting_receipt = false
@@ -108,6 +109,7 @@ welcome_mode = function()
     turn_light(0, animation.idle)
     smart_delay(1000 * welcome_mode_seconds)
     forget_pressed_key()
+    waiting_loops = play_video_wait_time * 10
     return mode_choose
 end
 
@@ -116,16 +118,22 @@ choose_mode = function()
     run_stop()
     check_open_lid()
 
-    can_play_video = true
-    set_can_play_video(can_play_video)
-
-    if get_is_playing_video() then
-        return mode_play_video
-    end
-
     turn_light(0, animation.idle)
 
     pressed_key = get_key()
+    if waiting_loops > 0 then
+        waiting_loops = waiting_loops - 1
+    else
+        can_play_video = true
+        set_can_play_video(can_play_video)
+    end
+
+    is_playing_video = get_is_playing_video()
+
+    if is_playing_video == true then
+        return mode_play_video
+    end
+    
     if pressed_key == button_cash then
         can_play_video = false
         set_can_play_video(can_play_video)
@@ -150,7 +158,16 @@ end
 
 play_video_mode = function()
 
-    if not get_is_playing_video() then
+    is_playing_video = get_is_playing_video()
+
+    if is_playing_video == false then
+        can_play_video = false
+        set_can_play_video(can_play_video)
+        if get_process_id() == 0 then
+            waiting_loops = play_video_wait_time * 10
+        else
+            waiting_loops = 30 * 10
+        end
         return mode_choose
     end
 
@@ -173,6 +190,7 @@ keyboard_mode = function()
     elseif pressed_key == button_cancel then
         keyboard_pressed = false
         electron_balance = 0
+        waiting_loops = play_video_wait_time * 10
         return mode_choose
     elseif pressed_key == button_begin then
         if keyboard_pressed == false then electron_balance = min_electron_balance end
@@ -195,7 +213,6 @@ wait_mode = function()
 
     if is_transaction_started == false then
         waiting_loops = wait_mode_seconds * 10;
-
         request_transaction_separated(electron_balance)
         print("\n\n\n electron_balance: ", electron_balance)
         is_transaction_started = true
@@ -216,12 +233,14 @@ wait_mode = function()
     if waiting_loops <= 0 then
         is_transaction_started = false
 	    if status ~= 0 then abort_transaction() end
+        waiting_loops = play_video_wait_time * 10
         return mode_choose
     end
 
     if (status == 0) and (is_transaction_started == true) then
         is_transaction_started = false
         abort_transaction()
+        waiting_loops = play_video_wait_time * 10
         return mode_choose       
 	end
 
@@ -239,7 +258,10 @@ fundraising_mode = function()
     init_prices()
     
     pressed_key = get_key()
-    if pressed_key == button_cancel then return mode_choose end
+    if pressed_key == button_cancel then
+        waiting_loops = play_video_wait_time * 10
+        return mode_choose 
+    end
     if pressed_key == button_begin then return mode_start_filling end
 
     update_balance()
@@ -324,7 +346,7 @@ thanks_mode = function()
 
         update_balance()
         if balance > 0.99 then
-            send_receipt(post_position, cash_balance, electronical_balance)
+            send_receipt(post_position, cash_balance, electronical_balance, 0)
             is_waiting_receipt = false
             increment_cars() 
             return mode_fundraising
@@ -332,9 +354,10 @@ thanks_mode = function()
         waiting_loops = waiting_loops - 1
     
     else
-        send_receipt(post_position, cash_balance, electronical_balance)
+        send_receipt(post_position, cash_balance, electronical_balance, 0)
         is_waiting_receipt = false
         increment_cars()
+        waiting_loops = play_video_wait_time * 10
 	    return mode_choose
     end
 
@@ -349,7 +372,10 @@ apology_mode = function()
     if waiting_loops <= 0 then waiting_loops = apology_mode_seconds * 10 end
     waiting_loops = waiting_loops - 1
 
-    if waiting_loops <= 0 then return mode_choose end
+    if waiting_loops <= 0 then
+        waiting_loops = play_video_wait_time * 10 
+        return mode_choose 
+    end
     return mode_apology
 end
 
@@ -563,8 +589,8 @@ turn_light = function(rel_num, animation_code)
     hardware:TurnLight(rel_num, animation_code)
 end
 
-send_receipt = function(post_pos, cash, electronical)
-    hardware:SendReceipt(post_pos, cash, electronical)
+send_receipt = function(post_pos, cash, electronical, qrMoney)
+    hardware:SendReceipt(post_pos, cash, electronical, qrMoney)
     cash_balance = 0
     electronical_balance = 0
 end
@@ -702,4 +728,8 @@ check_open_lid = function()
         run_program(0)
         printMessage("LID CLOSED :)")
     end
+end
+
+get_process_id = function()
+    return hardware:GetProcessId()
 end

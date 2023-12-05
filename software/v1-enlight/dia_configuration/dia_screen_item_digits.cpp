@@ -155,7 +155,7 @@ int dia_screen_item_digits_display(DiaScreenItem * base_item, void * digits_ptr,
 }
 
 int dia_screen_item_digits_notify(DiaScreenItem * base_item, void * digits_ptr, std::string key) {
-    //printf("notification recieved for '%s' key\n", key.c_str());
+    printf("notification recieved for '%s' key\n", key.c_str());
     int error = 0;
     std::string value = base_item->GetValue(key, &error);
     if (error!=0) {
