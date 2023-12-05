@@ -28,6 +28,7 @@ setup = function()
     -- constants
     welcome_mode_seconds = 3
     thanks_mode_seconds = 120
+    before_start_work_seconds = 5
     connection_to_bonus_seconds = 5
     wait_for_QR_seconds = 15
     free_pause_seconds = 120
@@ -35,6 +36,7 @@ setup = function()
     max_money_wait_seconds = 90
     
     is_paused = false
+    is_at_start = true
     is_authorized = false
     is_transaction_started = false
     is_connected_to_bonus_system = false
@@ -469,7 +471,20 @@ program_mode = function(working_mode)
   
   if sub_mode == 0 then
     run_program(default_paid_program)
-    balance_seconds = free_pause_seconds
+
+    if is_at_start == true then 
+        balance_seconds = free_pause_seconds
+        start_countdown = before_start_work_seconds * 10
+        is_at_start = false
+    end
+ 
+    if start_countdown > 0 then
+        start_countdown = start_countdown - 1
+    else
+        run_pause()
+        return mode_pause
+    end
+    
     turn_light(0, animation.intense)
   else
     run_sub_program(sub_mode)
@@ -566,6 +581,7 @@ thanks_mode = function()
         update_balance()
         if balance > 0.99 then
             is_waiting_receipt = false
+            is_at_start = true
             return mode_work 
         end
         waiting_loops = waiting_loops - 1
@@ -582,6 +598,7 @@ thanks_mode = function()
             hardware:EndSession();
         end
         hardware:CreateSession();
+        is_at_start = true
         return mode_choose_method
     end
 
