@@ -37,7 +37,10 @@ void DiaDeviceManager_StartDeviceScan(DiaDeviceManager * manager);
 void DiaDeviceManager_FinishDeviceScan(DiaDeviceManager * manager);
 void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortName, int isACM);
 void DiaDeviceManager_ReportMoney(void *manager, int moneyType, int Money);
-void DiaDeviceManager_PerformTransaction(void *manager, int money);
+void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTransactionSeparated);
+//-------------------------------------------------------------------------------
+int DiaDeviceManager_ConfirmTransaction(void* manager, int money);
+//--------------------------------------------------------------------------------
 void DiaDeviceManager_AbortTransaction(void *manager);
 int DiaDeviceManager_GetTransactionStatus(void *manager);
 void DiaDeviceManager_AddCardReader(DiaDeviceManager * manager);

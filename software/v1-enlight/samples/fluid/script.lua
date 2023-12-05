@@ -213,8 +213,8 @@ wait_mode = function()
 
     if is_transaction_started == false then
         waiting_loops = wait_mode_seconds * 10;
-
-        request_transaction(electron_balance)
+        request_transaction_separated(electron_balance)
+        print("\n\n\n electron_balance: ", electron_balance)
         is_transaction_started = true
     end
 
@@ -225,7 +225,7 @@ wait_mode = function()
     update_balance()
 
     if balance > 0.99 then
-        if status ~= 0 then abort_transaction() end
+        --if status ~= 0 then abort_transaction() end
         is_transaction_started = false
         return mode_start_filling
     end
@@ -303,7 +303,6 @@ filling_mode = function()
             volume = volume - get_volume() / 1000
             hardware:SendPause()
         end
-
     end
 
     if is_paused == false then 
@@ -318,6 +317,7 @@ filling_mode = function()
     end
     
     if get_sensor_active() == false then
+        confirm_transaction(balance)
         balance = 0
         waiting_loops = 0
         return mode_apology
@@ -330,8 +330,10 @@ thanks_mode = function()
     check_open_lid()
     run_stop()
     show_thanks()
+    
 
     if is_waiting_receipt == false then
+        confirm_transaction(balance)
         balance = 0
         turn_light(1, animation.one_button)
         waiting_loops = thanks_mode_seconds * 10;
@@ -611,8 +613,16 @@ run_program = function(program_num)
     hardware:TurnProgram(program_num)
 end
 
-request_transaction = function(money)
-    return hardware:RequestTransaction(money)
+request_transaction = function(balance)
+    return hardware:RequestTransaction(balance)
+end
+
+request_transaction_separated = function(balance)
+    return hardware:RequestTransactionSeparated(balance)
+end
+
+confirm_transaction = function(balance)
+    return hardware:ConfirmTransaction(math.floor(balance))
 end
 
 get_transaction_status = function()
