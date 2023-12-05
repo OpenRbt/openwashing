@@ -302,7 +302,7 @@ wait_for_card_mode = function()
     update_balance()
 
     if balance > 0.99 then
-        if status ~= 0 then 
+        if status ~= 0 then
             abort_transaction()
         end
         is_transaction_started = false

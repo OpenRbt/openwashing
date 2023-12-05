@@ -12,6 +12,8 @@
 #define DIA_VENDOTEK_NO_ERROR 0
 #define DIA_VENDOTEK_NULL_PARAMETER 4
 
+
+
 typedef struct payment_opts_s {
     vtk_t     *vtk;
     vtk_msg_t *mreq;
@@ -27,6 +29,11 @@ typedef struct payment_opts_s {
     ssize_t    price;
 } payment_opts_t;
 
+
+enum VendotekStage{
+    RC_IDL_VRP, RC_FIN_IDL_END, ALL
+};
+
 class DiaVendotek 
 {
 public: 
@@ -34,11 +41,15 @@ public:
 
     void * _Manager;
 
+    
     pthread_t ExecuteDriverProgramThread;
+    pthread_t ExecutePaymentConfirmationDriverProgramThread;
     pthread_mutex_t MoneyLock = PTHREAD_MUTEX_INITIALIZER;
     pthread_t ExecutePingThread;
     pthread_mutex_t OperationLock = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_t StateLock = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t RefundsLock = PTHREAD_MUTEX_INITIALIZER;
+    bool IsTransactionSeparated;
     int ToBeDeleted = 0;
     int RequestedMoney;
     int Available = 0;
@@ -47,6 +58,7 @@ public:
     std::string Port = "";
     vtk_t *_Vtk = NULL;
     payment_opts_t *_PaymentOpts = NULL;
+
     DiaVendotek(void * manager, void (*incomingMoneyHandler)(void * vendotek, int moneyType, int newMoney), std::string host, std::string port) {
         _Manager = manager;
         IncomingMoneyHandler = incomingMoneyHandler;
@@ -59,6 +71,7 @@ public:
     ~DiaVendotek() {
         ToBeDeleted = 1;
     }
+
 };
 
 void DiaVendotek_AbortTransaction(void * specificDriver);
@@ -67,8 +80,12 @@ int DiaVendotek_GetTransactionStatus(void * specificDriver);
 
 void* DiaVendotek_ExecuteDriverProgramThread(void * devicePtr);
 
-int DiaVendotek_PerformTransaction(void * specficDriver, int money);
+int DiaVendotek_PerformTransaction(void * specficDriver, int money, bool isTrasactionSeparated);
+//---------------------------------------------------------------------------
+int DiaVendotek_ConfirmTransaction(void * specficDriver, int money);
+void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr);
 
+//---------------------------------------------------------------------------
 int DiaVendotek_StopDriver(void * specficDriver);
 
 int DiaVendotek_StartPing(void * specificDriver);
