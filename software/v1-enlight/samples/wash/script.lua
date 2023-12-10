@@ -28,7 +28,7 @@ setup = function()
     -- constants
     welcome_mode_seconds = 3
     thanks_mode_seconds = 120
-    before_start_work_seconds = 5
+    before_start_work_seconds = 60
     connection_to_bonus_seconds = 5
     wait_for_QR_seconds = 15
     free_pause_seconds = 120
