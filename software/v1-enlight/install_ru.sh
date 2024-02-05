@@ -55,6 +55,9 @@ echo "COPYING update script and install updater dependencies"
 sleep 1
 python -m pip install -r ./updater/dependencies.txt
 cp ./updater/update.py ~/update.py
+mkdir -m 700 ~/.ssh
+touch ~/.ssh/authorized_keys
+chmod 644 ~/.ssh/authorized_keys
 
 echo "COPYING scripts which prepare AUTORUN feature"
 echo "it's ok to see errors here"
