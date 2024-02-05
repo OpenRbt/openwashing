@@ -9,6 +9,7 @@ sudo ./update_system.sh
 : > /home/pi/run.sh
 echo "xrandr -s 1920x1080" >> /home/pi/run.sh
 echo "cd /home/pi/wash" >> /home/pi/run.sh
+echo "python /home/pi/update.py" >> /home/pi/run.sh
 echo "./firmware.exe" >> /home/pi/run.sh
 
 cd ..

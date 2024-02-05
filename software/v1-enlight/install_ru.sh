@@ -51,6 +51,11 @@ sleep 1
 mkdir ~/wash/firmware
 cp -r ~/openwashing/software/v1-enlight/samples/wash/. ~/wash/firmware
 
+echo "COPYING update script and install updater dependencies"
+sleep 1
+python -m pip install -r ./updater/dependencies.txt
+cp ./updater/update.py ~/update.py
+
 echo "COPYING scripts which prepare AUTORUN feature"
 echo "it's ok to see errors here"
 sleep 1
