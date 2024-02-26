@@ -571,8 +571,13 @@ left_show_choose = function(balance_rur)
 
     main_screen:Set("programs_left.position", "700;544")
     main_screen:Set("payment_method_left.position", "1300;590")
-    if fundraiser_active_right == false then main_screen:Set("button_cash_left.position", "1360;587") end
-    if  hascardreader() then main_screen:Set("button_cashless_left.position", "1500;587") end
+
+    -- We are removing the ability to pay in cash
+    -- if fundraiser_active_right == false then
+    --     main_screen:Set("button_cash_left.position", "1500;587")
+    -- end
+
+    if  hascardreader() then main_screen:Set("button_cashless_left.position", "1360;587") end
     main_screen:Display()
 end
 
@@ -594,15 +599,15 @@ left_show_keyboard = function(balance_rur)
     main_screen:Set("balance_left.position", "30;100")
     main_screen:Set("enter_amount_left.position", "700;678")
 
-    main_screen:Set("button_1_left.position", "780;627")
+    main_screen:Set("button_1_left.position", "780;893")
     main_screen:Set("button_2_left.position", "780;760")
-    main_screen:Set("button_3_left.position", "780;893")
-    main_screen:Set("button_4_left.position", "913;627")
+    main_screen:Set("button_3_left.position", "780;627")
+    main_screen:Set("button_4_left.position", "913;893")
     main_screen:Set("button_5_left.position", "913;760")
-    main_screen:Set("button_6_left.position", "913;893")
-    main_screen:Set("button_7_left.position", "1046;627")
+    main_screen:Set("button_6_left.position", "913;627")
+    main_screen:Set("button_7_left.position", "1046;893")
     main_screen:Set("button_8_left.position", "1046;760")
-    main_screen:Set("button_9_left.position", "1046;893")
+    main_screen:Set("button_9_left.position", "1046;627")
     main_screen:Set("button_0_left.position", "1179;760")
 
     if fundraiser_active_right == false and
@@ -667,8 +672,13 @@ right_show_choose = function(balance_rur)
 
     main_screen:Set("programs_right.position", "700;8")
     main_screen:Set("payment_method_right.position", "1300;101")
-    if fundraiser_active_left == false then main_screen:Set("button_cash_right.position", "1360;77") end
-    if hascardreader() then main_screen:Set("button_cashless_right.position", "1500;77") end
+
+    -- We are removing the ability to pay in cash
+    -- if fundraiser_active_left == false then
+    --     main_screen:Set("button_cash_right.position", "1500;77")
+    -- end
+
+    if hascardreader() then main_screen:Set("button_cashless_right.position", "1360;77") end
     main_screen:Display()
 end
 
