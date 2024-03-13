@@ -296,6 +296,9 @@ filling_mode = function()
     pressed_key = get_key()
 
     if pressed_key == button_pause then
+        return mode_thanks
+
+        --[[
         is_paused = not is_paused
         if is_paused == false then 
             start_fluid_flow_sensor(volume * 1000)
@@ -303,13 +306,15 @@ filling_mode = function()
             volume = volume - get_volume() / 1000
             hardware:SendPause()
         end
+        ]]
+        
     end
 
-    if is_paused == false then 
-        show_filling(balance)
-        turn_light(0, animation.one_button)
-        balance = price_p[1] * (volume - get_volume() / 1000)
-    end
+    --if is_paused == false then 
+    show_filling(balance)
+    turn_light(0, animation.one_button)
+    balance = price_p[1] * (volume - get_volume() / 1000)
+    --end
     
     if balance <= 0.01 then
         balance = 0
@@ -427,6 +432,7 @@ end
 
 show_filling = function(balance_rur)
 
+    --[[
     if is_paused == true then
         filling:Set("play.visible", "true")
         filling:Set("pause.visible", "false")
@@ -434,6 +440,8 @@ show_filling = function(balance_rur)
         filling:Set("play.visible", "false")
         filling:Set("pause.visible", "true")
     end
+    ]]
+    
 
     balance_int = math.ceil(balance_rur)
     filling:Set("balance.value", balance_int)
@@ -694,7 +702,8 @@ start_fluid_flow_sensor = function(volume_rur)
 end
 
 get_sensor_active = function()
-    return hardware:GetSensorActive()
+    return true
+    --return hardware:GetSensorActive()
 end
 
 get_can_play_video = function()
