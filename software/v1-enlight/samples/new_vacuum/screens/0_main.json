@@ -565,6 +565,15 @@
             "visible":"true",
             "click_id":"104"
         },
+        {
+            "id":"button_start_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_start.png",
+            "visible":"true",
+            "click_id":"104"
+        },
 
 
 
@@ -584,6 +593,15 @@
             "position": "200;1800",
             "size":"107;424",
             "src":"pic/buttons/button_pause.png",
+            "visible":"true",
+            "click_id":"204"
+        },
+        {
+            "id":"button_start_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_start.png",
             "visible":"true",
             "click_id":"204"
         },

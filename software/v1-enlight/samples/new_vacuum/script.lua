@@ -36,7 +36,7 @@ setup = function()
     welcome_mode_seconds = 3
     thanks_mode_seconds = 5
     apology_mode_seconds = 5
-    wait_mode_seconds = 40
+    wait_mode_seconds = 15
 
     is_transaction_started = false
     is_waiting_receipt_left = false
@@ -92,7 +92,8 @@ setup = function()
     current_right_program = program_stop
     current_left_program = program_stop
 
-    init_prices()
+    init_prices_right()
+    init_prices_left()
     printMessage("Prices: " .. price_p[0] .. " " .. price_p[1] .. " " .. price_p[2] .. " " .. price_p[3] .. " " .. price_p[4])
 
     version = "1.0.0"
@@ -110,18 +111,21 @@ loop = function()
     pressed_key = get_key()
     set_time(get_time_hours(), get_time_minutes())
     set_weather(get_weather_negative(), get_weather_degrees(), get_weather_fraction())
-    printMessage(string.format("current state: %2d %1d   %2d %1d", current_left_mode, current_left_program, current_right_mode, current_right_program))
+    -- printMessage(string.format("current state: %2d %1d   %2d %1d", current_left_mode, current_left_program, current_right_mode, current_right_program))
     current_left_mode = left_display_mode(current_left_mode)
     current_right_mode = right_display_mode(current_right_mode)
     real_ms_per_loop = smart_delay(100)
     return 0
 end
 
-init_prices = function()
-    price_p[program_left_pause] = get_price(actual_program_left_pause_right_pause)
+init_prices_right = function()
     price_p[program_right_pause] = get_price(actual_program_left_pause_right_pause)
-    price_p[program_left_work] = get_price(actual_program_left_work_right_work)
     price_p[program_right_work] = get_price(actual_program_left_work_right_work)
+end
+
+init_prices_left = function()
+    price_p[program_left_pause] = get_price(actual_program_left_pause_right_pause)
+    price_p[program_left_work] = get_price(actual_program_left_work_right_work)
 end
 
 -- Mode
@@ -153,6 +157,7 @@ right_welcome_mode = function()
     run_program(current_left_program, current_right_program)
     turn_light(0, animation.idle)
     check_open_lid()
+    init_prices_right()
     smart_delay(1000 * welcome_mode_seconds)
     return mode_choose
 end
@@ -162,6 +167,7 @@ left_welcome_mode = function()
     run_program(current_left_program, current_right_program)
     turn_light(0, animation.idle)
     check_open_lid()
+    init_prices_left()
     smart_delay(1000 * welcome_mode_seconds)
     return mode_choose
 end
@@ -171,6 +177,7 @@ right_choose_mode = function()
     run_program(current_left_program, current_right_program)
     turn_light(0, animation.idle)
     check_open_lid()
+    init_prices_right()
 
     if pressed_key == cash_button_right and fundraiser_active_left == false then
         fundraiser_active_right = true
@@ -186,6 +193,7 @@ left_choose_mode = function()
     run_program(current_left_program, current_right_program)
     turn_light(0, animation.idle)
     check_open_lid()
+    init_prices_left()
 
     if pressed_key == cash_button_left and fundraiser_active_right == false then
         fundraiser_active_left = true
@@ -336,7 +344,7 @@ right_wait_mode = function()
 	end
 
     if pressed_key == cancel_button_right then
-        if electron_balance_right == min_electron_balance then 
+        if electron_balance_right == min_electron_balance then
             keyboard_pressed_right = false
             electron_balance_right = 0
         end
@@ -406,7 +414,7 @@ end
 right_work_mode = function()
     if current_right_program == program_stop then
         starting_balance_right = balance_right
-        current_right_program = program_right_work
+        current_right_program = program_right_pause
     end
 
     right_show_work(balance_right, balance_right / starting_balance_right)
@@ -434,7 +442,7 @@ end
 left_work_mode = function()
     if current_left_program == program_stop then
         starting_balance_left = balance_left
-        current_left_program = program_left_work
+        current_left_program = program_left_pause
     end
 
     left_show_work(balance_left, balance_left / starting_balance_left)
@@ -572,10 +580,9 @@ left_show_choose = function(balance_rur)
     main_screen:Set("programs_left.position", "700;544")
     main_screen:Set("payment_method_left.position", "1300;590")
 
-    -- We are removing the ability to pay in cash
-    -- if fundraiser_active_right == false then
-    --     main_screen:Set("button_cash_left.position", "1500;587")
-    -- end
+    if fundraiser_active_right == false then
+        main_screen:Set("button_cash_left.position", "1500;587")
+    end
 
     if  hascardreader() then main_screen:Set("button_cashless_left.position", "1360;587") end
     main_screen:Display()
@@ -636,7 +643,12 @@ left_show_work = function(balance_rur, progress_rur)
     left_set_progressbar(progress_rur)
 
     main_screen:Set("console_left.position", "700;635")
-    main_screen:Set("button_pause_left.position", "1500;587")
+
+    if current_left_program == program_left_pause then
+        main_screen:Set("button_start_left.position", "1500;587")
+    else
+        main_screen:Set("button_pause_left.position", "1500;587")
+    end
 
     main_screen:Display()
 end
@@ -673,10 +685,9 @@ right_show_choose = function(balance_rur)
     main_screen:Set("programs_right.position", "700;8")
     main_screen:Set("payment_method_right.position", "1300;101")
 
-    -- We are removing the ability to pay in cash
-    -- if fundraiser_active_left == false then
-    --     main_screen:Set("button_cash_right.position", "1500;77")
-    -- end
+    if fundraiser_active_left == false then
+        main_screen:Set("button_cash_right.position", "1500;77")
+    end
 
     if hascardreader() then main_screen:Set("button_cashless_right.position", "1360;77") end
     main_screen:Display()
@@ -736,7 +747,12 @@ right_show_work = function(balance_rur, progress_rur)
     right_set_progressbar(progress_rur)
 
     main_screen:Set("console_right.position", "700;102")
-    main_screen:Set("button_pause_right.position", "1500;77")
+
+    if current_right_program == program_right_pause then
+        main_screen:Set("button_start_right.position", "1500;77")
+    else
+        main_screen:Set("button_pause_right.position", "1500;77")
+    end
 
     main_screen:Display()
 end
@@ -768,6 +784,7 @@ right_disable_visibility = function()
     main_screen:Set("button_begin_right.position", "2000;2000")
     main_screen:Set("button_cancel_right.position", "2000;2000")
     main_screen:Set("button_pause_right.position", "2000;2000")
+    main_screen:Set("button_start_right.position", "2000;2000")
     main_screen:Set("enter_amount_right.position", "2000;2000")
     main_screen:Set("button_0_right.position", "2000;2000")
     main_screen:Set("button_1_right.position", "2000;2000")
@@ -811,6 +828,7 @@ left_disable_visibility = function()
     main_screen:Set("button_begin_left.position", "2000;2000")
     main_screen:Set("button_cancel_left.position", "2000;2000")
     main_screen:Set("button_pause_left.position", "2000;2000")
+    main_screen:Set("button_start_left.position", "2000;2000")
     main_screen:Set("enter_amount_left.position", "2000;2000")
     main_screen:Set("button_0_left.position", "2000;2000")
     main_screen:Set("button_1_left.position", "2000;2000")
