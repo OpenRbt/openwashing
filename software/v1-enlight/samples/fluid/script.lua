@@ -296,6 +296,8 @@ filling_mode = function()
     pressed_key = get_key()
 
     if pressed_key == button_pause then
+        volume = volume - get_volume() / 1000
+        hardware:SendPause()
         return mode_thanks
 
         --[[
@@ -702,8 +704,7 @@ start_fluid_flow_sensor = function(volume_rur)
 end
 
 get_sensor_active = function()
-    return true
-    --return hardware:GetSensorActive()
+    return hardware:GetSensorActive()
 end
 
 get_can_play_video = function()
