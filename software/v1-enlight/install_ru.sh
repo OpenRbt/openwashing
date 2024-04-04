@@ -9,9 +9,12 @@ echo "The script is run from $CUR_DIR"
 echo "THIS SCRIPT IS FOR RASPBIAN ONLY! DO NOT USE ON OTHER LINUX"
 sleep 5
 
+echo "INSTALLING PYTHON LIB"
+pip install python-vlc
+pip install pynput
+
 echo "INSTALLING WIRING PI"
 sudo apt-get install -y libi2c-dev
-
 
 mkdir ~/temp
 cd ~/temp

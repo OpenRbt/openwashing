@@ -839,6 +839,7 @@ int CentralServerDialog() {
 
     int serviceMoney = 0;
     int bonusAmount = 0;
+    int kaspiAmount = 0;
     bool openStation = false;
     std::string authorizedSessionID = "";
     std::string visibleSessionID = "";
@@ -858,7 +859,7 @@ int CentralServerDialog() {
     network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, 
     _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, sbpSystemActive, 
     qrData, authorizedSessionID, visibleSessionID, bonusAmount, sbpMoney, sbpUrl, 
-    sbpQrFailed, sbpOrderId);
+    sbpQrFailed, sbpOrderId, kaspiAmount);
 
     network->GetServerInfo(_ServerUrl);
     if (config) {
@@ -874,6 +875,11 @@ int CentralServerDialog() {
         // TODO protect with mutex
         _Balance += serviceMoney;
     }
+    if (kaspiAmount > 0) {
+        // TODO protect with mutex
+        _BalanceSbp += kaspiAmount;
+    }
+
     if (bonusAmount > 0) {
         // TODO protect with mutex
         _BalanceBonuses += bonusAmount;
@@ -1046,6 +1052,7 @@ int RecoverRegistry() {
 
     int tmp = 0;
     int bonusAmount = 0;
+    int kaspiAmount = 0;
     bool openStation = false;
     bool bonusSystemActive = false;
     bool sbpSystemActive = false;
@@ -1068,7 +1075,7 @@ int RecoverRegistry() {
     int err = 1;
     while (err) {
         err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, 
-        bonusSystemActive, sbpSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId);
+        bonusSystemActive, sbpSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId, kaspiAmount);
 
         if (err) {
             printf("waiting for server proper answer \n");

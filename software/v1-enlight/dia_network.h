@@ -617,7 +617,7 @@ class DiaNetwork {
 
     int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, 
     int &lastDiscountUpdate, bool &bonus_system_active, bool &sbp_system_active, std::string &qrData, std::string &authorizedSessionID, 
-    std::string &sessionID, int &bonusAmount, double& qrMoney, std::string &qrUrl, bool& qrFailed, std::string &qrOrderId) {
+    std::string &sessionID, int &bonusAmount, double& qrMoney, std::string &qrUrl, bool& qrFailed, std::string &qrOrderId, int &kaspi_money) {
 
         std::string answer;
         std::string url = _Host + _Port + "/ping";
@@ -655,6 +655,10 @@ class DiaNetwork {
             json_t *obj_service_amount;
             obj_service_amount = json_object_get(object, "serviceAmount");
             service_money = (int)json_integer_value(obj_service_amount);
+
+            json_t *obj_kaspi_amount;
+            obj_kaspi_amount = json_object_get(object, "kaspiAmount");
+            kaspi_money = (int)json_integer_value(obj_kaspi_amount);
 
             json_t *obj_open_station;
             obj_open_station = json_object_get(object, "openStation");
@@ -734,6 +738,7 @@ class DiaNetwork {
                 qrData = (std::string)json_string_value(obj_qr_data);
             }
             json_decref(obj_service_amount);
+            json_decref(obj_kaspi_amount);
             json_decref(obj_open_station);
             json_decref(obj_button_id);
             json_decref(obj_last_update);
