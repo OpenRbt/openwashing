@@ -1,0 +1,26 @@
+{
+  "name": "default configuration",
+  "resolution": "848x480",
+  "screens": [
+    {
+      "id": "welcome",
+      "src": "screens/welcome.json"
+    },
+    {
+      "id": "moremoney",
+      "src": "screens/moremoney.json"
+    },
+    {
+      "id": "working",
+      "src": "screens/working.json"
+    },
+    {
+      "id": "thanks",
+      "src": "screens/thanks.json"
+    }
+  ],
+  "buttons": 1,
+  "programs": 1,
+  "relays": 1,
+  "script": "script.lua"
+}
