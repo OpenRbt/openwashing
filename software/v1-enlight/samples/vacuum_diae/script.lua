@@ -106,22 +106,23 @@ local function working_mode()
     return modes.working
 end
 
-local thanks_waiting_loops = thanks_mode_duration_sec * iterations_per_second
+local thanks_waiting_loops = 0
 
 local function reset_thanks_mode()
-    thanks_waiting_loops = thanks_mode_duration_sec * iterations_per_second
+    thanks_waiting_loops = 0
 end
 
 local function thanks_mode_init()
+    thanks_waiting_loops = thanks_mode_duration_sec * iterations_per_second
     thanks:Display()
     turn_light(1, animation.stop)
     run_program(programs.stop)
     balance = 0
-    reset_thanks_mode()
 end
 
 local function thanks_mode()
-    if thanks_waiting_loops == thanks_mode_duration_sec * 10 then
+    
+    if thanks_waiting_loops == 0 then
         thanks_mode_init()
     end
 
