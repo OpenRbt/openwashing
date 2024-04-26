@@ -609,7 +609,6 @@ int request_transaction(void *object, int money) {
 int request_transaction_separated(void *object, int money){
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     if (money > 0) {
-        std::cout << "\n\n\nrequest_transaction_separated, money: " << money << "\n\n\n";
         DiaDeviceManager_PerformTransaction(manager, money, true);
         return 0;
     }
@@ -619,7 +618,6 @@ int request_transaction_separated(void *object, int money){
 int confirm_transaction(void *object, int money){
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     //printf("Manager Electronical:    %d",manager->ElectronMoney);
-    std::cout << "\n\n\nconfirm_transaction, money: " << money << "\n\n\n";
     int bonuses = 0;
     bonuses = DiaDeviceManager_ConfirmTransaction(manager, money);
 
