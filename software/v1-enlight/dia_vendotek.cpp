@@ -214,8 +214,6 @@ int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
                     idl1_resp[1].valint = &payment.opnum;
                     idl1_resp[2].id = 0x6;
                     idl1_resp[2].valint = &payment.timeout;
-                    idl1_resp[3].id = 0x8;
-                    idl1_resp[3].valint = &payment.evnum;
                     idl1_resp[4].id = 0;
 
                     rc_idl = do_stage(&stopts, idl1_req, idl1_resp) >= 0;
