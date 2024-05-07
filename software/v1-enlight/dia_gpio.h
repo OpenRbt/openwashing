@@ -6,8 +6,8 @@
 
 #define COIN_TOTAL 6
 #define COIN_SWITCH 4
-#define COIN_PIN 29
-#define BANKNOTE_PIN 28
+#define COIN_PIN 8
+#define BANKNOTE_PIN 7
 
 #define NO_ANIMATION 0
 #define ONE_BUTTON_ANIMATION 1

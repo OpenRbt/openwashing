@@ -195,7 +195,14 @@ class DiaNetwork {
             curl_slist_free_all(headers);
             return 1;
         }
-        *answer = raw_answer.data;
+        printf("answer.data=%s\n", raw_answer.data);
+        if (raw_answer.data) {
+            printf("raw data exists\n");
+            *answer = raw_answer.data;
+        } else {
+            printf("raw data does not exist\n");
+            *answer = "";
+        }
         DestructCurlAnswer(&raw_answer);
         curl_easy_cleanup(curl);
         curl_slist_free_all(headers);
@@ -529,6 +536,7 @@ class DiaNetwork {
 
         int result;
         std::string json_ping_request = json_create_card_reader_config();
+        printf("cardreader conf:\n%s\nurl:%s\n", json_ping_request.c_str(), url.c_str());
         result = SendRequest(&json_ping_request, &answer, url);
 
         if (result) {
@@ -1601,8 +1609,10 @@ class DiaNetwork {
     }
     static size_t _Writefunc(void *ptr, size_t size, size_t nmemb, curl_answer_t *answer) {
         assert(answer);
-        size_t new_len = answer->length + size * nmemb;
-        answer->data = (char *)realloc(answer->data, new_len + 1);
+         size_t new_len = answer->length + size*nmemb;
+         printf("answer.data 1[%s]", answer->data);
+        answer->data = (char*)realloc(answer->data, new_len+1);
+        printf("answer.data 2[%s]", answer->data);
         assert(answer->data);
         memcpy(answer->data + answer->length, ptr, size * nmemb);
         answer->data[new_len] = '\0';

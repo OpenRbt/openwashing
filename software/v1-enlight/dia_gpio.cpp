@@ -58,7 +58,8 @@ void DiaGpio_WriteRelay(DiaGpio * gpio, int relayNumber, int value) {
                     gpio->RelayOnTime[relayNumber] = 0;
                 }
             }
-            if(gpio->RelayPinStatus[relayNumber]!=value) {
+            printf("R%d:[%d]\n", relayNumber, value);
+            if(gpio->RelayPinStatus[relayNumber]!=value) {                
                 digitalWrite(gpio->RelayPin[relayNumber], value);
                 gpio->RelayPinStatus[relayNumber] = value;
             }
@@ -96,51 +97,56 @@ DiaGpio::DiaGpio(int maxButtons, int maxRelays, storage_interface_t * storage) {
     InitializedOk = 0;
     NeedWorking = 1;
 
-    if (wiringPiSetup () == -1) return;
+    if (wiringPiSetup () == -1) {
+        printf("WIRINGPISETUP FAILED\n");
+	return;
+    }
 
     CoinsHandler = new PulseHandler(COIN_PIN);
     BanknotesHandler = new PulseHandler(BANKNOTE_PIN);
     AdditionalHandler = 0;
 
     cleanPins(ButtonPin, PIN_COUNT);
-    ButtonPin[1] = 13;
+    ButtonPin[1] = 12;
     ButtonPin[2] = 14;
-    ButtonPin[3] = 21;
-    ButtonPin[4] = 22;
-    ButtonPin[5] = 23;
-    ButtonPin[6] = 24;
-    ButtonPin[7] = 25;
+    ButtonPin[3] = 0;
+    ButtonPin[4] = 1;
+    ButtonPin[5] = 2;
+    ButtonPin[6] = 5;
+    ButtonPin[7] = -1;
 
-    cleanPins(ButtonLightPin, PIN_COUNT);
-    ButtonLightPin[1] = 8;
-    ButtonLightPin[2] = 9;
-    ButtonLightPin[3] = 7;
-    ButtonLightPin[4] = 0;
-    ButtonLightPin[5] = 2;
-    ButtonLightPin[6] = 3;
-    ButtonLightPin[7] = 12;
+    cleanPins(ButtonLightPin,PIN_COUNT);
+    ButtonLightPin[1] = -1;
+    ButtonLightPin[2] = -1;
+    ButtonLightPin[3] = -1;
+    ButtonLightPin[4] = -1;
+    ButtonLightPin[5] = -1;
+    ButtonLightPin[6] = -1;
+    ButtonLightPin[7] = -1;
 
     cleanPins(RelayPin, PIN_COUNT);
-    RelayPin[1] = 15; // HighPreasurePump
-    RelayPin[2] = 16; // Not USED
-    RelayPin[3] = 1; // Soap
-    RelayPin[4] = 4; // Wax
-    RelayPin[5] = 5; // Pump Station
-    RelayPin[6] = 6; // Light
+    RelayPin[1] = 3; // HighPreasurePump
+    RelayPin[2] = 4; // Not USED
+    RelayPin[3] = 6; // Soap
+    RelayPin[4] = 9; // Wax
+    RelayPin[5] = 10; // Pump Station
+    RelayPin[6] = 13; // Light
  
     // these pins overwrite button lights
-    RelayPin[11] = 8; 
-    RelayPin[12] = 9; 
-    RelayPin[13] = 7; 
-    RelayPin[14] = 0; 
-    RelayPin[15] = 2; 
-    RelayPin[16] = 3;
-    RelayPin[17] = 12;
+    RelayPin[11] = -1; 
+    RelayPin[12] = -1; 
+    RelayPin[13] = -1; 
+    RelayPin[14] = -1; 
+    RelayPin[15] = -1; 
+    RelayPin[16] = -1;
+    RelayPin[17] = -1;
 
     for(int i=0;i<PIN_COUNT;i++) {
         if(RelayPin[i] >= 0) {
-            pinMode(RelayPin[i], OUTPUT);
-            digitalWrite(RelayPin[i],0);
+            int nPin = RelayPin[i];
+            printf("trying to set %d as OUTPUT\n", nPin);
+            pinMode(nPin, OUTPUT);
+            digitalWrite(nPin,LOW);
         }
         if(ButtonPin[i]>=0) {
             pinMode(ButtonPin[i], INPUT);
@@ -199,18 +205,21 @@ void DiaGpio_SetProgram(DiaGpio * gpio, int programNumber, int relayNumber,  int
 
 void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
     assert(gpio);
+    //printf("Hello Rus \n");
     if(gpio->CurrentProgram>(int)sizeof(gpio->Programs)) {
         printf("Disabling programs as current program is out of range %d...\n", gpio->CurrentProgram);
         gpio->CurrentProgram = -1;
     }
 
     if(gpio->CurrentProgram<0) {
+        //printf("Hello 2 \n");
         if(!gpio->AllTurnedOff) {
             gpio->AllTurnedOff = 1;
             printf("turning all off\n");
             DiaGpio_StopRelays(gpio);
         }
     } else {
+        //printf("Hello 3 \n");
         gpio->AllTurnedOff = 0;
         DiaRelayConfig * config;
         if (gpio->CurrentProgramIsPreflight) {
@@ -231,13 +240,17 @@ void DiaGpio_CheckRelays(DiaGpio * gpio, long curTime) {
             } else if(config->OffTime[i]<=0) {
                 if(!gpio->RelayPinStatus[i]) {
                     DiaGpio_WriteRelay(gpio, i, 1);
+                    printf("+%d\n", i);
                 }
             } else {
                 if(curTime>=config->NextSwitchTime[i]) {
+                    printf("Switch time \n");
                     if(gpio->RelayPinStatus[i]) {
+                        printf("gpio->RelayPinStatus \n");
                         DiaGpio_WriteRelay(gpio, i, 0);
                         config->NextSwitchTime[i] = curTime + config->OffTime[i];
                     } else  {
+                        printf("else gpio->RelayPinStatus \n");
                         DiaGpio_WriteRelay(gpio, i,1);
                         config->NextSwitchTime[i] = curTime + config->OnTime[i];
                     }
