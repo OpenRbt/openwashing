@@ -19,12 +19,12 @@
 
 void DiaDeviceManager_AddCardReader(DiaDeviceManager *manager) {
     printf("Abstract card reader added to the Device Manager\n");
-    manager->_CardReader = new DiaCardReader(manager, DiaDeviceManager_ReportMoney);
+    manager->_CardReader = new DiaCardReader(manager, DiaDeviceManager_ReportMoney, manager->logger);
 }
 
 int DiaDeviceManager_AddVendotek(DiaDeviceManager *manager, std::string host, std::string port) {
     printf("Vendotek card reader added to the Device Manager\n");
-    manager->_Vendotek = new DiaVendotek(manager, DiaDeviceManager_ReportMoney, host, port);
+    manager->_Vendotek = new DiaVendotek(manager, DiaDeviceManager_ReportMoney, host, port, manager->logger);
     return DiaVendotek_StartPing(manager->_Vendotek);
 }
 
@@ -212,18 +212,20 @@ void DiaDeviceManager_ScanDevices(DiaDeviceManager *manager) {
     }
 }
 
-DiaDeviceManager::DiaDeviceManager() {
+DiaDeviceManager::DiaDeviceManager(Logger* logger) {
     NeedWorking = 1;
     CoinMoney = 0;
     BanknoteMoney = 0;
     ElectronMoney = 0;
     ServiceMoney = 0;
+    this->logger = logger;
 #ifdef SCAN_DEVICES
     pthread_create(&WorkingThread, NULL, DiaDeviceManager_WorkingThread, this);
 #endif
 }
 
 DiaDeviceManager::~DiaDeviceManager() {
+    logger = nullptr;
 }
 
 void DiaDeviceManager_ReportMoney(void *manager, int moneyType, int money) {
@@ -260,6 +262,9 @@ void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTrasac
     }
     DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
     printf("DiaDeviceManager got Perform Transaction, money = %d\n", money);
+
+    Manager->logger->AddLog("Perform transaction: money = " + TO_STR(money) + ", separated = " + TO_STR(isTrasactionSeparated), DIA_DEVICE_MANAGER_LOG_TYPE);
+
     if (Manager->_CardReader) {
         printf("DiaDeviceManager Perform Transaction CardReader\n");
         DiaCardReader_PerformTransaction(Manager->_CardReader, money);
@@ -278,6 +283,9 @@ int DiaDeviceManager_ConfirmTransaction(void *manager, int money){
         return bonuses;
     }
     DiaDeviceManager *Manager = (DiaDeviceManager *)manager;
+
+    Manager->logger->AddLog("Confirm transaction: money = " + TO_STR(money), DIA_DEVICE_MANAGER_LOG_TYPE);
+
     printf("DiaDeviceManager got Confirm Transaction, money = %d\n", money);
     if (Manager->_CardReader) {
         printf("DiaDeviceManager Confirm Transaction CardReader\n");
@@ -296,6 +304,9 @@ void DiaDeviceManager_AbortTransaction(void *manager) {
         printf("DiaDeviceManager Abort Transaction got NULL driver\n");
         return;
     }
+
+    Manager->logger->AddLog("Abort transaction", DIA_DEVICE_MANAGER_LOG_TYPE);
+
     if (Manager->_CardReader) {
         DiaCardReader_AbortTransaction(Manager->_CardReader);
     } else if (Manager->_Vendotek) {
