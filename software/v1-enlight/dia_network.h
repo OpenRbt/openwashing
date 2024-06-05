@@ -900,6 +900,22 @@ class DiaNetwork {
         return 0;
     }
 
+    int AddLog(std::string text, std::string typeLog = "", std::string level = "info") {
+        std::string answer;
+
+        std::string json_add_log_request = json_add_log(text, typeLog, level);
+
+        std::string url = _Host + _Port + "/add-log";
+        int res = SendRequest(&json_add_log_request, &answer, url);
+        
+        if (res > 0) {
+            printf("\n!!!No connection to server - 1: %s, body: %s!!!\n\n", answer.c_str(), json_add_log_request.c_str());
+            return 1;
+        }
+
+        return 0;
+    }
+
     // Sends LOAD request to Central Server and decodes JSON result to money report.
     int GetLastMoneyReport(money_report_t *money_report_data) {
         std::string answer;
@@ -912,7 +928,7 @@ class DiaNetwork {
         int res = SendRequest(&json_get_last_money_report_request, &answer, url);
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 2\n");
             return 1;
         }
 
@@ -987,7 +1003,7 @@ class DiaNetwork {
         int res = SendRequest(&json_get_last_relay_report_request, &answer, url);
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 3\n");
             return 1;
         }
 
@@ -1070,7 +1086,7 @@ class DiaNetwork {
         printf("Server answer: \n%s\n", answer.c_str());
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 4\n");
         }
         return result;
     }
@@ -1092,7 +1108,7 @@ class DiaNetwork {
         printf("Server answer: \n%s\n", answer.c_str());
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 5\n");
         }
         return result;
     }
@@ -1114,7 +1130,7 @@ class DiaNetwork {
         printf("Server answer: %s\n", answer.c_str());
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 6\n");
         } else {
             if (answer.length() > 3) result = answer.substr(1, answer.length() - 3);
         }
@@ -1136,7 +1152,7 @@ class DiaNetwork {
         printf("Server answer: %s\n", answer.c_str());
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 7\n");
         } else {
             if (answer.length() > 3) result = answer.substr(1, answer.length() - 3);
         }
@@ -1159,7 +1175,7 @@ class DiaNetwork {
         printf("Server answer: %s\n", answer.c_str());
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 8\n");
         } else {
             if (answer != "") result = answer;
         }
@@ -1221,7 +1237,7 @@ class DiaNetwork {
         int res = SendReceiptRequest(extractedReceipt->PostPosition, extractedReceipt->Cash, extractedReceipt->Electronical);
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 9\n");
             return SERVER_UNAVAILABLE;
         } else {
             receipts_channel->DropOne();
@@ -1253,7 +1269,7 @@ class DiaNetwork {
         int res = SendRequest(&(message->json_request), &answer, url);
 
         if (res > 0) {
-            printf("No connection to server\n");
+            printf("No connection to server - 10\n");
             return SERVER_UNAVAILABLE;
         } else {
             channel.DropOne();
@@ -1518,6 +1534,25 @@ class DiaNetwork {
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "StationID", json_integer(stationID));
         json_object_set_new(object, "Key", json_string(key.c_str()));
+
+        char *str = json_dumps(object, 0);
+        std::string res = str;
+
+        free(str);
+        str = 0;
+        json_decref(object);
+        return res;
+    }
+
+    std::string json_add_log(std::string text, std::string typeLog = "", std::string level = "info") {
+        json_t *object = json_object();
+
+        json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "Text", json_string(text.c_str()));
+        json_object_set_new(object, "level", json_string(level.c_str()));
+
+        if (!typeLog.empty())
+            json_object_set_new(object, "Type", json_string(typeLog.c_str()));
 
         char *str = json_dumps(object, 0);
         std::string res = str;

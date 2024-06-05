@@ -45,6 +45,7 @@
 #include "dia_screen_item_qr.h"
 #include "dia_security.h"
 #include "dia_startscreen.h"
+#include "dia_log.h"
 
 #define DIA_VERSION "v1.8-enlight"
 
@@ -1266,7 +1267,8 @@ int main(int argc, char **argv) {
     printf("Card reader initialization...\n");
     StartScreenMessage(STARTUP_MESSAGE::CARD_READER, "Card Reader initialization...");
     // Runtime and firmware initialization
-    DiaDeviceManager *manager = new DiaDeviceManager;
+    Logger* logger = new Logger(network);
+    DiaDeviceManager *manager = new DiaDeviceManager(logger);
     bool findCardReader = true;
     while (findCardReader) {
         int errCardReader = addCardReader(manager);

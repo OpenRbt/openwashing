@@ -30,6 +30,8 @@ void * DiaCardReader_ExecuteDriverProgramThread(void * driverPtr) {
     int sum = driver->RequestedMoney;
     pthread_mutex_unlock(&driver->MoneyLock);
 
+    driver->logger->AddLog("Execute driver program thread: money = " + TO_STR(sum), DIA_CARDREADER_LOG_TYPE);
+
     fprintf(stderr, "reader request %d RUB...\n", sum);
     int money_command = sum * 100;
 
@@ -47,10 +49,15 @@ void * DiaCardReader_ExecuteDriverProgramThread(void * driverPtr) {
             driver->RequestedMoney = 0;
             pthread_mutex_unlock(&driver->MoneyLock);
             printf("Reported money: %d\n", sum);
+
+            driver->logger->AddLog("Execute driver program thread: reported money = " + TO_STR(sum), DIA_CARDREADER_LOG_TYPE, LogLevel::Debug);
+
         } else {
             printf("No handler to report: %d\n", sum);
         }
     } else {
+        driver->logger->AddLog("Execute driver program thread: status code = " + TO_STR(statusCode), DIA_CARDREADER_LOG_TYPE, LogLevel::Error);
+
         pthread_mutex_lock(&driver->MoneyLock);
         driver->RequestedMoney = 0;
         pthread_mutex_unlock(&driver->MoneyLock);
@@ -69,6 +76,8 @@ int DiaCardReader_PerformTransaction(void * specificDriver, int money) {
         printf("DiaCardReader Perform Transaction got NULL driver\n");
         return DIA_CARDREADER_NULL_PARAMETER;
     }
+
+    driver->logger->AddLog("Perform transaction: money = " + TO_STR(money), DIA_CARDREADER_LOG_TYPE);
 
     printf("DiaCardReader started Perform Transaction, money = %d\n", money);
 
@@ -96,6 +105,9 @@ int DiaCardReader_StopDriver(void * specificDriver) {
     }
 
     DiaCardReader * driver = reinterpret_cast<DiaCardReader *>(specificDriver);
+
+    driver->logger->AddLog("Abort transaction", DIA_CARDREADER_LOG_TYPE);
+
     pthread_mutex_lock(&driver->MoneyLock);
     driver->RequestedMoney = 0;
     pthread_mutex_unlock(&driver->MoneyLock);
@@ -115,12 +127,15 @@ int DiaCardReader_StopDriver(void * specificDriver) {
             int err = system(kill_line.c_str());
             if (err) {
                 printf("can't kill cardreader thread %d\n", err);
+
+                driver->logger->AddLog("Abort transaction: kill process result = " + TO_STR(err), DIA_CARDREADER_LOG_TYPE, LogLevel::Warning);
             }
         }
     }
     pthread_join(driver->ExecuteDriverProgramThread, NULL);
 
     printf("Cardreader thread killed\n");
+
     return DIA_CARDREADER_NO_ERROR;
 }
 

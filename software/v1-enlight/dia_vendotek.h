@@ -3,6 +3,7 @@
 
 #include "dia_device.h"
 #include "./vendotek/vendotek.h"
+#include "dia_log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -11,7 +12,8 @@
 
 #define DIA_VENDOTEK_NO_ERROR 0
 #define DIA_VENDOTEK_NULL_PARAMETER 4
-
+#define DIA_VENDOTEK_LOG_TYPE "vendotek"
+#define TO_STR std::to_string
 
 
 typedef struct payment_opts_s {
@@ -58,13 +60,15 @@ public:
     std::string Port = "";
     vtk_t *_Vtk = NULL;
     payment_opts_t *_PaymentOpts = NULL;
+    Logger* logger = nullptr;
 
-    DiaVendotek(void * manager, void (*incomingMoneyHandler)(void * vendotek, int moneyType, int newMoney), std::string host, std::string port) {
+    DiaVendotek(void * manager, void (*incomingMoneyHandler)(void * vendotek, int moneyType, int newMoney), std::string host, std::string port, Logger* logger) {
         _Manager = manager;
         IncomingMoneyHandler = incomingMoneyHandler;
         RequestedMoney = 0;
         Host = host;
         Port = port;
+        this->logger = logger;
         printf("Card Reader created\n");
     }
     

@@ -5,10 +5,12 @@
 #include "dia_device.h"
 #include "dia_cardreader.h"
 #include "dia_vendotek.h"
+#include "dia_log.h"
 #include <pthread.h>
 #include <stdlib.h>
 
 #define DIAE_DEVICE_MANAGER_NOERROR 0
+#define DIA_DEVICE_MANAGER_LOG_TYPE "devicemanager"
 
 enum CARD_READER_STATUS {PAYMENT_WORLD_SUCCCES, VENDOTEK_SUCCES,NOT_USED, VENDOTEK_NO_HOST, VENDOTEK_NULL_DRIVER, VENDOTEK_THREAD_ERROR, VENDOTEK_NOT_FOUND};
 
@@ -21,6 +23,7 @@ public:
     
     int NeedWorking;
     char * _PortName;
+    Logger* logger = nullptr;
 
     DiaCardReader* _CardReader = NULL;
     DiaVendotek* _Vendotek = NULL;
@@ -28,7 +31,7 @@ public:
     std::list<DiaDevice*> _Devices;
 
     pthread_t WorkingThread;
-    DiaDeviceManager();
+    DiaDeviceManager(Logger* logger);
     ~DiaDeviceManager();
 };
 void * DiaDeviceManager_WorkingThread(void * manager);
