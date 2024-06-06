@@ -39,3 +39,6 @@ one_instance.lock
 # IDEs
 .vscode
 .vscode/settings.json
+
+venv
+env

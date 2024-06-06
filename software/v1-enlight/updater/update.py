@@ -26,13 +26,13 @@ def get_local_ip(interface='wlan0'):
         local_ip = ip_info[ni.AF_INET][0]['addr']
         return local_ip
     except KeyError:
-        logger.info("IP-адрес не найден для интерфейса: " + interface)
+        logger.info("IP address not found for interface: " + interface)
         raise
     except ValueError:
-        logger.info("Некорректное название интерфейса: " + interface)
+        logger.info("Incirrect interface name: " + interface)
         raise
     except Exception as e:
-        logger.info("Ошибка: " + str(e))
+        logger.info("Error: " + str(e))
         raise
     
 
