@@ -107,6 +107,7 @@ uint8_t is_acceptable(char k);
 void set_rs_mode(uint8_t new_mode);
 void set_incoming_byte_handler(uint8_t port_num, void (*event_handler)(uint8_t symbol));
 uint8_t send_bytes(uint8_t port_num, const char * new_data, uint8_t size);
+void main_menu_reset();
 
 
 #endif /* __MAIN_H */

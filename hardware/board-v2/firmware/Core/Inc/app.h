@@ -42,9 +42,15 @@ typedef struct motor_full_status_s {
 typedef struct hw_settings_s {
 	uint8_t posts_supported; // 1 or 2 is a valid value here. Invalid value means 1
 	uint8_t main_post_number; // position of the first post
-	uint8_t second_post_number; // position of the second post
-	uint8_t dummy;
+	uint8_t frequency_converter_model;
+	uint8_t connection_mode;
 } hw_settings;
+
+#define ESQ_500 0
+#define ESQ_770 1
+
+#define CONNECTION_RS485 0
+#define CONNECTION_USB 1
 
 
 typedef struct relay_reader_s {
@@ -81,8 +87,12 @@ void write_settings(uint32_t * obj);
 char * get_post_num_str();
 uint8_t get_post_num();
 void set_post_num(uint8_t new_post_num);
+void set_motor(uint8_t new_motor);
 void inc_post_num();
 void dec_post_num();
+uint8_t get_motor();
+uint8_t get_connection_mode();
+void set_connection_mode(uint8_t new_mode);
 
 char * get_uid();
 char int_to_hexchar(uint8_t key);

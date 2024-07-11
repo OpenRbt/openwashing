@@ -40,4 +40,6 @@ uint8_t parse_motor_info_answer(const char * answer, motor_parsed_info * status)
 
 void esq_vars_init();
 
+void set_cmd_crc(const char *cmd, uint8_t size, uint16_t * crc_sum);
+
 #endif /* INC_ESQ500MODBUS_H_ */
