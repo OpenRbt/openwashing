@@ -154,7 +154,7 @@ class DiaNetwork {
 
     // Base function for sending a POST request.
     // Parameters: gets pre-created HTTP body, modifies answer from server, gets address of host (URL).
-    int SendRequest(std::string *body, std::string *answer, std::string host_addr) {
+    int SendRequest(std::string *body, std::string *answer, std::string host_addr, int timeout) {
         assert(body);
         assert(answer);
 
@@ -183,7 +183,7 @@ class DiaNetwork {
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "diae/0.1");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->_Writefunc);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &raw_answer);
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 10000);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
 
         res = curl_easy_perform(curl);
         int http_code = 0;
@@ -348,7 +348,7 @@ class DiaNetwork {
         int result;
         std::string json_create_session_request = json_create_get_volue();
         std::string answer;
-        result = SendRequest(&json_create_session_request, &answer, url);
+        result = SendRequest(&json_create_session_request, &answer, url, 10000);
 
         if (result || answer == "") return 1;
 
@@ -384,7 +384,7 @@ class DiaNetwork {
         int result;
         std::string json_end_session_request = json_create_end_session(sessionID);
         std::string answer;
-        result = SendRequest(&json_end_session_request, &answer, url);
+        result = SendRequest(&json_end_session_request, &answer, url, 10000);
 
         return result ? 1 : 0;
     }
@@ -396,7 +396,7 @@ class DiaNetwork {
 
         int result;
         std::string json_ping_request = json_create_card_reader_config();
-        result = SendRequest(&json_ping_request, &answer, url);
+        result = SendRequest(&json_ping_request, &answer, url, 10000);
         if (result) {
             return 1;
         }
@@ -444,7 +444,7 @@ class DiaNetwork {
 
         int result;
         std::string json_run_program_request = json_create_run_program(programID, preflight);
-        result = SendRequest(&json_run_program_request, &answer, url);
+        result = SendRequest(&json_run_program_request, &answer, url, 1000);
         if ((result) || (answer != "")) {
             //fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
@@ -458,7 +458,7 @@ class DiaNetwork {
 
         int result;
         std::string json_stop_program_request = json_create_get_volue();
-        result = SendRequest(&json_stop_program_request, &answer, url);
+        result = SendRequest(&json_stop_program_request, &answer, url, 1000);
         if ((result) || (answer != "")) {
             fprintf(stderr, "StopProgramOnServer answer %s\n", answer.c_str());
             return 1;
@@ -473,7 +473,7 @@ class DiaNetwork {
         std::string json_get_volue_request = json_create_get_volue();
         int result;
 
-        result = SendRequest(&json_get_volue_request, &answer, url);
+        result = SendRequest(&json_get_volue_request, &answer, url, 1000);
 
         if (result == 0 && answer != "") {
             json_error_t error;
@@ -512,7 +512,7 @@ class DiaNetwork {
         std::string json_start_fluid_flow_sensor_request = json_create_start_fluid_flow_sensor(volume, startProgramID, stopProgramID);
         int result;
 
-        result = SendRequest(&json_start_fluid_flow_sensor_request, &answer, url);
+        result = SendRequest(&json_start_fluid_flow_sensor_request, &answer, url, 10000);
 
         if ((result) || (answer != "")) {
             fprintf(stderr, "StartFluidFlowSensor answer %s\n", answer.c_str());
@@ -529,7 +529,7 @@ class DiaNetwork {
 
         int result;
         std::string json_ping_request = json_create_card_reader_config();
-        result = SendRequest(&json_ping_request, &answer, url);
+        result = SendRequest(&json_ping_request, &answer, url, 10000);
 
         if (result) {
             return 1;
@@ -579,7 +579,7 @@ class DiaNetwork {
 
         int result;
         std::string json_create_sbp_payment_request = json_create_sbp_payment(amount);
-        result = SendRequest(&json_create_sbp_payment_request, &answer, url);
+        result = SendRequest(&json_create_sbp_payment_request, &answer, url, 10000);
 
         if ((result) || (answer != "")) {
             return 1;
@@ -594,7 +594,7 @@ class DiaNetwork {
 
         int result;
         std::string json_confirm_sbp_payment_request = json_create_confirm_sbp_payment(orderIdUrl);
-        result = SendRequest(&json_confirm_sbp_payment_request, &answer, url);
+        result = SendRequest(&json_confirm_sbp_payment_request, &answer, url, 10000);
 
         if ((result) || (answer != "")) {
             return 1;
@@ -624,7 +624,7 @@ class DiaNetwork {
 
         int result;
         std::string json_ping_request = json_create_ping_report(balance, program);
-        result = SendRequest(&json_ping_request, &answer, url);
+        result = SendRequest(&json_ping_request, &answer, url, 1000);
         // printf("Server answer on PING:\n%s\n", answer.c_str());
 
         if (result == 2) {
@@ -764,7 +764,7 @@ class DiaNetwork {
         std::string json_get_qr_request = json_create_get_qr();
         int result;
 
-        result = SendRequest(&json_get_qr_request, &answer, url);
+        result = SendRequest(&json_get_qr_request, &answer, url, 10000);
 
         if (result == 0 && answer != "") {
             json_error_t error;
@@ -800,7 +800,7 @@ class DiaNetwork {
         std::string json_stop_dispenser_request = json_create_stop_dispenser(stopProgramID);
         int result;
 
-        result = SendRequest(&json_stop_dispenser_request, &answer, url);
+        result = SendRequest(&json_stop_dispenser_request, &answer, url, 10000);
 
         if (result == 0 && answer != "") {
             return 0;
@@ -814,7 +814,7 @@ class DiaNetwork {
         std::string answer;
         std::string json_set_bonuses_request = json_create_set_bonuses(bonuses);
         int result;
-        result = SendRequest(&json_set_bonuses_request, &answer, url);
+        result = SendRequest(&json_set_bonuses_request, &answer, url, 10000);
 
         if (result == 0 && answer != "") {
             return 0;
@@ -829,7 +829,7 @@ class DiaNetwork {
         std::string url = _Host + _Port + "/get-station-discounts";
         int result;
         std::string json_get_station_discounts_request = json_get_station_discounts();
-        result = SendRequest(&json_get_station_discounts_request, &answer, url);
+        result = SendRequest(&json_get_station_discounts_request, &answer, url, 10000);
         if (result) {
             return 1;
         }
@@ -906,7 +906,7 @@ class DiaNetwork {
         std::string json_add_log_request = json_add_log(text, typeLog, level);
 
         std::string url = _Host + _Port + "/add-log";
-        int res = SendRequest(&json_add_log_request, &answer, url);
+        int res = SendRequest(&json_add_log_request, &answer, url, 10000);
         
         if (res > 0) {
             printf("\n!!!No connection to server - 1: %s, body: %s!!!\n\n", answer.c_str(), json_add_log_request.c_str());
@@ -925,7 +925,7 @@ class DiaNetwork {
 
         // Send request to Central Server
         std::string url = _Host + _Port + "/load-money";
-        int res = SendRequest(&json_get_last_money_report_request, &answer, url);
+        int res = SendRequest(&json_get_last_money_report_request, &answer, url, 10000);
 
         if (res > 0) {
             printf("No connection to server - 2\n");
@@ -1000,7 +1000,7 @@ class DiaNetwork {
 
         // Send request to Central Server
         std::string url = _Host + _Port + "/load-relay";
-        int res = SendRequest(&json_get_last_relay_report_request, &answer, url);
+        int res = SendRequest(&json_get_last_relay_report_request, &answer, url, 10000);
 
         if (res > 0) {
             printf("No connection to server - 3\n");
@@ -1081,7 +1081,7 @@ class DiaNetwork {
 
         // Send request to Central Server
         std::string url = _Host + _Port + "/save-if-not-exists";
-        int res = SendRequest(&set_registry_value, &answer, url);
+        int res = SendRequest(&set_registry_value, &answer, url, 10000);
 
         printf("Server answer: \n%s\n", answer.c_str());
 
@@ -1103,7 +1103,7 @@ class DiaNetwork {
 
         // Send request to Central Server
         std::string url = _Host + _Port + "/save";
-        int res = SendRequest(&set_registry_value, &answer, url);
+        int res = SendRequest(&set_registry_value, &answer, url, 10000);
 
         printf("Server answer: \n%s\n", answer.c_str());
 
@@ -1125,7 +1125,7 @@ class DiaNetwork {
 
         // Send request to Central Server
         std::string url = _Host + _Port + "/load";
-        int res = SendRequest(&get_registry_value, &answer, url);
+        int res = SendRequest(&get_registry_value, &answer, url, 10000);
 
         printf("Server answer: %s\n", answer.c_str());
 
@@ -1147,7 +1147,7 @@ class DiaNetwork {
 
         // Send request to Central Server
         std::string url = _Host + _Port + "/load-from-station";
-        int res = SendRequest(&get_registry_value_from_station, &answer, url);
+        int res = SendRequest(&get_registry_value_from_station, &answer, url, 10000);
 
         printf("Server answer: %s\n", answer.c_str());
 
@@ -1170,7 +1170,7 @@ class DiaNetwork {
 
         // Send request to Central Server
         std::string url = _Host + _Port + "/station-by-hash";
-        int res = SendRequest(&get_public_key, &answer, url);
+        int res = SendRequest(&get_public_key, &answer, url, 10000);
 
         printf("Server answer: %s\n", answer.c_str());
 
@@ -1266,7 +1266,7 @@ class DiaNetwork {
         std::string answer;
         std::string url = _Host + _Port + message->route;
 
-        int res = SendRequest(&(message->json_request), &answer, url);
+        int res = SendRequest(&(message->json_request), &answer, url, 10000);
 
         if (res > 0) {
             printf("No connection to server - 10\n");
