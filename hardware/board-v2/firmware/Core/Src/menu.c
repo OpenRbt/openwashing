@@ -78,8 +78,8 @@ void menu_init(menu * main_menu, menu_supervisor *s) {
 	}
 
 	init_post_number_menu(&main_menu->items[0], s);
-	init_mode_menu(&main_menu->items[1]);
-	init_motors_menu(&main_menu->items[2]);
+	init_mode_menu(&main_menu->items[1], s);
+	init_motors_menu(&main_menu->items[2], s);
 	init_test_menu(&main_menu->items[3]);
 	init_exit_menu(&main_menu->items[4], s);
 }
@@ -173,75 +173,130 @@ void init_post_number_menu(menu * post_num, menu_supervisor *s) {
 	post_num->items[TOTAL_POSTS].action_arg = post_args_back;
 }
 
-void init_mode_menu(menu * modemenu) {
-	int N3 = 2;
+void init_mode_menu(menu * modemenu, menu_supervisor *s) {
+	int N3 = 3;
 	modemenu->id = 3;
 	modemenu->size = N3;
 	modemenu->heading = STR_MAIN_ITEM_POST_MODE;
 	modemenu->items = malloc(N3*sizeof(menu));
 	modemenu->action = 0;
 	modemenu->is_selected = 0;
+	act_submenu_arg * args = malloc(sizeof(act_submenu_arg)); // will never be destroyed
 
+	args->m = modemenu;
+	args->s = s;
 
-	// relay mode
-	modemenu->items[0].id = modemenu->id * ID_OFFST + 1;
-	modemenu->items[0].size = 0;
-	modemenu->items[0].heading = STR_WORK_MODE_RELAY;
-	modemenu->items[0].items = 0;
-	modemenu->items[0].action = 0;
+	modemenu->action = act_submenu_mode;
+	modemenu->action_arg = args;
 
-	// motor control mode
-	modemenu->items[1].id = modemenu->id * ID_OFFST + 2;
-	modemenu->items[1].size = 0;
-	modemenu->items[1].heading = STR_WORK_MODE_MOTOR;
-	modemenu->items[1].items = 0;
-	modemenu->items[1].action = 0;
+	int i=0;
+
+	// rs485
+	modemenu->items[i].id = i;
+	modemenu->items[i].size = 0;
+	modemenu->items[i].heading = STR_MODE_RS485;
+	modemenu->items[i].items = 0;
+	modemenu->items[i].action = 0;
+	modemenu->items[i].is_selected = 0;
+	modemenu->items[i].items = 0;
+	modemenu->items[i].action = act_set_active_mode;
+	modemenu->items[i].action_arg = &(modemenu->items[0]);
+	modemenu->items[i].parent = modemenu;
+
+	// usb
+	i++;
+	modemenu->items[i].id = i;
+	modemenu->items[i].size = 0;
+	modemenu->items[i].heading = STR_MODE_USB;
+	modemenu->items[i].items = 0;
+	modemenu->items[i].action = 0;
+	modemenu->items[i].is_selected = 0;
+	modemenu->items[i].items = 0;
+	modemenu->items[i].action = act_set_active_mode;
+	modemenu->items[i].action_arg = &(modemenu->items[1]);
+	modemenu->items[i].parent = modemenu;
+
+	// exit item
+	i++;
+	modemenu->items[i].id = i;
+	modemenu->items[i].size = 0;
+	modemenu->items[i].heading = STR_BACK;
+	modemenu->items[i].items = 0;
+	modemenu->items[i].action = act_goto_parent;
+	act_goto_parent_arg * post_args_back = malloc(sizeof(act_goto_parent_arg)); // never deleted
+	post_args_back->m = modemenu;
+	post_args_back->s = s;
+	modemenu->items[i].action_arg = post_args_back;
 }
 
-void init_motors_menu(menu * motorsmenu) {
+void init_motors_menu(menu * motorsmenu, menu_supervisor *s) {
 	motorsmenu->id = ID_MOTORSMENU;
-	motorsmenu->size = TOTAL_POSTS;
+	motorsmenu->size = 4;
 	motorsmenu->heading = STR_MAIN_ITEM_POST_MOTORS;
 	motorsmenu->items = malloc(TOTAL_POSTS*sizeof(menu));
 	motorsmenu->action = 0;
 	motorsmenu->is_selected = 0;
-	for (uint8_t i=1; i<=TOTAL_POSTS; i++) {
-		motorsmenu->items[i-1].id = motorsmenu->id * ID_OFFST + i;
-		int N4 = 3;
-		motorsmenu->items[i-1].size = N4;
-		motorsmenu->items[i-1].heading = str_by_num(i);
-		motorsmenu->items[i-1].items = malloc(N4*sizeof(menu));
-		motorsmenu->items[i-1].action = 0;
-		motorsmenu->items[i-1].is_selected = 0;
-		init_drivers_list(i-1, &motorsmenu->items[i-1]);
-	}
-}
+	act_submenu_arg * args = malloc(sizeof(act_submenu_arg)); // will never be destroyed
 
-void init_drivers_list(int i, menu * motorsitem) {
-	// off item
-	motorsitem[0].id = 0;
-	motorsitem[0].size = 0;
-	motorsitem[0].heading = STR_DRIVER_OFF;
-	motorsitem[0].items = 0;
-	motorsitem[0].action = 0;
-	motorsitem[0].is_selected = 0;
+	args->m = motorsmenu;
+	args->s = s;
+
+	motorsmenu->action = act_submenu_motor;
+	motorsmenu->action_arg = args;
+
+	int i=0;
 
 	// esq500 item
-	motorsitem[1].id = 1;
-	motorsitem[1].size = 0;
-	motorsitem[1].heading = STR_DRIVER_ESQ500;
-	motorsitem[1].items = 0;
-	motorsitem[1].action = 0;
-	motorsitem[1].is_selected = 1;
+	motorsmenu->items[i].id = i;
+	motorsmenu->items[i].size = 0;
+	motorsmenu->items[i].heading = STR_DRIVER_ESQ500;
+	motorsmenu->items[i].items = 0;
+	motorsmenu->items[i].action = 0;
+	motorsmenu->items[i].is_selected = 0;
+	motorsmenu->items[i].items = 0;
+	motorsmenu->items[i].action = act_set_active_motor;
+	motorsmenu->items[i].action_arg = &(motorsmenu->items[0]);
+	motorsmenu->items[i].parent = motorsmenu;
+
+	// esq770 item
+	i++;
+	motorsmenu->items[i].id = i;
+	motorsmenu->items[i].size = 0;
+	motorsmenu->items[i].heading = STR_DRIVER_ESQ770;
+	motorsmenu->items[i].items = 0;
+	motorsmenu->items[i].action = 0;
+	motorsmenu->items[i].is_selected = 0;
+	motorsmenu->items[i].items = 0;
+	motorsmenu->items[i].action = act_set_active_motor;
+	motorsmenu->items[i].action_arg = &(motorsmenu->items[1]);
+	motorsmenu->items[i].parent = motorsmenu;
 
 	// ae200h item
-	motorsitem[2].id = 2;
-	motorsitem[2].size = 0;
-	motorsitem[2].heading = STR_DRIVER_AE200H;
-	motorsitem[2].items = 0;
-	motorsitem[2].action = 0;
-	motorsitem[2].is_selected = 0;
+	i++;
+	motorsmenu->items[i].id = i;
+	motorsmenu->items[i].size = 0;
+	motorsmenu->items[i].heading = STR_DRIVER_AE200H;
+	motorsmenu->items[i].items = 0;
+	motorsmenu->items[i].action = 0;
+	motorsmenu->items[i].is_selected = 0;
+	motorsmenu->items[i].items = 0;
+	motorsmenu->items[i].action = act_set_active_motor;
+	motorsmenu->items[i].action_arg = &(motorsmenu->items[2]);
+	motorsmenu->items[i].parent = motorsmenu;
+
+	// exit item
+	i++;
+	motorsmenu->items[i].id = i;
+	motorsmenu->items[i].size = 0;
+	motorsmenu->items[i].heading = STR_BACK;
+	motorsmenu->items[i].items = 0;
+	motorsmenu->items[i].action = act_goto_parent;
+	act_goto_parent_arg * post_args_back = malloc(sizeof(act_goto_parent_arg)); // never deleted
+	post_args_back->m = motorsmenu;
+	post_args_back->s = s;
+	motorsmenu->items[i].action_arg = post_args_back;
 }
+
 
 void display_menu_item(menu * menu_item, int8_t start_item, int8_t cursor) {
 	SSD1306_Clear();
@@ -340,4 +395,62 @@ void act_goto_menu_aux(menu_supervisor *s, menu *m, int8_t desired_position) {
 	}
 
 	s->cur_item = m;
+}
+
+void act_set_active_motor(void * arg) {
+	menu * item = (menu *) arg;
+	menu * parent = item->parent;
+	for (uint8_t i=0;i<parent->size;i++) {
+		if (i == item->id) {
+			// we need to make it selected
+			parent->items[i].is_selected = 1;
+			set_motor(item->id);
+		} else {
+			parent->items[i].is_selected = 0;
+		}
+	}
+}
+
+void act_set_active_mode(void * arg) {
+	menu * item = (menu *) arg;
+	menu * parent = item->parent;
+	for (uint8_t i=0;i<parent->size;i++) {
+		if (i == item->id) {
+			// we need to make it selected
+			parent->items[i].is_selected = 1;
+			set_connection_mode(item->id);
+		} else {
+			parent->items[i].is_selected = 0;
+		}
+	}
+}
+
+void act_submenu_motor(void *arg) {
+	act_submenu_arg * args = (act_submenu_arg *)arg;
+	uint8_t motor = get_motor();
+	// Let's make just one of them selected
+	for (uint8_t i = 0;i<args->m->size; i++) {
+	if (i == motor) {
+		args->m->items[i].is_selected = 1;
+	} else {
+		args->m->items[i].is_selected = 0;
+	}
+
+	act_goto_menu_aux(args->s, args->m, motor);
+}
+}
+
+void act_submenu_mode(void *arg) {
+	act_submenu_arg * args = (act_submenu_arg *)arg;
+	uint8_t mode = get_connection_mode();
+	// Let's make just one of them selected
+	for (uint8_t i = 0;i<args->m->size; i++) {
+	if (i == mode) {
+		args->m->items[i].is_selected = 1;
+	} else {
+		args->m->items[i].is_selected = 0;
+	}
+
+	act_goto_menu_aux(args->s, args->m, mode);
+}
 }

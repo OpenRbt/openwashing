@@ -24,7 +24,7 @@ char cmd_set_speed[8];
 // stop motor command
 char cmd_stop_motor[8];
 
-void _set_cmd_crc(const char *cmd, uint8_t size, uint16_t * crc_sum) {
+void set_cmd_crc(const char *cmd, uint8_t size, uint16_t * crc_sum) {
 	*crc_sum = 0xffff;
 	uint16_t polynom = 0xa001;
 	for (uint8_t i = 0; i<size;i++) {
@@ -52,7 +52,7 @@ void esq_vars_init(){
 	cmd_motor_info[4] = 0x00;
 	cmd_motor_info[5] = 0x01;
 	// crc
-	_set_cmd_crc(cmd_motor_info, 6, (uint16_t *)&cmd_motor_info[6]);
+	set_cmd_crc(cmd_motor_info, 6, (uint16_t *)&cmd_motor_info[6]);
 
 	//header
 	cmd_start_motor[0] = DEVICE_ADDR;
@@ -64,7 +64,7 @@ void esq_vars_init(){
 	cmd_start_motor[4] = 0x00;
 	cmd_start_motor[5] = 0x05;
 	// crc
-	_set_cmd_crc(cmd_start_motor, 6, (uint16_t *)&cmd_start_motor[6]);
+	set_cmd_crc(cmd_start_motor, 6, (uint16_t *)&cmd_start_motor[6]);
 
 	// header
 	cmd_set_speed[0] = DEVICE_ADDR;
@@ -76,7 +76,7 @@ void esq_vars_init(){
 	cmd_set_speed[4] = 0x13; //1388 is 5000, which is 50%
 	cmd_set_speed[5] = 0x88;
 	// crc
-	_set_cmd_crc(cmd_set_speed, 6, (uint16_t *)&cmd_set_speed[6]);
+	set_cmd_crc(cmd_set_speed, 6, (uint16_t *)&cmd_set_speed[6]);
 
 	// header
 	cmd_stop_motor[0] = DEVICE_ADDR;
@@ -88,7 +88,7 @@ void esq_vars_init(){
 	cmd_stop_motor[4] = 0x00;
 	cmd_stop_motor[5] = 0x06;
 	// crc
-	_set_cmd_crc(cmd_stop_motor, 6, (uint16_t *)&cmd_stop_motor[6]);
+	set_cmd_crc(cmd_stop_motor, 6, (uint16_t *)&cmd_stop_motor[6]);
 }
 
 
@@ -110,7 +110,7 @@ char * set_motor_speed_cmd(uint8_t percent) {
 	char * val = (char*)&big_percent;
 	cmd_set_speed[5] = val[0];
 	cmd_set_speed[4] = val[1];
-	_set_cmd_crc(cmd_set_speed, 6, (uint16_t *)&cmd_set_speed[6]);
+	set_cmd_crc(cmd_set_speed, 6, (uint16_t *)&cmd_set_speed[6]);
 	return cmd_set_speed;
 }
 

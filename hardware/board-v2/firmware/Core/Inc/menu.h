@@ -10,8 +10,8 @@
 #define STR_MAIN_MENU_CAPTION "main menu"
 #define STR_MAIN_ITEM_POST_NUM "position"
 #define STR_MAIN_ITEM_POST_MODE "mode"
-#define STR_WORK_MODE_RELAY "control post"
-#define STR_WORK_MODE_MOTOR "motors driver"
+#define STR_MODE_RS485 "rs485"
+#define STR_MODE_USB "usb"
 #define STR_MAIN_ITEM_POST_MOTORS "motors"
 #define STR_TEST_RELAYS "test relays"
 #define STR_EXIT "exit"
@@ -32,6 +32,7 @@
 
 #define STR_DRIVER_OFF "off"
 #define STR_DRIVER_ESQ500 "esq500"
+#define STR_DRIVER_ESQ770 "esq770"
 #define STR_DRIVER_AE200H "ae200h"
 
 #define ID_OFFST 16
@@ -75,8 +76,8 @@ void display_menu_supervisor(menu_supervisor * s);
 void menu_supervisor_init(menu_supervisor * s, menu * main_menu);
 void menu_init(menu * main_menu, menu_supervisor *s);
 void init_post_number_menu(menu * post_num, menu_supervisor *s);
-void init_mode_menu(menu * modemenu);
-void init_motors_menu(menu * motorsmenu);
+void init_mode_menu(menu * modemenu, menu_supervisor *s);
+void init_motors_menu(menu * motorsmenu, menu_supervisor *s);
 void init_test_menu(menu * testmenu);
 void init_exit_menu(menu * exitmenu, menu_supervisor *s);
 void init_drivers_list(int i, menu * motorsitem);
@@ -91,6 +92,9 @@ typedef struct act_submenu_arg_s {
 } act_submenu_arg;
 void act_submenu_pos(void *arg);
 
+void act_submenu_motor(void *arg);
+void act_submenu_mode(void *arg);
+
 void act_test_relays(void * arg);
 void act_exit(void * arg);
 
@@ -101,6 +105,9 @@ typedef struct act_goto_parent_arg_s {
 void act_goto_parent(void * arg);
 
 void act_set_active(void * arg);
+
+void act_set_active_motor(void * arg);
+void act_set_active_mode(void * arg);
 
 void act_goto_menu_aux(menu_supervisor *s, menu *m, int8_t desired_position); // used to go to the specific menu
 

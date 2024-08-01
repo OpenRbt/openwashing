@@ -1,6 +1,7 @@
 "./Core/Src/app.o"
 "./Core/Src/buttons.o"
 "./Core/Src/esq500modbus.o"
+"./Core/Src/esq770modbus.o"
 "./Core/Src/fonts.o"
 "./Core/Src/freertos.o"
 "./Core/Src/gm009605.o"

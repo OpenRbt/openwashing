@@ -10,6 +10,7 @@
 #include "app.h"
 #include "shared.h"
 #include "esq500modbus.h"
+#include "esq770modbus.h"
 //#include "stm32f0xx_hal_flash.h"
 
 #define MODE_SPACE 0
@@ -195,24 +196,57 @@ uint8_t send_read_cmd(const char *cur_cmd) {
 
 // returns error
 uint8_t app_stop_motor(){
-	char * cur_cmd = stop_motor_cmd();
+	char * cur_cmd;
+	switch (current_settings.frequency_converter_model){
+	case ESQ_770:
+		cur_cmd = stop_motor_cmd_770();
+		break;
+	default:
+		cur_cmd = stop_motor_cmd();
+		break;
+	}
 	return send_generic_cmd(cur_cmd);
 }
 
 // returns error
 uint8_t app_set_motor_speed(uint8_t desired_speed) {
-	char * cur_cmd = set_motor_speed_cmd(desired_speed);
+	char * cur_cmd;
+	switch (current_settings.frequency_converter_model){
+	case ESQ_770:
+		cur_cmd = set_motor_speed_cmd_770(desired_speed);
+		break;
+	default:
+		cur_cmd = set_motor_speed_cmd(desired_speed);
+		break;
+	}
+
 	return send_generic_cmd(cur_cmd);
 }
 
 // returns error
 uint8_t app_start_motor() {
-	char * cur_cmd = start_motor_cmd();
+	char * cur_cmd;
+	switch (current_settings.frequency_converter_model){
+	case ESQ_770:
+		cur_cmd = start_motor_cmd_770();
+		break;
+	default:
+		cur_cmd = start_motor_cmd();
+		break;
+	}
 	return send_generic_cmd(cur_cmd);
 }
 
 uint8_t app_get_motor_info() {
-	char * cur_cmd = read_motor_info_cmd();
+	char * cur_cmd;
+	switch (current_settings.frequency_converter_model){
+	case ESQ_770:
+		cur_cmd = read_motor_info_cmd_770();
+		break;
+	default:
+		cur_cmd = read_motor_info_cmd();
+		break;
+	}
 	return send_read_cmd(cur_cmd);
 }
 
@@ -244,6 +278,7 @@ void app_init() {
 	zero_hw_relays_vars();
 	zero_motor_settings();
 	esq_vars_init();
+	esq_vars_init_770();
 }
 
 void set_turn_on_func(void (*new_turn_on)(uint8_t)) {
@@ -326,6 +361,16 @@ void recover_settings(uint32_t * obj) {
 		current_settings.main_post_number = 99;
 		write_settings((uint32_t *)&current_settings);
 	}
+	if(current_settings.frequency_converter_model > 2) {
+		current_settings.frequency_converter_model = 2;
+		write_settings((uint32_t *)&current_settings);
+	}
+
+	if(current_settings.connection_mode > 1) {
+		current_settings.connection_mode = 1;
+		write_settings((uint32_t *)&current_settings);
+	}
+
 	_update_post_num();
 }
 
@@ -340,6 +385,15 @@ char * get_post_num_str() {
 uint8_t get_post_num() {
 	return current_settings.main_post_number;
 }
+
+uint8_t get_motor() {
+	return current_settings.frequency_converter_model;
+}
+
+uint8_t get_connection_mode() {
+	return current_settings.connection_mode;
+}
+
 void set_post_num(uint8_t new_post_num) {
 	uint8_t old_post_num = current_settings.main_post_number;
 
@@ -348,6 +402,26 @@ void set_post_num(uint8_t new_post_num) {
 	if(current_settings.main_post_number > MAX_POST_NUM) current_settings.main_post_number = MIN_POST_NUM;
 	_update_post_num();
 	if (old_post_num != current_settings.main_post_number) {
+		write_settings((uint32_t *)&current_settings);
+	}
+}
+
+void set_motor(uint8_t new_motor) {
+	uint8_t old_motor = current_settings.frequency_converter_model;
+
+	current_settings.frequency_converter_model = new_motor;
+	if(current_settings.frequency_converter_model > 2) current_settings.frequency_converter_model = 2;
+	if (old_motor != current_settings.frequency_converter_model) {
+		write_settings((uint32_t *)&current_settings);
+	}
+}
+
+void set_connection_mode(uint8_t new_mode) {
+	uint8_t old_mode = current_settings.connection_mode;
+
+	current_settings.connection_mode = new_mode;
+	if(current_settings.connection_mode > 1) current_settings.connection_mode = 1;
+	if (old_mode != current_settings.connection_mode) {
 		write_settings((uint32_t *)&current_settings);
 	}
 }
@@ -400,29 +474,59 @@ void set_state(uint8_t new_state) {
 }
 
 void app_process_cmd(const char * cmd) {
+	int i = 0;
+	uint8_t station = 0;
+
+	if (current_settings.connection_mode == CONNECTION_RS485) {
+		if (cmd[0]=='S') {
+			i =1;
+			for (;cmd[i]!=' ' && i<MAX_CMD_BUF-1;) {
+				if (cmd[i] < '0' || cmd[i] > '9') {
+					return;
+				}
+				station*=10;
+				station+= (cmd[i]-'0');
+				i++;
+			}
+			if (station!=current_settings.main_post_number) {
+				return;
+			}
+			i++;
+		} else {
+		return;
+		}
+	}
+
 	if(get_tick) {
 		last_ping = get_tick();
 	}
-	if(cmd[0]=='U' && cmd[1]=='I' && cmd[2] == 'D') {
-		app_decode_uid(&cmd[3]);
+
+	if(cmd[i+0]=='U' && cmd[i+1]=='I' && cmd[i+2] == 'D') {
+		app_decode_uid(&cmd[i+3]);
 		return;
 	}
-	if(cmd[0]=='S' && cmd[1]=='E' && cmd[2]=='T') {
-		app_decode_set(&cmd[3]);
+	if(cmd[i+0]=='S' && cmd[i+1]=='E' && cmd[i+2]=='T') {
+		app_decode_set(&cmd[i+3]);
 		return;
 	}
-	if(cmd[0]=='P' && cmd[1]=='I' && cmd[2] == 'N' && cmd[3] == 'G') {
-		app_decode_ping(&cmd[4]);
+	if(cmd[i+0]=='P' && cmd[i+1]=='I' && cmd[i+2] == 'N' && cmd[i+3] == 'G') {
+		app_decode_ping(&cmd[i+4]);
 		return;
 	}
-	if(cmd[0]=='R' && cmd[1]=='U' && cmd[2]=='N') {
-		app_decode_run(&cmd[3]);
+	if(cmd[i+0]=='R' && cmd[i+1]=='U' && cmd[i+2]=='N') {
+		app_decode_run(&cmd[i+3]);
 	}
 }
+
 void app_decode_ping(const char *cmd) {
 	// right now we don't even parse additional data
 	if(app_send_data) {
-		app_send_data(post_num_str, 3);
+		char str[4];
+		str[0] = post_num_str[0];
+		str[1] = post_num_str[1];
+		str[2] = ';';
+		str[3] = 0;
+		app_send_data(str, 4);
 	}
 }
 
@@ -613,7 +717,7 @@ void app_decode_run(const char *cmd) {
 			return;
 		}
 	}
-	app_send_data("OK", 2);
+	app_send_data("OK;", 3);
 	app_apply_relays(&r_config);
 }
 void app_apply_relays(relay_reader_config  * new_relays) {
@@ -692,7 +796,7 @@ uint8_t get_state() {
 	if (get_tick) {
 		uint32_t cur_tick = get_tick();
 		uint32_t time_passed = cur_tick - last_ping;
-		if(time_passed > 1000) {
+		if(time_passed > 2000) {
 			current_state = ST_WAITING_FOR_CONNECTION;
 		} else {
 			current_state = ST_WORKING;

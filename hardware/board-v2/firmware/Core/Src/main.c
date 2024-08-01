@@ -245,7 +245,11 @@ static void MX_I2C1_Init(void) {
 
 static void MX_USART1_UART_Init(void) {
 	huart1.Instance = USART1;
-	huart1.Init.BaudRate = 9600;
+	if (get_connection_mode() == CONNECTION_RS485) {
+		huart1.Init.BaudRate = 9600;
+	} else {
+		huart1.Init.BaudRate = 38400;
+	}
 	huart1.Init.WordLength = UART_WORDLENGTH_8B;
 	huart1.Init.StopBits = UART_STOPBITS_1;
 	huart1.Init.Parity = UART_PARITY_NONE;

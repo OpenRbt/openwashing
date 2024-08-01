@@ -1,4 +1,4 @@
-../Core/Src/esq500modbus.c:27:6:_set_cmd_crc	32	static
+../Core/Src/esq500modbus.c:27:6:set_cmd_crc	32	static
 ../Core/Src/esq500modbus.c:44:6:esq_vars_init	8	static
 ../Core/Src/esq500modbus.c:96:8:start_motor_cmd	8	static
 ../Core/Src/esq500modbus.c:100:9:parse_start_motor_answer	16	static

@@ -1,4 +1,4 @@
-../Core/Src/esq500modbus.c:27:6:_set_cmd_crc	4
+../Core/Src/esq500modbus.c:27:6:set_cmd_crc	4
 ../Core/Src/esq500modbus.c:44:6:esq_vars_init	1
 ../Core/Src/esq500modbus.c:96:8:start_motor_cmd	1
 ../Core/Src/esq500modbus.c:100:9:parse_start_motor_answer	1
