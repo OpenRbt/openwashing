@@ -400,29 +400,61 @@ void set_state(uint8_t new_state) {
 }
 
 void app_process_cmd(const char * cmd) {
+	int i = 0;
+	uint8_t station = 0;
+
+	//TODO: this parameter needs to be added to the settings menu
+	uint8_t is_rs485 = 1;
+	if (is_rs485 == 1) {
+		if (cmd[0]=='S') {
+			i =1;
+			for (;cmd[i]!=' ' && i<MAX_CMD_BUF-1;) {
+				if (cmd[i] < '0' || cmd[i] > '9') {
+					return;
+				}
+				station*=10;
+				station+= (cmd[i]-'0');
+				i++;
+			}
+			if (station!=current_settings.main_post_number) {
+				return;
+			}
+			i++;
+		} else {
+		return;
+		}
+	}
+
 	if(get_tick) {
 		last_ping = get_tick();
 	}
-	if(cmd[0]=='U' && cmd[1]=='I' && cmd[2] == 'D') {
-		app_decode_uid(&cmd[3]);
+
+	if(cmd[i+0]=='U' && cmd[i+1]=='I' && cmd[i+2] == 'D') {
+		app_decode_uid(&cmd[i+3]);
 		return;
 	}
-	if(cmd[0]=='S' && cmd[1]=='E' && cmd[2]=='T') {
-		app_decode_set(&cmd[3]);
+	if(cmd[i+0]=='S' && cmd[i+1]=='E' && cmd[i+2]=='T') {
+		app_decode_set(&cmd[i+3]);
 		return;
 	}
-	if(cmd[0]=='P' && cmd[1]=='I' && cmd[2] == 'N' && cmd[3] == 'G') {
-		app_decode_ping(&cmd[4]);
+	if(cmd[i+0]=='P' && cmd[i+1]=='I' && cmd[i+2] == 'N' && cmd[i+3] == 'G') {
+		app_decode_ping(&cmd[i+4]);
 		return;
 	}
-	if(cmd[0]=='R' && cmd[1]=='U' && cmd[2]=='N') {
-		app_decode_run(&cmd[3]);
+	if(cmd[i+0]=='R' && cmd[i+1]=='U' && cmd[i+2]=='N') {
+		app_decode_run(&cmd[i+3]);
 	}
 }
+
 void app_decode_ping(const char *cmd) {
 	// right now we don't even parse additional data
 	if(app_send_data) {
-		app_send_data(post_num_str, 3);
+		char str[4];
+		str[0] = post_num_str[0];
+		str[1] = post_num_str[1];
+		str[2] = ';';
+		str[3] = 0;
+		app_send_data(str, 4);
 	}
 }
 
@@ -613,7 +645,7 @@ void app_decode_run(const char *cmd) {
 			return;
 		}
 	}
-	app_send_data("OK", 2);
+	app_send_data("OK;", 3);
 	app_apply_relays(&r_config);
 }
 void app_apply_relays(relay_reader_config  * new_relays) {
