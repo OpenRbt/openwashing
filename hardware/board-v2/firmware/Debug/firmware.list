@@ -3863,10 +3863,10 @@ uint8_t get_state() {
  8001930:	687a      	ldr	r2, [r7, #4]
  8001932:	1ad3      	subs	r3, r2, r3
  8001934:	603b      	str	r3, [r7, #0]
-		if(time_passed > 1000) {
+		if(time_passed > 2000) {
  8001936:	683a      	ldr	r2, [r7, #0]
  8001938:	23fa      	movs	r3, #250	; 0xfa
- 800193a:	009b      	lsls	r3, r3, #2
+ 800193a:	00db      	lsls	r3, r3, #3
  800193c:	429a      	cmp	r2, r3
  800193e:	d903      	bls.n	8001948 <get_state+0x34>
 			current_state = ST_WAITING_FOR_CONNECTION;

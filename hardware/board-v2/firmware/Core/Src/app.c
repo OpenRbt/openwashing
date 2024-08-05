@@ -724,7 +724,7 @@ uint8_t get_state() {
 	if (get_tick) {
 		uint32_t cur_tick = get_tick();
 		uint32_t time_passed = cur_tick - last_ping;
-		if(time_passed > 1000) {
+		if(time_passed > 2000) {
 			current_state = ST_WAITING_FOR_CONNECTION;
 		} else {
 			current_state = ST_WORKING;
