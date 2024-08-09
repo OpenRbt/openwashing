@@ -615,15 +615,32 @@ class DiaNetwork {
     // Returns 0, if request was OK, other value - in case of failure.
     // Modifies service money, if server returned that kind of data.
 
-    int SendPingRequest(int &service_money, bool &open_station, int &button_id, int balance, int program, int &lastUpdate, 
-    int &lastDiscountUpdate, bool &bonus_system_active, bool &sbp_system_active, std::string &qrData, std::string &authorizedSessionID, 
-    std::string &sessionID, int &bonusAmount, double& qrMoney, std::string &qrUrl, bool& qrFailed, std::string &qrOrderId, int &kaspi_money) {
+    struct PingResponse {
+        int serviceMoney = 0;
+        int bonusAmount = 0;
+        int kaspiAmount = 0;
+        bool openStation = false;
+        std::string authorizedSessionID = "";
+        std::string visibleSessionID = "";
+        bool bonusSystemActive = false;
+        bool sbpSystemActive = false;
+        int buttonID = 0;
+        int lastUpdate = 0;
+        int discountLastUpdate = 0;
+        std::string qrData = "";
+        std::string sbpUrl = "";
+        std::string sbpOrderId = "";
+        double sbpMoney = 0;
+        bool sbpQrFailed = true;
+    };
+
+    int SendPingRequest(int balance, int program, bool justTurnedOn, PingResponse &resp) {
 
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 
         int result;
-        std::string json_ping_request = json_create_ping_report(balance, program);
+        std::string json_ping_request = json_create_ping_report(balance, program, justTurnedOn);
         result = SendRequest(&json_ping_request, &answer, url, 1000);
         // printf("Server answer on PING:\n%s\n", answer.c_str());
 
@@ -631,7 +648,7 @@ class DiaNetwork {
             return 3;
         }
         if (result) {
-            sbp_system_active = false;
+            resp.sbpSystemActive = false;
             return 1;
         }
 
@@ -654,89 +671,80 @@ class DiaNetwork {
 
             json_t *obj_service_amount;
             obj_service_amount = json_object_get(object, "serviceAmount");
-            service_money = (int)json_integer_value(obj_service_amount);
+            resp.serviceMoney = (int)json_integer_value(obj_service_amount);
 
             json_t *obj_kaspi_amount;
             obj_kaspi_amount = json_object_get(object, "kaspiAmount");
-            kaspi_money = (int)json_integer_value(obj_kaspi_amount);
+            resp.kaspiAmount = (int)json_integer_value(obj_kaspi_amount);
 
             json_t *obj_open_station;
             obj_open_station = json_object_get(object, "openStation");
-            open_station = (bool)json_boolean_value(obj_open_station);
+            resp.openStation = (bool)json_boolean_value(obj_open_station);
 
             json_t *obj_button_id;
             obj_button_id = json_object_get(object, "ButtonID");
-            button_id = (int)json_integer_value(obj_button_id);
+            resp.buttonID = (int)json_integer_value(obj_button_id);
 
             json_t *obj_last_update;
             obj_last_update = json_object_get(object, "lastUpdate");
-            lastUpdate = (int)json_integer_value(obj_last_update);
+            resp.lastUpdate = (int)json_integer_value(obj_last_update);
 
             json_t *obj_last_discount_update;
             obj_last_discount_update = json_object_get(object, "lastDiscountUpdate");
-            lastDiscountUpdate = (int)json_integer_value(obj_last_discount_update);
+            resp.discountLastUpdate = (int)json_integer_value(obj_last_discount_update);
 
             json_t *obj_bonus_system;
             obj_bonus_system = json_object_get(object, "bonusSystemActive");
-            bonus_system_active = (bool)json_boolean_value(obj_bonus_system);
+            resp.bonusSystemActive = (bool)json_boolean_value(obj_bonus_system);
 
             json_t *obj_sbp_system;
             obj_sbp_system = json_object_get(object, "sbpSystemActive");
-            sbp_system_active = (bool)json_boolean_value(obj_sbp_system);
+            resp.sbpSystemActive = (bool)json_boolean_value(obj_sbp_system);
 
             json_t *obj_bonus_amount;
             obj_bonus_amount = json_object_get(object, "bonusAmount");
-            bonusAmount = (int)json_integer_value(obj_bonus_amount);
+            resp.bonusAmount = (int)json_integer_value(obj_bonus_amount);
 
             json_t *obj_qr_money;
             obj_qr_money = json_object_get(object, "qrMoney");
-            qrMoney = (double)json_number_value(obj_qr_money);
+            resp.sbpMoney = (double)json_number_value(obj_qr_money);
 
             json_t *obj_qr_url;
             obj_qr_url = json_object_get(object, "qrUrl");
             if (json_is_string(obj_qr_url)) {
-                qrUrl = (std::string)json_string_value(obj_qr_url);
-            }
-            else{
-                qrUrl = "";
+                resp.sbpUrl = (std::string)json_string_value(obj_qr_url);
             }
 
             json_t *obj_qr_failed;
             obj_qr_failed = json_object_get(object, "qrFailed");
-            qrFailed = (bool)json_boolean_value(obj_qr_failed);
+            resp.sbpQrFailed = (bool)json_boolean_value(obj_qr_failed);
 
             json_t *obj_qr_order_id;
             obj_qr_order_id = json_object_get(object, "qrOrderId");
             if (json_is_string(obj_qr_order_id)) {
-                qrOrderId = (std::string)json_string_value(obj_qr_order_id);
-            }
-            else{
-                qrOrderId = "";
+                resp.sbpOrderId = (std::string)json_string_value(obj_qr_order_id);
             }
 
             json_t *obj_authorized_session_ID;
             obj_authorized_session_ID = json_object_get(object, "AuthorizedSessionID");
             
             if (json_is_string(obj_authorized_session_ID)) {
-                authorizedSessionID = (std::string)json_string_value(obj_authorized_session_ID);
+                resp.authorizedSessionID = (std::string)json_string_value(obj_authorized_session_ID);
             }
-            else{
-                authorizedSessionID = "";
-            }
+
             json_t *obj_session_ID;
             obj_session_ID = json_object_get(object, "sessionID");
             
             if (json_is_string(obj_session_ID)) {
-                sessionID = (std::string)json_string_value(obj_session_ID);
+                resp.visibleSessionID = (std::string)json_string_value(obj_session_ID);
             }
-            else{
-                sessionID = "";
-            }
+
             json_t *obj_qr_data;
             obj_qr_data = json_object_get(object, "qr_data");
             if (json_is_string(obj_qr_data)) {
-                qrData = (std::string)json_string_value(obj_qr_data);
+                resp.qrData = (std::string)json_string_value(obj_qr_data);
             }
+
             json_decref(obj_service_amount);
             json_decref(obj_kaspi_amount);
             json_decref(obj_open_station);
@@ -1298,12 +1306,13 @@ class DiaNetwork {
     }
 
     // Encodes _PublicKey to JSON string.
-    std::string json_create_ping_report(int balance, int program) {
+    std::string json_create_ping_report(int balance, int program, bool justTurnedOn) {
         json_t *object = json_object();
 
         json_object_set_new(object, "Hash", json_string(_PublicKey.c_str()));
         json_object_set_new(object, "CurrentBalance", json_integer(balance));
         json_object_set_new(object, "CurrentProgram", json_integer(program));
+        json_object_set_new(object, "JustTurnedOn", json_boolean(justTurnedOn));
         char *str = json_dumps(object, 0);
         std::string res = str;
 
