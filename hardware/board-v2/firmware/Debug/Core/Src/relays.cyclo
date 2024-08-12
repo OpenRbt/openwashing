@@ -1,0 +1,2 @@
+../Core/Src/relays.c:10:6:add_relay	1
+../Core/Src/relays.c:16:6:init_gpio_entity	1
