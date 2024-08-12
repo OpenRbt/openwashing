@@ -496,7 +496,7 @@ void app_process_cmd(const char * cmd) {
 		return;
 		}
 	}
-
+	if (i>10) return;
 	if(get_tick) {
 		last_ping = get_tick();
 	}

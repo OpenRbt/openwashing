@@ -37,7 +37,7 @@
 ../Core/Src/app.c:453:6:_copy_hex_from_byte_to_buf	1
 ../Core/Src/app.c:460:8:get_uid	3
 ../Core/Src/app.c:472:6:set_state	1
-../Core/Src/app.c:476:6:app_process_cmd	22
+../Core/Src/app.c:476:6:app_process_cmd	23
 ../Core/Src/app.c:521:6:app_decode_ping	2
 ../Core/Src/app.c:533:9:process_char	42
 ../Core/Src/app.c:659:6:init_relay_config	2
