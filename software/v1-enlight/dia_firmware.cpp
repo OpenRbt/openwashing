@@ -72,6 +72,8 @@ std::string centralKey;
 
 int _DebugKey = 0;
 
+bool _JustTurnedOn = true;
+
 // Variable for storing an additional money.
 // For instance, service money from Central Server can be transfered inside.
 int _Balance = 0;
@@ -838,97 +840,76 @@ int CentralServerDialog() {
 
     printf("Sending another PING request to server...\n");
 
-    int serviceMoney = 0;
-    int bonusAmount = 0;
-    int kaspiAmount = 0;
-    bool openStation = false;
-    std::string authorizedSessionID = "";
-    std::string visibleSessionID = "";
-    bool bonusSystemActive = false;
-    bool sbpSystemActive = false;
-    int buttonID = 0;
-    int lastUpdate = 0;
-    int discountLastUpdate = 0;
-    std::string qrData = "";
-
-    std::string sbpUrl = "";
-    std::string sbpOrderId = "";
-
-    double sbpMoney = 0;
-    bool sbpQrFailed = true;
-
-    network->SendPingRequest(serviceMoney, openStation, buttonID, _CurrentBalance, 
-    _CurrentProgramID, lastUpdate, discountLastUpdate, bonusSystemActive, sbpSystemActive, 
-    qrData, authorizedSessionID, visibleSessionID, bonusAmount, sbpMoney, sbpUrl, 
-    sbpQrFailed, sbpOrderId, kaspiAmount);
+    DiaNetwork::PingResponse resp;
+    network->SendPingRequest(_CurrentBalance, _CurrentProgramID, _JustTurnedOn, resp);
 
     network->GetServerInfo(_ServerUrl);
     if (config) {
-        if (lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
+        if (resp.lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
             config->LoadConfig();
         }
-        if (discountLastUpdate != config->GetDiscountLastUpdate()) {
+        if (resp.discountLastUpdate != config->GetDiscountLastUpdate()) {
             config->LoadDiscounts();
-            config->SetDiscountLastUpdate(discountLastUpdate);
+            config->SetDiscountLastUpdate(resp.discountLastUpdate);
         }
     }
-    if (serviceMoney > 0) {
+    if (resp.serviceMoney > 0) {
         // TODO protect with mutex
-        _Balance += serviceMoney;
+        _Balance += resp.serviceMoney;
     }
-    if (kaspiAmount > 0) {
+    if (resp.kaspiAmount > 0) {
         // TODO protect with mutex
-        _BalanceSbp += kaspiAmount;
+        _BalanceSbp += resp.kaspiAmount;
     }
 
-    if (bonusAmount > 0) {
+    if (resp.bonusAmount > 0) {
         // TODO protect with mutex
-        _BalanceBonuses += bonusAmount;
+        _BalanceBonuses += resp.bonusAmount;
     }
-    if (sbpMoney > 0 && !sbpQrFailed && !sbpOrderId.empty() && _SbpOrderId != sbpOrderId) {
+    if (resp.sbpMoney > 0 && !resp.sbpQrFailed && !resp.sbpOrderId.empty() && _SbpOrderId != resp.sbpOrderId) {
         // TODO protect with mutex
-        _SbpOrderId = sbpOrderId;
-        if (!network->ConfirmSbpPayment(sbpOrderId)) {
-            _BalanceSbp = sbpMoney / 100;
+        _SbpOrderId = resp.sbpOrderId;
+        if (!network->ConfirmSbpPayment(resp.sbpOrderId)) {
+            _BalanceSbp = resp.sbpMoney / 100;
         }
     }
-    if (openStation) {
+    if (resp.openStation) {
         _OpenLid = _OpenLid + 1;
         printf("Door is going to be opened... \n");
         // TODO: add the function of turning on the relay, which will open the lock.
     }
 
-    _SbpQr = sbpUrl;
+    _SbpQr = resp.sbpUrl;
 
-    if (bonusSystemActive != _BonusSystemIsActive) {
-        _BonusSystemIsActive = bonusSystemActive;
-        printf("Bonus system activated: %d\n", bonusSystemActive);
+    if (resp.bonusSystemActive != _BonusSystemIsActive) {
+        _BonusSystemIsActive = resp.bonusSystemActive;
+        printf("Bonus system activated: %d\n", resp.bonusSystemActive);
     }
-    if(sbpSystemActive != _SbpSystemActive){
-        _SbpSystemActive = sbpSystemActive;
-        printf("SBP system activated: %d\n", sbpSystemActive);
+    if(resp.sbpSystemActive != _SbpSystemActive){
+        _SbpSystemActive = resp.sbpSystemActive;
+        printf("SBP system activated: %d\n", resp.sbpSystemActive);
     }
     if(_BonusSystemIsActive){
-        if (_VisibleSessionID == authorizedSessionID) {
-            _IsConnectedToBonusSystem = !authorizedSessionID.empty();
+        if (_VisibleSessionID == resp.authorizedSessionID) {
+            _IsConnectedToBonusSystem = !resp.authorizedSessionID.empty();
             CreateSession();
-            visibleSessionID = _VisibleSessionID;
+            resp.visibleSessionID = _VisibleSessionID;
         }
-        if (_AuthorizedSessionID != authorizedSessionID) {
+        if (_AuthorizedSessionID != resp.authorizedSessionID) {
             EndSession();
         }
-        _VisibleSessionID = visibleSessionID;
-        _AuthorizedSessionID = authorizedSessionID;
+        _VisibleSessionID = resp.visibleSessionID;
+        _AuthorizedSessionID = resp.authorizedSessionID;
         _Qr = _VisibleSessionID.empty() ? "" : _ServerUrl + "/#/?sessionID=" + _VisibleSessionID;
     }
-    if (buttonID != 0) {
-        printf("BUTTON PRESSED %d \n", buttonID);
+    if (resp.buttonID != 0) {
+        printf("BUTTON PRESSED %d \n", resp.buttonID);
     }
 #ifdef USE_GPIO
     if (config) {
         DiaGpio *gpio_b = config->GetGpio();
         if (gpio_b != 0) {
-            gpio_b->LastPressedKey = buttonID;
+            gpio_b->LastPressedKey = resp.buttonID;
         } else {
             printf("ERROR: gpio_b used with no init. \n");
         }
@@ -936,7 +917,7 @@ int CentralServerDialog() {
 #endif
 
 #ifdef USE_KEYBOARD
-    _DebugKey = buttonID;
+    _DebugKey = resp.buttonID;
 #endif
 
     if (config) {
@@ -1048,35 +1029,13 @@ int RecoverRegistry() {
     printf("Recovering registries...\n");
 
     DiaRuntimeRegistry *registry = config->GetRuntime()->Registry;
-
-    std::string value = "";
-
-    int tmp = 0;
-    int bonusAmount = 0;
-    int kaspiAmount = 0;
-    bool openStation = false;
-    bool bonusSystemActive = false;
-    bool sbpSystemActive = false;
-    std::string authorizedSessionID = "";
-    std::string sessionID = "";
-    int buttonID = 0;
-
-    int lastUpdate = 0;
-    int discountLastUpdate = 0;
-
-    std::string default_price = "15";
     
-    std::string qrData = "";
-
-    std::string sbpUrl = "";
-    std::string sbpOrderId = "";
-    double sbpMoney = 0;
-    bool sbpQrFailed = true;
+    std::string default_price = "15";
+    DiaNetwork::PingResponse resp;
 
     int err = 1;
     while (err) {
-        err = network->SendPingRequest(tmp, openStation, buttonID, _CurrentBalance, _CurrentProgram, lastUpdate, discountLastUpdate, 
-        bonusSystemActive, sbpSystemActive, qrData, authorizedSessionID, sessionID, bonusAmount, sbpMoney, sbpUrl, sbpQrFailed, sbpOrderId, kaspiAmount);
+        err = network->SendPingRequest(_CurrentBalance, _CurrentProgram, _JustTurnedOn, resp);
 
         if (err) {
             printf("waiting for server proper answer \n");
@@ -1100,6 +1059,9 @@ int RecoverRegistry() {
             registry->SetValue(key.c_str(), value.c_str());
         }
     }
+
+    _JustTurnedOn = false;
+
     return err;
 }
 //////////////////////////////////////////////
