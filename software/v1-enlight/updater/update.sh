@@ -7,7 +7,7 @@ IP_SUBNET_FILE="/home/$USER/ip-subnet-digits.txt"
 CURRENT_WASH_DIR="/home/$USER/wash"
 WASH_DIR_LINK="/home/$USER/current_wash"
 AUTH_KEYS_FILE="/home/$USER/.ssh/authorized_keys"
-INTERFACE="enp0s3"
+INTERFACE="eth0"
 PORT="8020"
 
 function log_info {
