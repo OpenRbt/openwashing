@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DECIMAL_SEPARATOR=","
+DECIMAL_SEPARATOR=$(locale decimal_point)
 LOG_FILE="/home/$USER/update-logs.log"
 MAX_LOG_SIZE=5242880
 IP_SUBNET_FILE="/home/$USER/ip-subnet-digits.txt"
