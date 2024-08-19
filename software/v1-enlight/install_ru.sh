@@ -57,7 +57,7 @@ cp -r ~/openwashing/software/v1-enlight/samples/wash/. ~/wash/firmware
 echo "COPYING update script and install updater dependencies"
 sleep 1
 python -m pip install -r ./updater/requirements.txt
-cp ./updater/update.py ~/update.py
+cp ./updater/update.sh ~/update.sh
 mkdir -m 700 ~/.ssh
 touch ~/.ssh/authorized_keys
 chmod 644 ~/.ssh/authorized_keys
