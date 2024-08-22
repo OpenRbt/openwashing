@@ -129,7 +129,7 @@ if ! grep -q "$public_key" $AUTH_KEYS_FILE; then
     echo "$public_key" >> $AUTH_KEYS_FILE
 fi
 
-if [ ! -d "$CURRENT_WASH_DIR" ] || [ ! -f "$CURRENT_WASH_DIR/firmware" ] || [ ! -f "$CURRENT_WASH_DIR/firmware.exe" ] || [ ! -f "$CURRENT_WASH_DIR/firmware/script.lua" ]; then
+if [ ! -d "$CURRENT_WASH_DIR" ] || [ ! -d "$CURRENT_WASH_DIR/firmware" ] || [ ! -f "$CURRENT_WASH_DIR/firmware.exe" ] || [ ! -f "$CURRENT_WASH_DIR/firmware/script.lua" ]; then
     log_info "Start pinging"
 
     send_ping $ip "{\"hash\":\"$mac_address\",\"currentBalance\":0,\"currentProgram\":0}" &
