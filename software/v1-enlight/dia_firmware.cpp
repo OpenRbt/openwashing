@@ -606,10 +606,10 @@ int get_electronical(void *object) {
 
 // Tries to perform a bank card NFC transaction.
 // Gets money amount.
-int request_transaction(void *object, int money) {
+int request_transaction(void *object, int money, bool isTerminalSBP) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     if (money > 0) {
-        DiaDeviceManager_PerformTransaction(manager, money, false);
+        DiaDeviceManager_PerformTransaction(manager, money, false, isTerminalSBP);
         return 0;
     }
     return 1;
@@ -618,7 +618,7 @@ int request_transaction(void *object, int money) {
 int request_transaction_separated(void *object, int money){
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     if (money > 0) {
-        DiaDeviceManager_PerformTransaction(manager, money, true);
+        DiaDeviceManager_PerformTransaction(manager, money, true, false);
         return 0;
     }
     return 1;

@@ -255,7 +255,7 @@ void *DiaDeviceManager_WorkingThread(void *manager) {
     return 0;
 }
 
-void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTrasactionSeparated) {
+void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTrasactionSeparated, bool isTerminalSBP) {
     if (manager == NULL) {
         printf("DiaDeviceManager Perform Transaction got NULL driver\n");
         return;
@@ -271,7 +271,7 @@ void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTrasac
     } else if (Manager->_Vendotek) {
         printf("DiaDeviceManager Perform Transaction Vendotek\n");
 
-        DiaVendotek_PerformTransaction(Manager->_Vendotek, money, isTrasactionSeparated);
+        DiaVendotek_PerformTransaction(Manager->_Vendotek, money, isTrasactionSeparated, isTerminalSBP);
     }
 }
 

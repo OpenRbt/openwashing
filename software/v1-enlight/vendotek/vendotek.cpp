@@ -142,6 +142,7 @@ const char * vtk_msg_stringify(uint16_t id)
        { 0x12, "System information      " },
        { 0x13, "Banking receipt         " },
        { 0x14, "Display time, ms        " },
+       { 0x19, "Host id                 " },
        { 0, NULL }
     };
     for (int iarg = 0; argids[iarg].id; iarg++) {

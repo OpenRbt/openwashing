@@ -40,7 +40,7 @@ void DiaDeviceManager_StartDeviceScan(DiaDeviceManager * manager);
 void DiaDeviceManager_FinishDeviceScan(DiaDeviceManager * manager);
 void DiaDeviceManager_CheckOrAddDevice(DiaDeviceManager *manager, char * PortName, int isACM);
 void DiaDeviceManager_ReportMoney(void *manager, int moneyType, int Money);
-void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTransactionSeparated);
+void DiaDeviceManager_PerformTransaction(void *manager, int money, bool isTransactionSeparated, bool isTerminalSBP);
 //-------------------------------------------------------------------------------
 int DiaDeviceManager_ConfirmTransaction(void* manager, int money);
 //--------------------------------------------------------------------------------

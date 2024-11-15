@@ -115,6 +115,7 @@ typedef struct payment_s {
         char    *evname;
         long    prodid;
         char    *prodname;
+        long    *host;
         long    price;
         long    price_confirmed;
         long    timeout;
@@ -236,6 +237,7 @@ int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
     payment.prodid    = opts->prodid;
     payment.prodname  = opts->prodname;
     payment.price     = opts->price;
+    payment.host      = opts->host;
     payment.timeout   = opts->timeout;
      
     stage_opts_t stopts;
@@ -495,7 +497,7 @@ int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
 
                     stopts.timeout = payment.timeout * 1000;
                     payment.opnum++;
-                    stage_req_t vrp_req[6] = {};
+                    stage_req_t vrp_req[7] = {};
                     vrp_req[0].id = 0x1;
                     vrp_req[0].valstr = (char*)"VRP";
                     vrp_req[1].id = 0x3;
@@ -506,7 +508,9 @@ int do_payment(void * driverPtr, payment_opts_t *opts, VendotekStage key)
                     vrp_req[3].valstr =  payment.prodname;
                     vrp_req[4].id = 0x4;
                     vrp_req[4].valint = &payment.price;
-                    vrp_req[5].id = 0;
+                    vrp_req[5].id = 0x19;
+                    vrp_req[5].valint = payment.host;
+                    vrp_req[6].id = 0;
 
                     stage_resp_t vrp_resp[4] = {};
                     vrp_resp[0].id = 0x1;
@@ -686,6 +690,12 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
     popts.prodid    = 0;
     popts.evnum     = 0;
     popts.evname    = (char*)"";
+    popts.host      = nullptr;
+
+    static ssize_t hostSbp = 101;
+    if (driver->IsSBP) {
+        popts.host = &hostSbp;
+    }
 
     int rcode = 0;
 
@@ -947,7 +957,7 @@ int DiaVendotek_StartPing(void * specificDriver) {
 
 // Entry point function
 // Creates task thread with requested parameter (money amount) and exits
-int DiaVendotek_PerformTransaction(void * specificDriver, int money, bool isTrasactionSeparated) {
+int DiaVendotek_PerformTransaction(void * specificDriver, int money, bool isTrasactionSeparated, bool isSBP) {
     DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(specificDriver);
 
     if (specificDriver == NULL || money == 0) {
@@ -961,16 +971,12 @@ int DiaVendotek_PerformTransaction(void * specificDriver, int money, bool isTras
     driver->PaymentStage = 1;
     pthread_mutex_unlock(&driver->StateLock);
 
-    vtk_logi("DiaVendotek started Perform Transaction, money = %d", money);
+    vtk_logi("DiaVendotek started Perform Transaction, money = %d, isSeparated = %d, isSBP = %d", money, isTrasactionSeparated, isSBP);
     pthread_mutex_lock(&driver->MoneyLock);
     driver->RequestedMoney = money;
-    pthread_mutex_unlock(&driver->MoneyLock);
-
-    vtk_logi("DiaVendotek isTrasactionSeparated, isSeparated = %d", isTrasactionSeparated);
-    pthread_mutex_lock(&driver->RefundsLock);
     driver->IsTransactionSeparated = isTrasactionSeparated;
-    pthread_mutex_unlock(&driver->RefundsLock);
-
+    driver->IsSBP = isSBP;
+    pthread_mutex_unlock(&driver->MoneyLock);
 
     int err = pthread_create(&driver->ExecuteDriverProgramThread,
         NULL,
