@@ -115,6 +115,8 @@ std::string _ServerUrl = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
+std::string _CardReaderType = "";
+
 int _MaxAfkTime = 180;
 
 std::string _FileName;
@@ -183,6 +185,10 @@ void setIsConnectedToBonusSystem(bool isConnectedToBonusSystem) {
 
 bool getIsConnectedToBonusSystem() {
     return _IsConnectedToBonusSystem;
+}
+
+std::string getCardReaderType() {
+    return _CardReaderType;
 }
 
 bool dirExists(const std::string& dirName_in)
@@ -1100,6 +1106,8 @@ int addCardReader(DiaDeviceManager *manager) {
     std::string port;
     network->GetCardReaderConig(cardReaderType, host, port);
 
+    _CardReaderType = cardReaderType;
+
     if (cardReaderType == "PAYMENT_WORLD") {
         DiaDeviceManager_AddCardReader(manager);
         printf("card reader PAYMENT_WORLD\n");
@@ -1443,6 +1451,8 @@ int main(int argc, char **argv) {
 
     hardware->get_is_connected_to_bonus_system_function = getIsConnectedToBonusSystem;
     hardware->set_is_connected_to_bonus_system_function = setIsConnectedToBonusSystem;
+
+    hardware->get_card_reader_type = getCardReaderType;
 
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
