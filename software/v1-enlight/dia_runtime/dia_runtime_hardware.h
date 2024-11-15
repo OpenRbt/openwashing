@@ -409,6 +409,17 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    bool (*get_is_sbp_payment_on_terminal_available)();
+    bool GetIsSbpPaymentOnTerminalAvailable() {
+        if (get_is_sbp_payment_on_terminal_available) {
+            return get_is_sbp_payment_on_terminal_available();
+        } else {
+            printf("error: NIL object or function GetIsSbpPaymentOnTerminalAvailable\n");
+        }
+        return "";
+    }
+
+
     // StopProgramOnServer
 
     // Bonus system

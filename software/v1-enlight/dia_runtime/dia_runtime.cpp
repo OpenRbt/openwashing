@@ -107,6 +107,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("GetProcessId", &DiaRuntimeHardware::GetProcessId)
         .addFunction("GetIsConnectedToBonusSystem", &DiaRuntimeHardware::GetIsConnectedToBonusSystem)
         .addFunction("SetIsConnectedToBonusSystem", &DiaRuntimeHardware::SetIsConnectedToBonusSystem)
+        .addFunction("GetIsSbpPaymentOnTerminalAvailable", &DiaRuntimeHardware::GetIsSbpPaymentOnTerminalAvailable)
         .addFunction("GetQR", &DiaRuntimeHardware::GetQR)
         .addFunction("GetSbpQR", &DiaRuntimeHardware::GetSbpQR)
         .addFunction("SendPause", &DiaRuntimeHardware::SendPause)

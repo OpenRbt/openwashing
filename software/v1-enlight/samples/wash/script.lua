@@ -796,6 +796,10 @@ get_is_preflight = function()
     return hardware:GetIsPreflight()
 end
 
+get_is_sbp_payment_on_terminal_available = function()
+    return hardware:GetIsSbpPaymentOnTerminalAvailable()
+end
+
 get_is_finishing_programm = function(program_id)
     if registry:GetIsFinishingProgram(program_id) == 1 then
         return true
