@@ -796,8 +796,8 @@ get_is_preflight = function()
     return hardware:GetIsPreflight()
 end
 
-get_card_reader_type = function()
-    return hardware:GetCardReaderType()
+get_is_sbp_payment_on_terminal_available = function()
+    return hardware:GetIsSbpPaymentOnTerminalAvailable()
 end
 
 get_is_finishing_programm = function(program_id)

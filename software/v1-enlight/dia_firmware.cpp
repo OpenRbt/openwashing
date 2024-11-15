@@ -115,7 +115,7 @@ std::string _ServerUrl = "";
 bool _BonusSystemClient = false;
 int _BonusSystemBalance = 0;
 
-std::string _CardReaderType = "";
+bool _IsSbpPaymentOnTerminalAvailable = false;
 
 int _MaxAfkTime = 180;
 
@@ -187,8 +187,8 @@ bool getIsConnectedToBonusSystem() {
     return _IsConnectedToBonusSystem;
 }
 
-std::string getCardReaderType() {
-    return _CardReaderType;
+bool getIsSbpPaymentOnTerminalAvailable() {
+    return _IsSbpPaymentOnTerminalAvailable;
 }
 
 bool dirExists(const std::string& dirName_in)
@@ -1106,8 +1106,6 @@ int addCardReader(DiaDeviceManager *manager) {
     std::string port;
     network->GetCardReaderConig(cardReaderType, host, port);
 
-    _CardReaderType = cardReaderType;
-
     if (cardReaderType == "PAYMENT_WORLD") {
         DiaDeviceManager_AddCardReader(manager);
         printf("card reader PAYMENT_WORLD\n");
@@ -1136,6 +1134,7 @@ int addCardReader(DiaDeviceManager *manager) {
             StartScreenMessage(STARTUP_MESSAGE::CARD_READER, "Try to find VENDOTEK (Attempt " + std::to_string(i + 1) + " of 10)");
         }
         if (found_card_reader) {
+            _IsSbpPaymentOnTerminalAvailable = true;
             return CARD_READER_STATUS::VENDOTEK_SUCCES;
         } else {
             return CARD_READER_STATUS::VENDOTEK_NOT_FOUND;
@@ -1452,7 +1451,7 @@ int main(int argc, char **argv) {
     hardware->get_is_connected_to_bonus_system_function = getIsConnectedToBonusSystem;
     hardware->set_is_connected_to_bonus_system_function = setIsConnectedToBonusSystem;
 
-    hardware->get_card_reader_type = getCardReaderType;
+    hardware->get_is_sbp_payment_on_terminal_available = getIsSbpPaymentOnTerminalAvailable;
 
     hardware->program_object = config->GetGpio();
     hardware->turn_program_function = turn_program;
