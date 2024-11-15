@@ -288,10 +288,18 @@ class DiaRuntimeHardware {
         return 0;
     }
 
-    int (*request_transaction_function)(void* object, int money);
+    int (*request_transaction_function)(void* object, int money, bool isTerminalSBP);
     int RequestTransaction(int money) {
         if (electronical_object && request_transaction_function) {
-            return request_transaction_function(electronical_object, money);
+            return request_transaction_function(electronical_object, money, false);
+        } else {
+            printf("error: NIL object or function RequestTransaction\n");
+        }
+        return 0;
+    }
+    int RequestTransactionTerminalSBP(int money) {
+        if (electronical_object && request_transaction_function) {
+            return request_transaction_function(electronical_object, money, true);
         } else {
             printf("error: NIL object or function RequestTransaction\n");
         }

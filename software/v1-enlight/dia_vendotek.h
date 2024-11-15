@@ -29,6 +29,7 @@ typedef struct payment_opts_s {
     ssize_t    prodid;
     char      *prodname;
     ssize_t    price;
+    ssize_t   *host;
 } payment_opts_t;
 
 
@@ -50,8 +51,8 @@ public:
     pthread_t ExecutePingThread;
     pthread_mutex_t OperationLock = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_t StateLock = PTHREAD_MUTEX_INITIALIZER;
-    pthread_mutex_t RefundsLock = PTHREAD_MUTEX_INITIALIZER;
     bool IsTransactionSeparated;
+    bool IsSBP;
     int ToBeDeleted = 0;
     int RequestedMoney;
     int Available = 0;
@@ -84,7 +85,7 @@ int DiaVendotek_GetTransactionStatus(void * specificDriver);
 
 void* DiaVendotek_ExecuteDriverProgramThread(void * devicePtr);
 
-int DiaVendotek_PerformTransaction(void * specficDriver, int money, bool isTrasactionSeparated);
+int DiaVendotek_PerformTransaction(void * specficDriver, int money, bool isTrasactionSeparated, bool isSBP);
 //---------------------------------------------------------------------------
 int DiaVendotek_ConfirmTransaction(void * specficDriver, int money);
 void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr);
