@@ -29,7 +29,7 @@ typedef struct payment_opts_s {
     ssize_t    prodid;
     char      *prodname;
     ssize_t    price;
-    ssize_t   *host;
+    long      *host;
 } payment_opts_t;
 
 
