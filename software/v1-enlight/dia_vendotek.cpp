@@ -692,7 +692,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
     popts.evname    = (char*)"";
     popts.host      = nullptr;
 
-    static ssize_t hostSbp = 101;
+    static long hostSbp = 101;
     if (driver->IsSBP) {
         popts.host = &hostSbp;
     }
