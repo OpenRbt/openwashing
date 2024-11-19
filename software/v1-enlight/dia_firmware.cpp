@@ -604,11 +604,11 @@ int get_electronical(void *object) {
     return curMoney;
 }
 
-int get_sbp_vendotek_money(void *object) {
+int get_sbp_terminal_money(void *object) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     int curMoney = manager->SbpMoney;
     if (curMoney > 0) {
-        printf("vendotek sbp money %d\n", curMoney);
+        printf("terminal sbp money %d\n", curMoney);
         SaveIncome(0, 0, 0, 0, 0, 0, curMoney, getActiveSession());
         manager->SbpMoney = 0;
     }
@@ -620,7 +620,7 @@ int get_sbp_vendotek_money(void *object) {
 int request_transaction(void *object, int money, bool isTerminalSBP) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     if (money > 0) {
-        DiaDeviceManager_PerformTransaction(manager, money, false, isTerminalSBP);
+        DiaDeviceManager_PerformTransaction(manager, money, true, isTerminalSBP);
         return 0;
     }
     return 1;
@@ -1487,7 +1487,7 @@ int main(int argc, char **argv) {
     hardware->get_is_preflight_function = get_is_preflight;
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;
-    hardware->get_sbp_vendotek_money_function = get_sbp_vendotek_money;
+    hardware->get_sbp_terminal_money_function = get_sbp_terminal_money;
     hardware->request_transaction_function = request_transaction;
     hardware->request_transaction_separated_function = request_transaction_separated;
     //--------------------------------------------------------------------------

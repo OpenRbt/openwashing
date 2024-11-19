@@ -744,16 +744,18 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
     driver->logger->AddLog("Execute driver program thread: rcode after do payment = " + TO_STR(rcode), DIA_VENDOTEK_LOG_TYPE, rcode == 0 ? LogLevel::Info : LogLevel::Error);
 
     if (rcode == 0) {
+
+        int moneytype = DIA_ELECTRON;
+        if(driver->IsSBP) {
+            moneytype = DIA_SBP;
+        }
+
         if(!driver->IsTransactionSeparated){
             if (driver->IncomingMoneyHandler != NULL) {
 
                 pthread_mutex_lock(&driver->MoneyLock);
                 int sum = driver->RequestedMoney;
-                if(driver->IsSBP) {
-                    driver->IncomingMoneyHandler(driver->_Manager, DIA_SBP, sum);
-                } else {
-                    driver->IncomingMoneyHandler(driver->_Manager, DIA_ELECTRON, sum);
-                }
+                driver->IncomingMoneyHandler(driver->_Manager, moneytype, sum);
                 driver->RequestedMoney = 0;
                 pthread_mutex_unlock(&driver->MoneyLock);
 
@@ -769,11 +771,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 
                 pthread_mutex_lock(&driver->MoneyLock);
                 int sum = driver->RequestedMoney;
-                if(driver->IsSBP) {
-                    driver->IncomingMoneyHandler(driver->_Manager, DIA_SBP, sum);
-                } else {
-                    driver->IncomingMoneyHandler(driver->_Manager, DIA_ELECTRON, sum);
-                }
+                driver->IncomingMoneyHandler(driver->_Manager, moneytype, sum);
                 pthread_mutex_unlock(&driver->MoneyLock);
 
                 vtk_logi("Reported money: %d", sum);
