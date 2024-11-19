@@ -218,6 +218,7 @@ DiaDeviceManager::DiaDeviceManager(Logger* logger) {
     BanknoteMoney = 0;
     ElectronMoney = 0;
     ServiceMoney = 0;
+    SbpMoney = 0;
     this->logger = logger;
 #ifdef SCAN_DEVICES
     pthread_create(&WorkingThread, NULL, DiaDeviceManager_WorkingThread, this);
@@ -239,6 +240,8 @@ void DiaDeviceManager_ReportMoney(void *manager, int moneyType, int money) {
         Manager->ElectronMoney += money;
     } else if (moneyType == DIA_SERVICE) {
         Manager->ServiceMoney += money;
+    } else if (moneyType == DIA_SBP) {
+        Manager->SbpMoney += money;
     } else {
         printf("ERROR: Unknown money type %d\n", money);
     }
