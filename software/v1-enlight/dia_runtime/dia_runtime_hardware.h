@@ -277,6 +277,16 @@ class DiaRuntimeHardware {
         }
         return 0;
     }
+
+    int (*get_sbp_vendotek_money_function)(void* object);
+    int GetSbpVendotekMoney() {
+        if (electronical_object && get_sbp_vendotek_money_function) {
+            return get_sbp_vendotek_money_function(electronical_object);
+        } else {
+            printf("error: NIL object or function GetSbpVendotekMoney\n");
+        }
+        return 0;
+    }
     
     int (*confirm_transaction_function)(void* object, int balance);
     int ConfirmTransaction(int balance){

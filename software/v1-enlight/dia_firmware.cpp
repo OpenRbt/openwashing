@@ -604,6 +604,17 @@ int get_electronical(void *object) {
     return curMoney;
 }
 
+int get_sbp_vendotek_money(void *object) {
+    DiaDeviceManager *manager = (DiaDeviceManager *)object;
+    int curMoney = manager->SbpMoney;
+    if (curMoney > 0) {
+        printf("vendotek sbp money %d\n", curMoney);
+        SaveIncome(0, 0, 0, 0, 0, 0, curMoney, getActiveSession());
+        manager->SbpMoney = 0;
+    }
+    return curMoney;
+}
+
 // Tries to perform a bank card NFC transaction.
 // Gets money amount.
 int request_transaction(void *object, int money, bool isTerminalSBP) {
@@ -1476,6 +1487,7 @@ int main(int argc, char **argv) {
     hardware->get_is_preflight_function = get_is_preflight;
     hardware->get_openlid_function = get_openlid;
     hardware->get_electronical_function = get_electronical;
+    hardware->get_sbp_vendotek_money_function = get_sbp_vendotek_money;
     hardware->request_transaction_function = request_transaction;
     hardware->request_transaction_separated_function = request_transaction_separated;
     //--------------------------------------------------------------------------

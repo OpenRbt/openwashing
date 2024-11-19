@@ -20,6 +20,7 @@ public:
     int BanknoteMoney;
     int ElectronMoney;
     int ServiceMoney;
+    int SbpMoney;
     
     int NeedWorking;
     char * _PortName;
