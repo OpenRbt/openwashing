@@ -620,7 +620,7 @@ int get_sbp_terminal_money(void *object) {
 int request_transaction(void *object, int money, bool isTerminalSBP) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     if (money > 0) {
-        DiaDeviceManager_PerformTransaction(manager, money, true, isTerminalSBP);
+        DiaDeviceManager_PerformTransaction(manager, money, false, isTerminalSBP);
         return 0;
     }
     return 1;
