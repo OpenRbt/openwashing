@@ -749,7 +749,6 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 
                 pthread_mutex_lock(&driver->MoneyLock);
                 int sum = driver->RequestedMoney;
-                std::cout<<"\n\n\n IsTransactionSeparated=true driver->IsSBP: " << driver->IsSBP << "\n\n\n";
                 if(driver->IsSBP) {
                     driver->IncomingMoneyHandler(driver->_Manager, DIA_SBP, sum);
                 } else {
@@ -770,7 +769,6 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 
                 pthread_mutex_lock(&driver->MoneyLock);
                 int sum = driver->RequestedMoney;
-                std::cout<<"\n\n\n IsTransactionSeparated=false driver->IsSBP: " << driver->IsSBP << "\n\n\n";
                 if(driver->IsSBP) {
                     driver->IncomingMoneyHandler(driver->_Manager, DIA_SBP, sum);
                 } else {
