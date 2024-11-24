@@ -1,0 +1,90 @@
+{
+  "name": "default configuration",
+  "orientation":"vertical",
+  "resolution": "1920x1080",
+  "screens": [
+    {
+      "id": "welcome",
+      "src": "screens/1_welcome.json"
+    },
+    {
+      "id": "ask_for_money_l3",
+      "src": "screens_l3/2_ask_for_money.json"
+    },
+    {
+      "id": "working_l3",
+      "src": "screens_l3/4_working.json"
+    },
+    {
+      "id": "thanks_l3",
+      "src": "screens_l3/10_thanks.json"
+    },
+    {
+      "id": "choose_method_l3",
+      "src": "screens_l3/11_choose_method.json"
+    },
+    {
+      "id": "select_price_l3",
+      "src": "screens_l3/12_select_price.json"
+    },
+    {
+      "id": "wait_for_card_l3",
+      "src": "screens_l3/13_wait_for_card.json"
+    },
+    {
+      "id": "ask_for_money_l2",
+      "src": "screens_l2/2_ask_for_money.json"
+    },
+    {
+      "id": "working_l2",
+      "src": "screens_l2/4_working.json"
+    },
+    {
+      "id": "thanks_l2",
+      "src": "screens_l2/10_thanks.json"
+    },
+    {
+      "id": "choose_method_l2",
+      "src": "screens_l2/11_choose_method.json"
+    },
+    {
+      "id": "select_price_l2",
+      "src": "screens_l2/12_select_price.json"
+    },
+    {
+      "id": "wait_for_card_l2",
+      "src": "screens_l2/13_wait_for_card.json"
+    },
+    {
+      "id": "ask_for_money_l1",
+      "src": "screens_l1/2_ask_for_money.json"
+    },
+    {
+      "id": "working_l1",
+      "src": "screens_l1/4_working.json"
+    },
+    {
+      "id": "thanks_l1",
+      "src": "screens_l1/10_thanks.json"
+    },
+    {
+      "id": "choose_method_l1",
+      "src": "screens_l1/11_choose_method.json"
+    },
+    {
+      "id": "select_price_l1",
+      "src": "screens_l1/12_select_price.json"
+    },
+    {
+      "id": "wait_for_card_l1",
+      "src": "screens_l1/13_wait_for_card.json"
+    }
+  ],
+  "buttons": 6,
+  "last_button_pulse": true,
+  "relays": 6,
+  "endpoint": "http://app.diae.l2/v0/gql/",
+  "programs": 6,
+  "script": "script.lua",
+  "include": "constants.lua"
+}

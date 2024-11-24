@@ -1,0 +1,40 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1920;1080",
+        "src":"pic/kz/2/background_choose_method.png",
+        "visible":"true"
+      },
+      {
+        "id":"cash",
+        "type":"image",
+        "position": "0;0",
+        "size":"960;1080",
+        "src":"pic/kz/arrow.png",
+        "visible":"false",
+        "click_id":"2"
+      },
+      {
+        "id":"card",
+        "type":"image",
+        "position": "960;0",
+        "size":"960;1080",
+        "src":"pic/kz/arrow.png",
+        "visible":"false",
+        "click_id":"5"
+      },
+      {
+        "id":"post_number",
+        "type": "digits",
+        "position": "1880;10",
+        "font": "round_number",
+        "symbol_size":"14;22",
+        "padding": "1",
+        "length": "2",
+        "visible":"true"
+      }
+    ]
+  }

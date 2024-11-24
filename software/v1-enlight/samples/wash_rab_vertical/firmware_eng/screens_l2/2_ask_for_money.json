@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"1920;1080",
+      "src":"pic/l2//2/background.jpg",
+      "visible":"true"   
+    },
+    {
+      "id":"post_number",
+      "type": "digits",
+      "position": "1880;10",
+      "font": "round_number",
+      "symbol_size":"14;22",
+      "padding": "1",
+      "length": "2",
+      "visible":"true",
+	  "is_vertical":"true"
+    }
+  ]
+}

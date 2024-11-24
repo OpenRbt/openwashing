@@ -1,0 +1,72 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"1920;1080",
+      "src":"pic/l1/1/background.png",
+      "visible":"true"
+    },
+    {
+      "id":"back_l3",
+      "type":"image",
+      "position": "1647;64",
+      "size":"225;853",
+      "src":"pic/l3/1/back_l3.png",
+      "visible":"true",
+	  "click_id":"6"
+    },
+	{
+      "id":"back_l2",
+      "type":"image",
+      "position": "1326;64",
+      "size":"225;853",
+      "src":"pic/l2/1/back_l2.png",
+      "visible":"true",
+	  "click_id":"5"
+    },
+	{
+      "id":"back_l1",
+      "type":"image",
+      "position": "1009;64",
+      "size":"225;854",
+      "src":"pic/l1/1/back_l1.png",
+      "visible":"true",
+	  "click_id":"4"
+    },
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "1847;546",
+        "font": "round_number",
+        "symbol_size":"50;25",
+        "padding": "0",
+        "length": "4",        
+        "visible":"true",
+	"is_vertical":"true"
+      },
+    {
+      "id":"post_number",
+      "type": "digits",
+      "position": "490;230",
+      "font": "round_number",
+      "symbol_size":"60;35",
+      "is_vertical":"true",
+      "padding": "1",
+      "length": "1",
+      "visible":"true"
+   	},
+    {
+      "id":"post_number_2",
+      "type": "digits",
+      "position": "710;220",
+      "font": "round_number",
+      "symbol_size":"60;35",
+      "is_vertical":"true",
+      "padding": "1",
+      "length": "1",
+      "visible":"true"
+    }
+  ]
+}

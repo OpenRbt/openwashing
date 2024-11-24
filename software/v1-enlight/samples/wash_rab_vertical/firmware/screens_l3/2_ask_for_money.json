@@ -1,0 +1,67 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"1920;1080",
+      "src":"pic/l3//2/background.png",
+      "visible":"true"   
+    },
+	{
+      "id":"language_back_l1",
+      "type":"image",
+      "position": "50;94",
+      "size":"225;884",
+      "src":"pic/l1//2/language_back_l1.png",
+      "visible":"true",
+      "click_id":"1"
+    },
+  	{
+      "id":"language_back_l2",
+      "type":"image",
+      "position": "372;94",
+      "size":"225;884",
+      "src":"pic/l2//2/language_back_l2.png",
+      "visible":"true",
+      "click_id":"2"
+    },
+  	{
+      "id":"language_back_l3",
+      "type":"image",
+      "position": "690;94",
+      "size":"225;884",
+      "src":"pic/l3//2/language_back_l3.png",
+      "visible":"true",
+      "click_id":"3"
+    },
+	{
+      "id":"qr_code",
+      "type":"image",
+      "position": "1444;238",
+      "size":"390;384",
+      "src":"pic/l1//2/qr_code.png",
+      "visible":"true"   
+    },
+    {
+      "id":"return_background",
+      "type":"image",
+      "position": "1245;720",
+      "size":"543;112",
+      "src":"pic/l1//return_background.png",
+      "visible":"false",
+      "click_id":"2"
+    },
+    {
+      "id":"post_number",
+      "type": "digits",
+      "position": "1880;10",
+      "font": "round_number",
+      "symbol_size":"14;22",
+      "padding": "1",
+      "length": "2",
+      "visible":"true",
+	  "is_vertical":"true"
+    }
+  ]
+}

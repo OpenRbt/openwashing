@@ -1,0 +1,46 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1920;1080",
+        "src":"pic/l1/thanks.png",
+        "visible":"true"
+      },
+       {
+        "id":"thanks_l1",
+        "type":"image",
+        "position": "608;131",
+        "size":"287;828",
+        "src":"pic/l1/thanks_l1.png",
+        "visible":"true"
+      },
+      {
+        "id":"thanks_l2",
+        "type":"image",
+        "position": "944;131",
+        "size":"288;828",
+        "src":"pic/l2/thanks_l2.png",
+        "visible":"true"
+      },
+      {
+        "id":"thanks_l3",
+        "type":"image",
+        "position": "1267;131",
+        "size":"287;828",
+        "src":"pic/l3/thanks_l3.png",
+        "visible":"true"
+      },
+      {
+        "id":"delay_seconds",
+        "type": "digits",
+        "position": "729;490",
+        "font": "round_number",
+        "symbol_size":"50;66",
+        "padding": "1",
+        "length": "3",
+        "visible":"false"
+      }
+    ]
+  }

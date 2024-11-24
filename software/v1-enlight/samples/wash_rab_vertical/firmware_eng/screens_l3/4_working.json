@@ -1,0 +1,352 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1920;1080",
+        "src":"pic/l3/background.png",
+        "visible":"true"
+      },
+      {
+        "id":"balance_background",
+        "type":"image",
+        "position": "674;41",
+        "size":"571;732",
+        "src":"pic/l3/balance.png",
+        "visible":"true"
+      },
+	  {
+        "id":"logo",
+        "type":"image",
+        "position": "57;84",
+        "size":"38;175",
+        "src":"pic/l3/logo.png",
+        "visible":"true"
+      },
+	  {
+        "id":"stop_background",
+        "type":"image",
+        "position": "1315;408",
+        "size":"251;362",
+        "src":"pic/l3/stop_background.png",
+        "visible":"true"
+      },
+	  {
+        "id":"time_background",
+        "type":"image",
+        "position": "1315;40",
+        "size":"251;354",
+        "src":"pic/l3/time_background.png",
+        "visible":"true"
+      },
+	  {
+        "id":"stop_background_a",
+        "type":"image",
+        "position": "1305;28",
+        "size":"270;750",
+        "src":"pic/l3/stop_background_a.png",
+        "visible":"false"
+      },
+	  {
+        "id":"colone",
+        "type":"image",
+        "position": "1451;202",
+        "size":"78;18",
+        "src":"pic/l3/colone.png",
+        "visible":"true"
+      },
+	  {
+        "id":"arrow_water",
+        "type":"image",
+        "position": "134;781",
+        "size":"56;19",
+        "src":"pic/l3/arrow_water.png",
+        "visible":"true"
+      },
+	  {
+        "id":"arrow_foam",
+        "type":"image",
+        "position": "453;781",
+        "size":"56;19",
+        "src":"pic/l3/arrow_foam.png",
+        "visible":"true"
+      },
+      {
+        "id":"p1_ico",
+        "type":"image",
+        "position": "27;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p1/ico.png",
+        "visible":"true",
+        "click_id":"11"
+      },
+	   {
+        "id":"p1_a_ico",
+        "type":"image",
+        "position": "27;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p1/ico_a.png",
+        "visible":"false",
+        "click_id":"11"
+      },
+	  {
+        "id":"p1_2_ico",
+        "type":"image",
+        "position": "27;527",
+        "size":"270;250",
+        "src":"pic/l3/programs/p1_2/ico.png",
+        "visible":"true",
+        "click_id":"12"
+      },
+	  {
+        "id":"p1_2_a_ico",
+        "type":"image",
+        "position": "27;527",
+        "size":"270;250",
+        "src":"pic/l3/programs/p1_2/ico_a.png",
+        "visible":"false",
+        "click_id":"12"
+      },
+      {
+        "id":"p2_ico",
+        "type":"image",
+        "position": "348;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p2/ico.png",
+        "visible":"true", 
+        "click_id":"21"
+      },
+	  {
+        "id":"p2_a_ico",
+        "type":"image",
+        "position": "348;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p2/ico_a.png",
+        "visible":"false", 
+        "click_id":"21"
+      },
+      {
+        "id":"p2_2_ico",
+        "type":"image",
+        "position": "348;527",
+        "size":"270;250",
+        "src":"pic/l3/programs/p2_2/ico.png",
+        "visible":"true", 
+        "click_id":"22"
+      },
+	  {
+        "id":"p2_2_a_ico",
+        "type":"image",
+        "position": "348;527",
+        "size":"270;250",
+        "src":"pic/l3/programs/p2_2/ico_a.png",
+        "visible":"false", 
+        "click_id":"22"
+      },
+	  {
+        "id":"p3_ico",
+        "type":"image",
+        "position": "669;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p3/ico.png",
+        "visible":"true", 
+        "click_id":"31"
+      },
+	  {
+        "id":"p3_a_ico",
+        "type":"image",
+        "position": "669;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p3/ico_a.png",
+        "visible":"false", 
+        "click_id":"31"
+      },
+      {
+        "id":"p4_ico",
+        "type":"image",
+        "position": "986;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p4/ico.png",
+        "visible":"true", 
+        "click_id":"41"
+      },
+	  {
+        "id":"p4_a_ico",
+        "type":"image",
+        "position": "986;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p4/ico_a.png",
+        "visible":"false", 
+        "click_id":"41"
+      },
+      {
+        "id":"p5_ico",
+        "type":"image",
+        "position": "1306;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p5/ico.png",
+        "visible":"true",
+        "click_id":"51"
+      },
+	  {
+        "id":"p5_a_ico",
+        "type":"image",
+        "position": "1306;806",
+        "size":"270;250",
+        "src":"pic/l3/programs/p5/ico_a.png",
+        "visible":"false",
+        "click_id":"51"
+      },
+      {
+        "id":"balance",
+        "type": "digits",
+        "position": "847;46",
+        "font": "round_number",
+        "symbol_size":"350;178",
+        "padding": "0",
+        "length": "4",        
+        "visible":"true",
+		"is_vertical":"true"
+      },
+	  {
+        "id":"time_hours",
+        "type": "digits",
+        "position": "1430;227",
+        "font": "round_number",
+        "symbol_size":"107;72",
+        "padding": "0",
+        "length": "2",
+         "min_length": "2",
+        "visible":"true",
+		"is_vertical":"true"
+      },
+	  {
+        "id":"time_min",
+        "type": "digits",
+        "position": "1430;57",
+        "font": "round_number",
+        "symbol_size":"107;72",
+        "padding": "0",
+        "length": "2",
+        "min_length": "2",
+        "visible":"true",
+		"is_vertical":"true"
+      },
+      {
+        "id":"temp_degrees",
+        "type": "digits",
+        "position": "1340;73",
+        "font": "standard_number",
+        "symbol_size":"40;25",
+        "padding": "0",
+        "length": "2",
+        "min_length": "2",
+        "visible":"true",
+        "is_vertical":"true"
+      },
+      {
+      	"id":"temp_sign",
+      	"type":"digits",
+      	"position": "1360;121",
+      	"font": "minus",
+      	"symbol_size":"150;20",
+      	"padding": "0",
+      	"length": "1",
+      	"visible":"true",
+      	"is_vertical":"true"
+      },
+      {
+        "id":"price",
+        "type": "digits",
+        "position": "20;14",
+        "font": "round_number",
+        "symbol_size":"19;13",
+        "padding": "0",
+        "length": "3",
+        "visible":"true",
+		"is_vertical":"true"
+      },
+	  {
+        "id":"cur_tip",
+        "type":"image_array",
+        "position": "1628;41",
+        "size":"251;1008",
+        "visible":"true",
+        "index":"0",
+        "length":"8",
+        "sources": [
+		      {
+            "src":"pic/l3/tip_main.png"
+          },
+		      {
+            "src":"pic/l3/tip_water_active.png"
+          },
+          {
+            "src":"pic/l3/tip_turbowater_active.png"
+          },
+          {
+            "src":"pic/l3/tip_foam_active.png"
+          },
+          {
+            "src":"pic/l3/tip_colorfoam_active.png"
+          },
+          {
+            "src":"pic/l3/tip_wax_active.png"
+          },
+          {
+            "src":"pic/l3/tip_osmosian_active.png"
+          },
+          {
+            "src":"pic/l3/tip_stop_active.png"
+		}
+		]
+	  },
+      {
+        "id":"cur_p",
+        "type":"image_array",
+        "position": "123;40",
+        "size":"486;450",
+        "visible":"true",
+        "index":"0",
+        "length":"8",
+        "sources": [
+		  {
+            "src":"pic/l3/m_type_program_big.png"
+          },
+          {
+            "src":"pic/l3/programs/p1/ico_a_big.png"
+          },
+		  {
+            "src":"pic/l3/programs/p1_2/ico_a_big.png"
+          },
+          {
+            "src":"pic/l3/programs/p2/ico_a_big.png"
+          },
+          {
+            "src":"pic/l3/programs/p2_2/ico_a_big.png"
+          },
+          {
+            "src":"pic/l3/programs/p3/ico_a_big.png"
+          },
+          {
+            "src":"pic/l3/programs/p4/ico_a_big.png"
+          },
+          {
+            "src":"pic/l3/programs/p5/ico_a_big.png"
+          }
+		  ]
+      },
+      {
+        "id":"pause_digits",
+        "type": "digits",
+        "position": "1400;437",
+        "font": "round_number",
+        "symbol_size":"137;87",
+        "padding": "5",
+        "length": "3",
+        "visible":"true",
+		"is_vertical":"true"
+      }
+    ]
+  }
