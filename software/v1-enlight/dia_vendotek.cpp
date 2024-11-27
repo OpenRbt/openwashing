@@ -672,15 +672,18 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
     }
 
     DiaVendotek * driver = reinterpret_cast<DiaVendotek *>(driverPtr);
+
+    driver->logger->AddLog("Execute driver program thread: mutex money lock", DIA_VENDOTEK_LOG_TYPE);
     pthread_mutex_lock(&driver->MoneyLock);
     int sum = driver->RequestedMoney;
     pthread_mutex_unlock(&driver->MoneyLock);
+    driver->logger->AddLog("Execute driver program thread: mutex money unlock", DIA_VENDOTEK_LOG_TYPE);
 
     vtk_logi("reader request %d RUB...", sum);
 
     vtk_logd("isSeparated %d", driver->IsTransactionSeparated);
 
-    driver->logger->AddLog("Execute driver program thread: money = " + TO_STR(sum) + ", separated" + TO_STR(driver->IsTransactionSeparated), DIA_VENDOTEK_LOG_TYPE);
+    driver->logger->AddLog("Execute driver program thread: money = " + TO_STR(sum) + ", separated = " + TO_STR(driver->IsTransactionSeparated), DIA_VENDOTEK_LOG_TYPE);
 
     payment_opts_t popts;
     popts.timeout   = 2;
@@ -701,6 +704,7 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 
     vtk_logd("host %s, port %s", driver->Host, driver->Port);
 
+    driver->logger->AddLog("Execute driver program thread: mutex operation lock", DIA_VENDOTEK_LOG_TYPE);
     pthread_mutex_lock(&driver->OperationLock);
 
     vtk_init(&popts.vtk);
@@ -709,9 +713,11 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
 
     driver->logger->AddLog("Execute driver program thread: rcode = " + TO_STR(rcode), DIA_VENDOTEK_LOG_TYPE, rcode == 0 ? LogLevel::Info : LogLevel::Error);
 
+    driver->logger->AddLog("Execute driver program thread: mutex state lock", DIA_VENDOTEK_LOG_TYPE);
     pthread_mutex_lock(&driver->StateLock);
     driver->_PaymentOpts = &popts;
     pthread_mutex_unlock(&driver->StateLock);
+    driver->logger->AddLog("Execute driver program thread: mutex state unlock", DIA_VENDOTEK_LOG_TYPE);
 
     if (rcode >= 0) {
         vtk_msg_init(&popts.mreq,  popts.vtk);
@@ -733,11 +739,14 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
     
     vtk_free(popts.vtk);
  
+    driver->logger->AddLog("Execute driver program thread: mutex state lock", DIA_VENDOTEK_LOG_TYPE);
     pthread_mutex_lock(&driver->StateLock);
     driver->_PaymentOpts = NULL;
     pthread_mutex_unlock(&driver->StateLock);
+    driver->logger->AddLog("Execute driver program thread: mutex state unlock", DIA_VENDOTEK_LOG_TYPE);
 
     pthread_mutex_unlock(&driver->OperationLock);
+    driver->logger->AddLog("Execute driver program thread: mutex operation unlock", DIA_VENDOTEK_LOG_TYPE);
 
     vtk_logi("Card reader returned status code: %d", rcode);
 
@@ -753,11 +762,13 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
         if(!driver->IsTransactionSeparated){
             if (driver->IncomingMoneyHandler != NULL) {
 
+                driver->logger->AddLog("Execute driver program thread: mutex money lock, separated", DIA_VENDOTEK_LOG_TYPE);
                 pthread_mutex_lock(&driver->MoneyLock);
                 int sum = driver->RequestedMoney;
                 driver->IncomingMoneyHandler(driver->_Manager, moneytype, sum);
                 driver->RequestedMoney = 0;
                 pthread_mutex_unlock(&driver->MoneyLock);
+                driver->logger->AddLog("Execute driver program thread: mutex money unlock, separated", DIA_VENDOTEK_LOG_TYPE);
 
                 vtk_logi("Reported money: %d", sum);
 
@@ -769,10 +780,12 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
         }else{
             if (driver->IncomingMoneyHandler != NULL) {
 
+                driver->logger->AddLog("Execute driver program thread: mutex money lock", DIA_VENDOTEK_LOG_TYPE);
                 pthread_mutex_lock(&driver->MoneyLock);
                 int sum = driver->RequestedMoney;
                 driver->IncomingMoneyHandler(driver->_Manager, moneytype, sum);
                 pthread_mutex_unlock(&driver->MoneyLock);
+                driver->logger->AddLog("Execute driver program thread: mutex money unlock", DIA_VENDOTEK_LOG_TYPE);
 
                 vtk_logi("Reported money: %d", sum);
 
@@ -780,15 +793,18 @@ void * DiaVendotek_ExecuteDriverProgramThread(void * driverPtr) {
             } 
             else {
                 vtk_loge("No handler to report: %d", sum);
+                driver->logger->AddLog("Execute driver program thread: no handler to report", DIA_VENDOTEK_LOG_TYPE);
             }
         }
         
     } 
     else {
 
+        driver->logger->AddLog("Execute driver program thread: mutex money lock", DIA_VENDOTEK_LOG_TYPE);
         pthread_mutex_lock(&driver->MoneyLock);
         driver->RequestedMoney = 0;
         pthread_mutex_unlock(&driver->MoneyLock);
+        driver->logger->AddLog("Execute driver program thread: mutex money unlock", DIA_VENDOTEK_LOG_TYPE);
 
     }
     pthread_exit(NULL);
@@ -973,16 +989,21 @@ int DiaVendotek_PerformTransaction(void * specificDriver, int money, bool isTras
 
     driver->logger->AddLog("Perform transaction: money = " + TO_STR(money) + ", separated = " + TO_STR(isTrasactionSeparated), DIA_VENDOTEK_LOG_TYPE);
 
+    driver->logger->AddLog("Perform transaction: mutex state lock", DIA_VENDOTEK_LOG_TYPE);
     pthread_mutex_lock(&driver->StateLock);
     driver->PaymentStage = 1;
     pthread_mutex_unlock(&driver->StateLock);
+    driver->logger->AddLog("Perform transaction: mutex state unlock", DIA_VENDOTEK_LOG_TYPE);
 
     vtk_logi("DiaVendotek started Perform Transaction, money = %d, isSeparated = %d, isSBP = %d", money, isTrasactionSeparated, isSBP);
+
+    driver->logger->AddLog("Perform transaction: mutex money lock", DIA_VENDOTEK_LOG_TYPE);
     pthread_mutex_lock(&driver->MoneyLock);
     driver->RequestedMoney = money;
     driver->IsTransactionSeparated = isTrasactionSeparated;
     driver->IsSBP = isSBP;
     pthread_mutex_unlock(&driver->MoneyLock);
+    driver->logger->AddLog("Perform transaction: mutex money unlock", DIA_VENDOTEK_LOG_TYPE);
 
     int err = pthread_create(&driver->ExecuteDriverProgramThread,
         NULL,
@@ -990,6 +1011,7 @@ int DiaVendotek_PerformTransaction(void * specificDriver, int money, bool isTras
         driver);
     if (err != 0) {
         vtk_loge("can't create thread :[%s]", strerror(err));
+        driver->logger->AddLog("Error creating thread: money = " + TO_STR(money) + ", separated = " + TO_STR(isTrasactionSeparated) + ", err = " + TO_STR(err) + ", strerr = " + strerror(err), DIA_VENDOTEK_LOG_TYPE, LogLevel::Error);
         return 1;
     }
     return DIA_VENDOTEK_NO_ERROR;
