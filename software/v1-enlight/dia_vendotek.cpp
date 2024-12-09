@@ -1062,6 +1062,9 @@ int DiaVendotek_StopDriver(void * specificDriver) {
 
         driver->logger->AddLog("Abort transaction: failure ", DIA_VENDOTEK_LOG_TYPE, LogLevel::Error);
 
+        pthread_join(driver->ExecuteDriverProgramThread, NULL);
+        vtk_logi("Vendotek thread killed");
+
         return -1;
     }
     vtk_logi("Start Stop Driver");
