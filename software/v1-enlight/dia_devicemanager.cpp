@@ -25,7 +25,7 @@ void DiaDeviceManager_AddCardReader(DiaDeviceManager *manager) {
 int DiaDeviceManager_AddVendotek(DiaDeviceManager *manager, std::string host, std::string port) {
     printf("Vendotek card reader added to the Device Manager\n");
     manager->_Vendotek = new DiaVendotek(manager, DiaDeviceManager_ReportMoney, host, port, manager->logger);
-    return DiaVendotek_StartPing(manager->_Vendotek);
+    return DiaVendotek_StartWorker(manager->_Vendotek);
 }
 
 void DiaDeviceManager_StartDeviceScan(DiaDeviceManager *manager) {

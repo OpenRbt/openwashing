@@ -45,15 +45,14 @@ public:
     void * _Manager;
 
     
-    pthread_t ExecuteDriverProgramThread;
-    pthread_t ExecutePaymentConfirmationDriverProgramThread;
     pthread_mutex_t MoneyLock = PTHREAD_MUTEX_INITIALIZER;
-    pthread_t ExecutePingThread;
+    pthread_t ExecuteWorkerThread;
     pthread_mutex_t OperationLock = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_t StateLock = PTHREAD_MUTEX_INITIALIZER;
     bool IsTransactionSeparated;
     bool IsSBP;
     int ToBeDeleted = 0;
+    int ToConfirm = 0;
     int RequestedMoney;
     int Available = 0;
     int PaymentStage = 0;
@@ -93,7 +92,9 @@ void* DiaVendotek_ExecutePaymentConfirmationDriverProgramThread(void * devicePtr
 //---------------------------------------------------------------------------
 int DiaVendotek_StopDriver(void * specficDriver);
 
-int DiaVendotek_StartPing(void * specificDriver);
+int DiaVendotek_ExecutePing(void * specificDriver);
 int DiaVendotek_GetAvailableStatus(void * specificDriver);
 
+void * DiaVendotek_ExecuteWorkerThread(void * driverPtr);
+int DiaVendotek_StartWorker(void * specificDriver);
 #endif
