@@ -1,0 +1,80 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"1920;1080",
+      "src":"pic/background.png",
+      "visible":"true"
+    },
+    {
+      "id":"choose_wash_type",
+      "type":"image",
+      "position": "457;77",
+      "size":"510;49",
+      "src":"pic/choose_wash_type.png",
+      "visible":"true"
+    },
+    {
+      "id":"no_change",
+      "type":"image",
+      "position": "1280;78",
+      "size":"502;43",
+      "src":"pic/no_change.png",
+      "visible":"true"
+    },
+    {
+      "id":"programs",
+      "type":"image",
+      "position": "137;150",
+      "size":"1648;873",
+      "src":"pic/programs.png",
+      "visible":"true"
+    },
+    {
+      "id":"price_p1",
+      "type": "digits",
+      "position": "392;863",
+      "font": "round_number",
+      "symbol_size":"20;32",
+      "padding": "0",
+      "length": "3",
+      "visible":"true",
+      "click_id":"1"
+    },
+    {
+      "id":"price_p2",
+      "type": "digits",
+      "position": "807;863",
+      "font": "round_number",
+      "symbol_size":"20;32",
+      "padding": "0",
+      "length": "3",
+      "visible":"true",
+      "click_id":"2"
+    },
+    {
+      "id":"price_p3",
+      "type": "digits",
+      "position": "1230;863",
+      "font": "round_number",
+      "symbol_size":"20;32",
+      "padding": "0",
+      "length": "3",
+      "visible":"true",
+      "click_id":"3"
+    },
+    {
+      "id":"price_p4",
+      "type": "digits",
+      "position": "1646;863",
+      "font": "round_number",
+      "symbol_size":"20;32",
+      "padding": "0",
+      "length": "3",
+      "visible":"true",
+      "click_id":"4"
+    }
+  ]
+}
