@@ -1,4 +1,4 @@
--- Vacuum Firmware
+-- Robot Firmware
 
 -- setup is running at the start just once
 setup = function()
@@ -20,6 +20,7 @@ setup = function()
     -- constants
     go_to_box_mode_seconds = 10
     wait_card_mode_seconds = 40
+    wait_sbp_qr_seconds = 15
     apology_mode_seconds = 10
     wait_mode_seconds = 40
     
@@ -54,6 +55,8 @@ setup = function()
     mode_wait_for_cash = 30
     mode_wait_for_card = 40
     mode_sbp_payment = 50
+    mode_wait_for_QR = 51
+    mode_sorry = 52
     mode_bonus_payment = 60
     mode_go_to_box = 70
 
@@ -107,6 +110,8 @@ run_mode = function(new_mode)
     if new_mode == mode_choose_payment then return choose_payment_mode() end
     if new_mode == mode_wait_for_cash then return wait_for_cash_mode() end
     if new_mode == mode_wait_for_card then return wait_for_card_mode() end
+    if new_mode == mode_wait_for_QR then return wait_for_QR_mode() end
+    if new_mode == mode_sorry then return sorry_mode() end
     if new_mode == mode_sbp_payment then return sbp_payment_mode() end
     if new_mode == mode_bonus_payment then return bonus_payment_mode() end
     if new_mode == mode_go_to_box then return go_to_box_mode() end
@@ -141,7 +146,10 @@ choose_payment_mode = function()
         return mode_wait_for_cash
     end
     if is_connected_to_sbp and pressed_key == 2 then
-        return mode_sbp_payment
+        hardware:CreateSbpPayment(price_p[selected_program])
+        sbp_balance = price_p[selected_program]
+        waiting_loops = wait_sbp_qr_seconds * 10;
+        return mode_wait_for_QR
     end
     if hascardreader() and pressed_key == 3 then
         electron_balance = price_p[selected_program]
@@ -226,10 +234,74 @@ wait_for_card_mode = function()
     return mode_wait_for_card
 end
 
-sbp_payment_mode = function()
-    show_sbp_payment()
+wait_for_QR_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
     run_stop()
-   
+    sbpQr = get_sbp_qr()
+    pressed_key = get_key()
+    if sbpQr == '' or sbpQr == nil or sbpQr == sbpQrTemp then
+        if waiting_loops > 0 then
+            show_wait_for_QR(waiting_loops/10)
+            waiting_loops = waiting_loops - 1
+        else
+            waiting_loops = apology_mode_seconds * 10
+            return mode_sorry
+        end
+    else
+        sbpQrTemp = sbpQr
+        return mode_sbp_payment
+    end
+
+    return mode_wait_for_QR
+end
+
+sorry_mode = function()
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
+    run_stop()
+    show_sorry()
+
+    pressed_key = get_key()
+    if pressed_key > 0 and pressed_key <= 4 then
+        return mode_choose_payment
+    end
+    
+    if waiting_loops > 0 then
+        waiting_loops = waiting_loops - 1
+    else
+        return mode_choose_payment
+    end
+
+    return mode_sorry
+end
+
+sbp_payment_mode = function()
+
+    is_connected_to_bonus_system = false
+    set_is_connected_to_bonus_system(false)
+
+    sbp_qr = get_sbp_qr()
+
+    if sbpQr == nil or sbpQr == '' then
+        return mode_choose_payment
+    end
+
+    show_sbp_payment(sbp_qr)
+
+    run_stop()
+
+    pressed_key = get_key()
+
+    if pressed_key > 0 and pressed_key <= 4 then
+        return mode_choose_payment
+    end
+
+    update_balance()
+    if balance >= price_p[selected_program] then
+        return mode_go_to_box
+    end
+
     return mode_sbp_payment
 end
 
@@ -325,7 +397,23 @@ show_wait_for_card = function()
     wait_for_card:Display()
 end
 
-show_sbp_payment = function()
+show_wait_for_QR = function(seconds_float)
+    seconds_int = math.ceil(seconds_float)
+    wait_for_QR:Set("delay_seconds.value", seconds_int)
+    wait_for_QR:Display()
+end
+
+show_sorry = function()
+    sorry:Display()
+end
+
+show_sbp_payment = function(sbpQr)
+    if sbpQr == nil or sbpQr == '' then
+        sbp_payment:Set("qr_sbp.visible", "false")
+    else
+        sbp_payment:Set("qr_sbp.visible", "true")
+    end
+    sbp_payment:Set("qr_sbp.url", sbpQr)
     sbp_payment:Display()
 end
 
@@ -479,10 +567,5 @@ get_QR = function()
 end
 
 get_sbp_qr = function()
-    sbpQr = hardware:GetSbpQR();
-    if sbpQr == nil or sbpQr == '' then
-        sbp_payment:Set("qr_sbp.visible", "false")
-    else
-        sbp_payment:Set("qr_sbp.visible", "true")
-    end
+    return hardware:GetSbpQR();
 end
