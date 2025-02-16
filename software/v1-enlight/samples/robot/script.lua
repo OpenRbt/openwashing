@@ -65,6 +65,9 @@ setup = function()
     current_mode = mode_choose_program
 
     waiting_loops_progress = 0
+    waiting_loops = 0
+
+    required_payment = 0
 
     version = "1.0.0"
 
@@ -137,7 +140,7 @@ choose_payment_mode = function()
     is_connected_to_sbp = get_is_connected_to_sbp_system()
     qr = get_QR()
 
-    show_choose_payment(qr, is_connected_to_sbp)
+    show_choose_payment(qr, is_connected_to_sbp, required_payment, balance)
     run_stop()
 
     pressed_key = get_key()
@@ -145,14 +148,14 @@ choose_payment_mode = function()
     if pressed_key == 1 then
         return mode_wait_for_cash
     end
-    if is_connected_to_sbp and pressed_key == 2 then
-        hardware:CreateSbpPayment(price_p[selected_program])
-        sbp_balance = price_p[selected_program]
+    if is_connected_to_sbp and required_payment >= 10 and pressed_key == 2 then
+        hardware:CreateSbpPayment(required_payment)
+        sbp_balance = required_payment
         waiting_loops = wait_sbp_qr_seconds * 10;
         return mode_wait_for_QR
     end
     if hascardreader() and pressed_key == 3 then
-        electron_balance = price_p[selected_program]
+        electron_balance = required_payment
         return mode_wait_for_card
     end
     if pressed_key == 4 then 
@@ -160,8 +163,12 @@ choose_payment_mode = function()
         return mode_choose_program
     end
 
+    printMessage("balance: "..balance)
+    printMessage("required_payment: "..required_payment)
+
     update_balance()
-    if balance >= price_p[selected_program] then
+    if required_payment <= 0 then
+        
         return mode_go_to_box
     end
 
@@ -177,8 +184,13 @@ wait_for_cash_mode = function()
     run_stop()
 
     update_balance()
-    if balance >= price_p[selected_program] then
+    if required_payment <= 0 then
         return mode_go_to_box
+    end
+
+    pressed_key = get_key()
+    if pressed_key > 0 and pressed_key <= 4 then
+        return mode_choose_payment
     end
 
     return mode_wait_for_cash
@@ -206,7 +218,7 @@ wait_for_card_mode = function()
     status = get_transaction_status()
     update_balance()
 
-    if balance >= price_p[selected_program] then
+    if required_payment <= 0 then
         if status ~= 0 then
             abort_transaction()
         end
@@ -298,7 +310,7 @@ sbp_payment_mode = function()
     end
 
     update_balance()
-    if balance >= price_p[selected_program] then
+    if required_payment <= 0 then
         return mode_go_to_box
     end
 
@@ -368,9 +380,9 @@ show_choose_program = function()
     choose_program:Display()
 end
 
-show_choose_payment = function(qr, is_connected_to_sbp)
+show_choose_payment = function(qr, is_connected_to_sbp, required_payment, balance)
 
-    if qr == nil or qr == '' or hardware:BonusSystemIsActive() == false then
+    if qr == nil or qr == '' or hardware:BonusSystemIsActive() == false or balance > 0 then
         choose_payment:Set("qr_pic.visible", "false")
         choose_payment:Set("bonus_pic.visible", "false")
     else
@@ -378,7 +390,7 @@ show_choose_payment = function(qr, is_connected_to_sbp)
         choose_payment:Set("bonus_pic.visible", "true")
     end
 
-    if is_connected_to_sbp ~= true then
+    if is_connected_to_sbp ~= true or required_payment < 10 then
         choose_payment:Set("sbp.visible", "false")
         choose_payment:Set("sbp_arrow.visible", "false")
     else
@@ -386,6 +398,11 @@ show_choose_payment = function(qr, is_connected_to_sbp)
         choose_payment:Set("sbp_arrow.visible", "true")
     end
 
+    if balance > 0 then
+
+    end
+
+    choose_payment:Set("qr_pic.url", qr)
     choose_payment:Display()
 end
 
@@ -507,6 +524,8 @@ update_balance = function()
     balance = balance + new_service
     balance = balance + new_bonuses
     balance = balance + new_sbp
+
+    required_payment = price_p[selected_program] - balance
 end
 
 forget_pressed_key = function()

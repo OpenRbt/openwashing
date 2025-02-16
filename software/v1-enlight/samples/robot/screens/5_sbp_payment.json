@@ -11,7 +11,7 @@
     {
       "id":"qr_sbp",
       "type":"qr",
-      "position": "730;177",
+      "position": "740;400",
       "size":"460;460",
       "src":"pic/qr_sbp.png",
       "url":"",

@@ -33,6 +33,23 @@
       "visible":"true"
     },
     {
+      "id":"bonus_pic",
+      "type":"image",
+      "position": "1346;158",
+      "size":"440;40",
+      "src":"pic/bonus.png",
+      "visible":"true"
+    },
+    {
+      "id":"qr_pic",
+      "type":"qr",
+      "position": "1381;208",
+      "size":"370;370",
+      "src":"pic/qr.png",
+      "url":"",
+      "visible":"true"
+    },
+    {
       "id":"cash",
       "type":"image",
       "position": "165;648",
@@ -76,6 +93,22 @@
       "id":"non_cash_arrow",
       "type":"image",
       "position": "1124;976",
+      "size":"70;40",
+      "src":"pic/arrow.png",
+      "visible":"true"
+    },
+    {
+      "id":"back",
+      "type":"image",
+      "position": "1417;653",
+      "size":"296;243",
+      "src":"pic/back.png",
+      "visible":"true"
+    },
+    {
+      "id":"back_arrow",
+      "type":"image",
+      "position": "1530;976",
       "size":"70;40",
       "src":"pic/arrow.png",
       "visible":"true"
