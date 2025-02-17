@@ -23,10 +23,6 @@
       "src": "screens/5_sbp_payment.json"
     },
     {
-      "id": "bonus_payment",
-      "src": "screens/6_bonus_payment.json"
-    },
-    {
       "id": "go_to_box",
       "src": "screens/7_go_to_box.json"
     },

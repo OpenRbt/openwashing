@@ -23,10 +23,10 @@ setup = function()
     wait_sbp_qr_seconds = 15
     apology_mode_seconds = 10
     wait_mode_seconds = 40
+    inactive_seconds = 120
     
     is_authorized = false
     is_transaction_started = false
-    is_connected_to_bonus_system = false
     is_waiting_receipt = false
     is_money_added = false
     is_connected_to_sbp = false
@@ -57,7 +57,6 @@ setup = function()
     mode_sbp_payment = 50
     mode_wait_for_QR = 51
     mode_sorry = 52
-    mode_bonus_payment = 60
     mode_go_to_box = 70
 
     real_ms_per_loop = 100
@@ -116,18 +115,21 @@ run_mode = function(new_mode)
     if new_mode == mode_wait_for_QR then return wait_for_QR_mode() end
     if new_mode == mode_sorry then return sorry_mode() end
     if new_mode == mode_sbp_payment then return sbp_payment_mode() end
-    if new_mode == mode_bonus_payment then return bonus_payment_mode() end
     if new_mode == mode_go_to_box then return go_to_box_mode() end
 end
 
 choose_program_mode = function()
 
+    run_stop()
     init_prices()
     init_discounts()
     show_choose_program()
 
+    turn_light(0, animation.idle)
+
     pressed_key = get_key()
     if pressed_key > 0 and pressed_key <= 4 then
+        waiting_loops = inactive_seconds * 10
         set_selected_program(pressed_key)
         return mode_choose_payment
     end
@@ -143,9 +145,12 @@ choose_payment_mode = function()
     show_choose_payment(qr, is_connected_to_sbp, required_payment, balance)
     run_stop()
 
+    turn_light(0, animation.idle)
+
     pressed_key = get_key()
 
     if pressed_key == 1 then
+        waiting_loops = inactive_seconds * 10
         return mode_wait_for_cash
     end
     if is_connected_to_sbp and required_payment >= 10 and pressed_key == 2 then
@@ -163,17 +168,16 @@ choose_payment_mode = function()
         return mode_choose_program
     end
 
-    printMessage("balance: "..balance)
-    printMessage("required_payment: "..required_payment)
-
     update_balance()
     if required_payment <= 0 then
-        
         return mode_go_to_box
     end
 
-    if get_is_connected_to_bonus_system() then
-        
+    if balance <= 0 then 
+        waiting_loops = waiting_loops - 1
+        if waiting_loops <= 0 then
+            return mode_choose_program
+        end
     end
 
     return mode_choose_payment
@@ -183,6 +187,8 @@ wait_for_cash_mode = function()
     show_wait_for_cash()
     run_stop()
 
+    turn_light(0, animation.idle)
+
     update_balance()
     if required_payment <= 0 then
         return mode_go_to_box
@@ -190,17 +196,26 @@ wait_for_cash_mode = function()
 
     pressed_key = get_key()
     if pressed_key > 0 and pressed_key <= 4 then
+        waiting_loops = inactive_seconds * 10
         return mode_choose_payment
+    end
+
+    if cash_balance <= 0 then 
+        waiting_loops = waiting_loops - 1
+        if waiting_loops <= 0 then
+            waiting_loops = inactive_seconds * 10
+            return mode_choose_payment
+        end
     end
 
     return mode_wait_for_cash
 end
 
 wait_for_card_mode = function()
-    is_connected_to_bonus_system = false
-    set_is_connected_to_bonus_system(false)
     show_wait_for_card()
     run_stop()
+
+    turn_light(0, animation.idle)
 
     if is_transaction_started == false then
         waiting_loops = wait_card_mode_seconds * 10;
@@ -227,16 +242,18 @@ wait_for_card_mode = function()
     end
 
     if waiting_loops <= 0 then
-    is_transaction_started = false
-	if status ~= 0 then
-	    abort_transaction()
-	end
+        is_transaction_started = false
+	    if status ~= 0 then
+	        abort_transaction()
+	    end
+        waiting_loops = inactive_seconds * 10
         return mode_choose_payment
     end
 
     if (status == 0) and (is_transaction_started == true) then
         is_transaction_started = false
         abort_transaction()
+        waiting_loops = inactive_seconds * 10
         return mode_choose_payment        
 	end
 
@@ -247,9 +264,10 @@ wait_for_card_mode = function()
 end
 
 wait_for_QR_mode = function()
-    is_connected_to_bonus_system = false
-    set_is_connected_to_bonus_system(false)
     run_stop()
+
+    turn_light(0, animation.idle)
+
     sbpQr = get_sbp_qr()
     pressed_key = get_key()
     if sbpQr == '' or sbpQr == nil or sbpQr == sbpQrTemp then
@@ -269,19 +287,20 @@ wait_for_QR_mode = function()
 end
 
 sorry_mode = function()
-    is_connected_to_bonus_system = false
-    set_is_connected_to_bonus_system(false)
     run_stop()
     show_sorry()
 
+    turn_light(0, animation.idle)
+
     pressed_key = get_key()
     if pressed_key > 0 and pressed_key <= 4 then
-        return mode_choose_payment
+        waiting_loops = 0
     end
     
     if waiting_loops > 0 then
         waiting_loops = waiting_loops - 1
     else
+        waiting_loops = inactive_seconds * 10
         return mode_choose_payment
     end
 
@@ -290,12 +309,12 @@ end
 
 sbp_payment_mode = function()
 
-    is_connected_to_bonus_system = false
-    set_is_connected_to_bonus_system(false)
+    turn_light(0, animation.idle)
 
     sbp_qr = get_sbp_qr()
 
     if sbpQr == nil or sbpQr == '' then
+        waiting_loops = inactive_seconds * 10
         return mode_choose_payment
     end
 
@@ -306,6 +325,7 @@ sbp_payment_mode = function()
     pressed_key = get_key()
 
     if pressed_key > 0 and pressed_key <= 4 then
+        waiting_loops = inactive_seconds * 10
         return mode_choose_payment
     end
 
@@ -317,18 +337,11 @@ sbp_payment_mode = function()
     return mode_sbp_payment
 end
 
-bonus_payment_mode = function()
-    show_bonus_payment()
-    run_stop()
-
-    return mode_bonus_payment
-end
-
 go_to_box_mode = function()
     show_go_to_box()
 
-    is_connected_to_bonus_system = false
-    set_is_connected_to_bonus_system(false)
+    turn_light(0, animation.idle)
+
     set_current_state(0)
 
     if is_waiting_receipt == false then
@@ -336,26 +349,30 @@ go_to_box_mode = function()
         run_program(selected_program)
         waiting_loops = go_to_box_mode_seconds * 10;
         is_waiting_receipt = true
+        if visible_session ~= "" then 
+            hardware:CloseVisibleSession();
+            hardware:EndSession();
+        end
     end
 
     if waiting_loops > 0 then
-        pressed_key = get_key()
-        if pressed_key > 0 and pressed_key <= 4 then
-            waiting_loops = 0
+        if waiting_loops < 90 then
+            run_stop()
+            pressed_key = get_key()
+            if pressed_key > 0 and pressed_key <= 4 then
+                waiting_loops = 0
+            end
         end
         waiting_loops = waiting_loops - 1
     else
         send_receipt(post_position, cash_balance, electronical_balance, sbp_receipt_balance)
+        increment_cars()
         cash_balance = 0
         bonuses_balance = 0
         electronical_balance = 0
         sbp_receipt_balance = 0
         is_waiting_receipt = false
 
-        if visible_session ~= "" then 
-            hardware:CloseVisibleSession();
-            hardware:EndSession();
-        end
         hardware:CreateSession();
 
         set_selected_program(0)
@@ -399,7 +416,13 @@ show_choose_payment = function(qr, is_connected_to_sbp, required_payment, balanc
     end
 
     if balance > 0 then
-
+        balance_int = math.ceil(balance)
+        choose_payment:Set("balance.visible", "true")
+        choose_payment:Set("balance.value", balance_int)
+        choose_payment:Set("rub.visible", "true")
+    else
+        choose_payment:Set("balance.visible", "false")
+        choose_payment:Set("rub.visible", "false")
     end
 
     choose_payment:Set("qr_pic.url", qr)
@@ -432,10 +455,6 @@ show_sbp_payment = function(sbpQr)
     end
     sbp_payment:Set("qr_sbp.url", sbpQr)
     sbp_payment:Display()
-end
-
-show_bonus_payment = function()
-    bonus_payment:Display()
 end
 
 show_go_to_box = function()
@@ -536,49 +555,12 @@ hascardreader = function()
   return hardware:HasCardReader()
 end
 
-need_to_open_lid = function()
-    val = hardware:GetOpenLid()
-    if val>0 then return true end
-    return false
-end
-
-check_open_lid = function()
-    if need_to_open_lid() then
-        printMessage("LID OPENED ...")
-        run_program(11)
-        printMessage("LID OPENED :(")
-        smart_delay(9500)
-        run_program(0)
-        printMessage("LID CLOSED :)")
-    end
-end
-
-get_process_id = function()
-    return hardware:GetProcessId()
-end
-
-is_authorized_function = function ()
-    authorizedSessionID = hardware:AuthorizedSessionID();
-    if authorizedSessionID ~= "" and authorizedSessionID ~= nil then
-        return true
-    end
-    return false
-end
-
 create_session = function()
     hardware:CreateSession();
 end
 
-get_is_connected_to_bonus_system = function()
-    return hardware:GetIsConnectedToBonusSystem();
-end
-
 get_is_connected_to_sbp_system = function()
     return hardware:SbpSystemIsActive();
-end
-
-set_is_connected_to_bonus_system = function(connectedToBonusSystem)
-    hardware:SetIsConnectedToBonusSystem(connectedToBonusSystem);
 end
 
 get_QR = function()

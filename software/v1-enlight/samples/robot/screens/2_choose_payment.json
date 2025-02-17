@@ -33,6 +33,24 @@
       "visible":"true"
     },
     {
+      "id":"balance",
+      "type": "digits",
+      "position": "1381;313",
+      "font": "round_number",
+      "symbol_size":"92;123",
+      "padding": "1",
+      "length": "3",
+      "visible":"false"
+    },
+    {
+      "id":"rub",
+      "type":"image",
+      "position": "1680;313",
+      "size":"111;123",
+      "src":"pic/rub.png",
+      "visible":"false"
+    },
+    {
       "id":"bonus_pic",
       "type":"image",
       "position": "1346;158",
