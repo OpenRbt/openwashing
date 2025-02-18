@@ -356,7 +356,7 @@ go_to_box_mode = function()
     end
 
     if waiting_loops > 0 then
-        if waiting_loops < 90 then
+        if waiting_loops <= 90 then
             run_stop()
             pressed_key = get_key()
             if pressed_key > 0 and pressed_key <= 4 then
