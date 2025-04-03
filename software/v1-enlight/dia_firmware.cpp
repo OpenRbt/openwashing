@@ -654,7 +654,6 @@ int confirm_transaction(void *object, int money){
 int get_transaction_status(void *object) {
     DiaDeviceManager *manager = (DiaDeviceManager *)object;
     int status = DiaDeviceManager_GetTransactionStatus(manager);
-    fprintf(stderr, "Transaction status: %d\n", status);
     return status;
 }
 
@@ -847,15 +846,11 @@ int GetVolume() {
 // Sends PING request to Central Server every 2 seconds.
 // May get service money from server.
 int CentralServerDialog() {
-    printf("PING CENTRAL SERVER\n");
-
     _IntervalsCount++;
     if (_IntervalsCount < 0) {
         printf("Memory corruption on _IntervalsCount\n");
         _IntervalsCount = 0;
     }
-
-    printf("Sending another PING request to server...\n");
 
     DiaNetwork::PingResponse resp;
     network->SendPingRequest(_CurrentBalance, _CurrentProgramID, _JustTurnedOn, resp);
