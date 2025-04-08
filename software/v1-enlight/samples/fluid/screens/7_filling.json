@@ -268,10 +268,18 @@
       {
         "id":"pause",
         "type":"image",
-        "position": "1350;445",
-        "size":"163;163",
-        "src":"pic/pause.png",
-        "click_id":"201",
+        "position": "1360;57",
+        "size":"120;966",
+        "src":"pic/buttons/stop.png",
+        "visible":"true",
+        "click_id":"201"
+      },
+      {
+        "id":"change_will_return",
+        "type":"image",
+        "position": "1500;50",
+        "size":"36;980",
+        "src":"pic/change_will_return.png",
         "visible":"true"
       },
       {
