@@ -3,7 +3,7 @@
 DECIMAL_SEPARATOR=$(locale decimal_point)
 LOG_FILE="/home/$USER/update-logs.log"
 MAX_LOG_SIZE=5242880
-IP_SUBNET_FILE="/home/$USER/ip-subnet-digits.txt"
+SERVER_IP_FILE="/home/$USER/server-ip.txt"
 CURRENT_WASH_DIR="/home/$USER/wash"
 WASH_DIR_LINK="/home/$USER/current_wash"
 AUTH_KEYS_FILE="/home/$USER/.ssh/authorized_keys"
@@ -36,15 +36,11 @@ function scan_network {
     local_ip=$1
     base_ip=$(echo $local_ip | cut -d. -f1-3)
 
-    if [ -f "$IP_SUBNET_FILE" ]; then
-        previous_ip=$(cat $IP_SUBNET_FILE)
-    fi
-
-    for i in $previous_ip $(seq 0 255); do
+    for i in $(seq 0 255); do
         ip="$base_ip.$i"
         response=$(curl -s --connect-timeout "0${DECIMAL_SEPARATOR}5" http://$ip:$PORT/ping)
         if [ $? -eq 0 ]; then
-            echo $i > $IP_SUBNET_FILE
+            echo $ip > $SERVER_IP_FILE
             echo $ip
             return
         fi
@@ -98,26 +94,49 @@ fi
 
 log_info "MAC: $mac_address"
 
-interfaces=$(ls /sys/class/net | grep -v lo)
+ip=""
 
-for interface in $interfaces; do
-    ip=$(get_local_ip $interface)
-    if [ ! -z "$ip" ]; then
-        break
+if [ -f "$SERVER_IP_FILE" ]; then
+    log_info "Getting server IP from file"
+    
+    ip=$(cat $SERVER_IP_FILE)
+
+    response=$(curl -s --connect-timeout "0${DECIMAL_SEPARATOR}5" http://$ip:$PORT/ping)
+
+    if [ $? -ne 0 ]; then
+        log_info "Server not found by ip received from file"
+        ip=""
     fi
-done
-
-if [ -z "$ip" ]; then
-    log_info "No valid IP found"
-    exit 1
 fi
 
-log_info "Local IP: $ip"
+if [ -z "$ip" ]; then
+    log_info "Getting Server IP via network scan"
 
-ip=$(scan_network $ip)
+    interfaces=$(ls /sys/class/net | grep -v lo)
+
+    for interface in $interfaces; do
+        ip=$(get_local_ip $interface)
+        
+        if [ -z "$ip" ]; then
+            log_info "No valid IP found in interface $interface"
+            continue
+        fi
+
+        log_info "Local IP: $ip in interface $interface"
+
+        ip=$(scan_network $ip)
+
+        if [ -z "$ip" ]; then
+            log_info "No server found in interface $interface"
+            continue
+        fi
+
+        break
+    done
+fi
 
 if [ -z "$ip" ]; then
-    log_info "No server found in the network"
+    log_info "No server found"
     exit 1
 fi
 
