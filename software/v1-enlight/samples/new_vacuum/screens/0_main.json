@@ -1,0 +1,893 @@
+{
+    "items":[
+        {
+            "id":"background_left",
+            "type":"image",
+            "position": "0;540",
+            "size":"1920;540",
+            "src":"pic/background_left.png",
+            "visible":"true",
+            "click_id":"0"
+        },
+        {
+            "id":"background_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"1920;540",
+            "src":"pic/background_right.png",
+            "visible":"true",
+            "click_id":"0"
+        },
+
+
+
+
+
+        {
+            "id":"degrees",
+            "type": "digits",
+            "position": "165;975",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"fraction",
+            "type": "digits",
+            "position": "165;952",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"plus",
+            "type":"image",
+            "position": "165;1500",
+            "size":"18;19",
+            "src":"pic/plus.png",
+            "visible":"true"
+        },
+        {
+            "id":"minus",
+            "type":"image",
+            "position": "165;1500",
+            "size":"18;19",
+            "src":"pic/minus.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"hours",
+            "type": "digits",
+            "position": "165;100",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"minutes",
+            "type": "digits",
+            "position": "165;59",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "2",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"minutes_zero",
+            "type": "digits",
+            "position": "165;75",
+            "font": "standard_number",
+            "symbol_size":"20;15",
+            "padding": "2",
+            "length": "1",
+            "visible":"false",
+            "value": "0",
+            "is_vertical": "true"
+        },
+
+
+
+
+
+        {
+            "id":"balance_left",
+            "type": "digits",
+            "position": "530;750",
+            "font": "standard_number",
+            "symbol_size":"60;44",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"balance_right",
+            "type": "digits",
+            "position": "530;210",
+            "font": "standard_number",
+            "symbol_size":"60;44",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+
+        {
+            "id":"price_work_left",
+            "type": "digits",
+            "position": "815;630",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"price_pause_left",
+            "type": "digits",
+            "position": "875;630",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+
+
+        {
+            "id":"price_work_right",
+            "type": "digits",
+            "position": "815;90",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+        {
+            "id":"price_pause_right",
+            "type": "digits",
+            "position": "875;90",
+            "font": "standard_number",
+            "symbol_size":"23;17",
+            "padding": "5",
+            "length": "3",
+            "visible":"true",
+            "is_vertical": "true"
+        },
+
+
+
+        {
+            "id":"programs_left",
+            "type":"image",
+            "position": "200;1500",
+            "size":"250;528",
+            "src":"pic/programs.png",
+            "visible":"true"
+        },
+        {
+            "id":"payment_method_left",
+            "type":"image",
+            "position": "200;800",
+            "size":"51;388",
+            "src":"pic/payment_methods.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_cash_left",
+            "type":"image",
+            "position": "1360;77",
+            "size":"107;424",
+            "src":"pic/buttons/button_cash.png",
+            "visible":"true",
+            "click_id":"100"
+        },
+        {
+            "id":"button_cashless_left",
+            "type":"image",
+            "position": "1500;77",
+            "size":"107;424",
+            "src":"pic/buttons/button_cashless.png",
+            "visible":"true",
+            "click_id":"101"
+        },
+
+
+
+
+
+        {
+            "id":"programs_right",
+            "type":"image",
+            "position": "700;800",
+            "size":"250;528",
+            "src":"pic/programs.png",
+            "visible":"true"
+        },
+        {
+            "id":"payment_method_right",
+            "type":"image",
+            "position": "700;1500",
+            "size":"51;388",
+            "src":"pic/payment_methods.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_cash_right",
+            "type":"image",
+            "position": "1360;587",
+            "size":"107;424",
+            "src":"pic/buttons/button_cash.png",
+            "visible":"true",
+            "click_id":"200"
+        },
+        {
+            "id":"button_cashless_right",
+            "type":"image",
+            "position": "1500;587",
+            "size":"107;424",
+            "src":"pic/buttons/button_cashless.png",
+            "visible":"true",
+            "click_id":"201"
+        },
+
+
+
+        
+        {
+            "id":"fundraising_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"545;422",
+            "src":"pic/fundraising.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_begin_left",
+            "type":"image",
+            "position": "200;1600",
+            "size":"107;424",
+            "src":"pic/buttons/button_begin.png",
+            "visible":"true",
+            "click_id":"102"
+        },
+        {
+            "id":"button_cancel_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_cancel.png",
+            "visible":"true",
+            "click_id":"103"
+        },
+
+
+
+
+
+        {
+            "id":"fundraising_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"545;422",
+            "src":"pic/fundraising.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_begin_right",
+            "type":"image",
+            "position": "200;1600",
+            "size":"107;424",
+            "src":"pic/buttons/button_begin.png",
+            "visible":"true",
+            "click_id":"202"
+        },
+        {
+            "id":"button_cancel_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_cancel.png",
+            "visible":"true",
+            "click_id":"203"
+        },
+
+
+
+
+
+        {
+            "id":"enter_amount_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"76;246",
+            "src":"pic/enter_amount.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_0_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_0.png",
+            "visible":"true",
+            "click_id":"1"
+        },
+        {
+            "id":"button_1_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_1.png",
+            "visible":"true",
+            "click_id":"2"
+        },
+        {
+            "id":"button_2_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_2.png",
+            "visible":"true",
+            "click_id":"3"
+        },
+        {
+            "id":"button_3_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_3.png",
+            "visible":"true",
+            "click_id":"4"
+        },
+        {
+            "id":"button_4_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_4.png",
+            "visible":"true",
+            "click_id":"5"
+        },
+        {
+            "id":"button_5_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_5.png",
+            "visible":"true",
+            "click_id":"6"
+        },
+        {
+            "id":"button_6_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_6.png",
+            "visible":"true",
+            "click_id":"7"
+        },
+        {
+            "id":"button_7_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_7.png",
+            "visible":"true",
+            "click_id":"8"
+        },
+        {
+            "id":"button_8_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_8.png",
+            "visible":"true",
+            "click_id":"9"
+        },
+        {
+            "id":"button_9_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_9.png",
+            "visible":"true",
+            "click_id":"10"
+        },
+
+
+
+
+
+        {
+            "id":"enter_amount_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"76;246",
+            "src":"pic/enter_amount.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_0_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_0.png",
+            "visible":"true",
+            "click_id":"11"
+        },
+        {
+            "id":"button_1_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_1.png",
+            "visible":"true",
+            "click_id":"12"
+        },
+        {
+            "id":"button_2_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_2.png",
+            "visible":"true",
+            "click_id":"13"
+        },
+        {
+            "id":"button_3_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_3.png",
+            "visible":"true",
+            "click_id":"14"
+        },
+        {
+            "id":"button_4_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_4.png",
+            "visible":"true",
+            "click_id":"15"
+        },
+        {
+            "id":"button_5_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_5.png",
+            "visible":"true",
+            "click_id":"16"
+        },
+        {
+            "id":"button_6_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_6.png",
+            "visible":"true",
+            "click_id":"17"
+        },
+        {
+            "id":"button_7_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_7.png",
+            "visible":"true",
+            "click_id":"18"
+        },
+        {
+            "id":"button_8_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_8.png",
+            "visible":"true",
+            "click_id":"19"
+        },
+        {
+            "id":"button_9_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"100;100",
+            "src":"pic/keyboard/button_9.png",
+            "visible":"true",
+            "click_id":"20"
+        },
+
+
+
+
+
+        {
+            "id":"wait_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"373;483",
+            "src":"pic/wait.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"wait_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"373;483",
+            "src":"pic/wait.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"console_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"337;349",
+            "src":"pic/left_console.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_pause_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_pause.png",
+            "visible":"true",
+            "click_id":"104"
+        },
+        {
+            "id":"button_start_left",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_start.png",
+            "visible":"true",
+            "click_id":"104"
+        },
+
+
+
+
+
+        {
+            "id":"console_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"343;336",
+            "src":"pic/right_console.png",
+            "visible":"true"
+        },
+        {
+            "id":"button_pause_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_pause.png",
+            "visible":"true",
+            "click_id":"204"
+        },
+        {
+            "id":"button_start_right",
+            "type":"image",
+            "position": "200;1800",
+            "size":"107;424",
+            "src":"pic/buttons/button_start.png",
+            "visible":"true",
+            "click_id":"204"
+        },
+
+
+
+
+
+        {
+            "id":"thanks_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"455;422",
+            "src":"pic/thanks.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"thanks_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"455;422",
+            "src":"pic/thanks.png",
+            "visible":"true"
+        },
+
+
+
+
+        {
+            "id":"apology_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"485;402",
+            "src":"pic/apology.png",
+            "visible":"true"
+        },
+
+
+
+
+        {
+            "id":"apology_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"485;402",
+            "src":"pic/apology.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"progressbar_1_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_1.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_2_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_2.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_3_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_3.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_4_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_4.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_5_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_5.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_6_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_6.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_7_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_7.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_8_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_8.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_9_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_9.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_10_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_10.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_11_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_11.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_12_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_12.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_13_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_13.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_14_left",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_14.png",
+            "visible":"true"
+        },
+
+
+
+
+
+        {
+            "id":"progressbar_1_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_1.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_2_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_2.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_3_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_3.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_4_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_4.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_5_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_5.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_6_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_6.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_7_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_7.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_8_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_8.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_9_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_9.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_10_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_10.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_11_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_11.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_12_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_12.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_13_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_13.png",
+            "visible":"true"
+        },
+        {
+            "id":"progressbar_14_right",
+            "type":"image",
+            "position": "0;0",
+            "size":"61;70",
+            "src":"pic/progressbar/progressbar_14.png",
+            "visible":"true"
+        }
+    ]
+}
