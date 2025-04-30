@@ -1,5 +1,10 @@
 #include <stdio.h>
-#include <wiringPi.h>
+
+#ifdef MOCK_GPIO
+    #include "mocks/wiringpi_mock.h"
+#else
+    #include <wiringPi.h>
+#endif
 
 #include "dia_gpio.h"
 #include "pthread.h"

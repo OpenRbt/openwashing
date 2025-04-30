@@ -543,7 +543,7 @@ class DiaRuntimeHardware {
     int (*get_keys_function)(void* object);
 
     int GetKey() {
-#ifndef USE_GPIO
+#if !defined(USE_GPIO) && !defined(MOCK_GPIO)
         assert(get_keys_function);
         return get_keys_function(0);
 #endif

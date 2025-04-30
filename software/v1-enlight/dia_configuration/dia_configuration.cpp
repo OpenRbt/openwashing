@@ -46,7 +46,7 @@ int DiaConfiguration::Init() {
     if (!err) {
         int hideMouse = 0;
         int fullScreen = 0;
-        #ifdef USE_GPIO
+        #if defined(USE_GPIO) || defined(MOCK_GPIO)
         hideMouse = 1;
         fullScreen = 1;
         #endif
@@ -59,7 +59,7 @@ int DiaConfiguration::Init() {
             return CONFIGURATION_STATUS::ERROR_SCREEN;
         }
         _Gpio = 0;
-        #ifdef USE_GPIO
+        #if defined(USE_GPIO) || defined(MOCK_GPIO)
         _Gpio = new DiaGpio(GetButtonsNumber(), GetRelaysNumber(), GetStorage());
         if (!_Gpio->InitializedOk) {
             printf("ERROR: GPIO INIT");
@@ -289,7 +289,7 @@ int DiaConfiguration::LoadConfig() {
     }
     this->_Programs = tmpPrograms;
 
-    #ifdef USE_GPIO
+    #if defined(USE_GPIO) || defined(MOCK_GPIO)
     // Let's copy programs
     std::map<int, DiaProgram *>::iterator it;
     int programNum = 0;
