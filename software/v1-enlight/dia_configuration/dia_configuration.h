@@ -53,7 +53,7 @@ public:
     }
     
     DiaGpio *GetGpio() {
-        #ifdef USE_GPIO
+        #if defined(USE_GPIO) || defined(MOCK_GPIO)
         return _Gpio;
         #endif
         return 0;        

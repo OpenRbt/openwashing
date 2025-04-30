@@ -51,12 +51,6 @@
 
 #define USE_KEYBOARD
 
-// TODO: must be set via API
-#define COIN_MULTIPLICATOR 1
-#define BANKNOTE_MULTIPLICATOR 10
-#define ALLOW_PULSE 1
-// END must be set via API
-
 #define BILLION 1000000000
 #define MAX_ACCEPTABLE_FRAME_DRAW_TIME_MICROSEC 1000000
 
@@ -73,6 +67,11 @@ std::string centralKey;
 int _DebugKey = 0;
 
 bool _JustTurnedOn = true;
+
+// Pulse config for money acceptor
+int _CoinMultiplier = 1;
+int _BanknoteMultiplier = 10;
+bool _AllowPulse = true;
 
 // Variable for storing an additional money.
 // For instance, service money from Central Server can be transfered inside.
@@ -134,7 +133,7 @@ pthread_t play_video_thread;
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
 
-#ifdef USE_GPIO
+#if defined(USE_GPIO) || defined(MOCK_GPIO)
     key = DiaGpio_GetLastKey(_gpio);
 #endif
 
@@ -370,7 +369,7 @@ int get_key(void *object) {
 }
 
 int turn_light(void *object, int pin, int animation_id) {
-#ifdef USE_GPIO
+#if defined(USE_GPIO) || defined(MOCK_GPIO)
     DiaGpio *gpio = (DiaGpio *)object;
     gpio->AnimationSubCode = pin;
     gpio->AnimationCode = animation_id;
@@ -535,20 +534,20 @@ int get_coins(void *object) {
 
     int gpioCoin = 0;
 
-    if (ALLOW_PULSE && config) {
+    if (PulseConfig::getInstance().getAllowPulse() && config) {
         DiaGpio *g = config->GetGpio();
         if (g) {
-            gpioCoin = COIN_MULTIPLICATOR * g->CoinsHandler->Money;
+            gpioCoin = PulseConfig::getInstance().getCoinMultiplier() * g->CoinsHandler->Money;
             g->CoinsHandler->Money = 0;
         }
     }
 
     int gpioCoinAdditional = 0;
 
-    if (ALLOW_PULSE && config) {
+    if (PulseConfig::getInstance().getAllowPulse() && config) {
         DiaGpio *g = config->GetGpio();
         if (g && g->AdditionalHandler) {
-            gpioCoinAdditional = COIN_MULTIPLICATOR * g->AdditionalHandler->Money;
+            gpioCoinAdditional = PulseConfig::getInstance().getCoinMultiplier() * g->AdditionalHandler->Money;
             g->AdditionalHandler->Money = 0;
         }
     }
@@ -576,10 +575,10 @@ int get_banknotes(void *object) {
     }
 
     int gpioBanknote = 0;
-    if (ALLOW_PULSE && config) {
+    if (PulseConfig::getInstance().getAllowPulse() && config) {
         DiaGpio *g = config->GetGpio();
         if (g) {
-            gpioBanknote = BANKNOTE_MULTIPLICATOR * g->BanknotesHandler->Money;
+            gpioBanknote = PulseConfig::getInstance().getBanknoteMultiplier() * g->BanknotesHandler->Money;
             g->BanknotesHandler->Money = 0;
         }
     }
@@ -779,7 +778,7 @@ int RunProgram() {
     }
 
     if (IsLocalOrAllRelayBoardMode()) {
-        #ifdef USE_GPIO
+        #if defined(USE_GPIO) || defined(MOCK_GPIO)
             DiaGpio *gpio = config->GetGpio();
             if (_CurrentProgram >= MAX_PROGRAMS_COUNT) {
                 return 1;
@@ -917,7 +916,7 @@ int CentralServerDialog() {
     if (resp.buttonID != 0) {
         printf("BUTTON PRESSED %d \n", resp.buttonID);
     }
-#ifdef USE_GPIO
+#if defined(USE_GPIO) || defined(MOCK_GPIO)
     if (config) {
         DiaGpio *gpio_b = config->GetGpio();
         if (gpio_b != 0) {
@@ -1299,6 +1298,12 @@ int main(int argc, char **argv) {
         }
     }
 
+    printf("Loading money acceptor configuration...\n");
+    StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Loading money acceptor configuration...");
+    if (!PulseConfig::getInstance().initFromNetwork(network)) {
+        printf("Warning: Some money acceptor configuration values could not be loaded, using defaults\n");
+    }
+
     printf("Config initialization...\n");
     StartScreenMessage(STARTUP_MESSAGE::CONFIGURATION, "Configuration initialization...");
     config = new DiaConfiguration(folder, network);
@@ -1644,6 +1649,24 @@ int main(int argc, char **argv) {
                             fflush(stdout);
                             break;
 
+                        #ifdef MOCK_GPIO
+                        case SDLK_c:
+                            printf("Simulating coin insertion\n");
+                            if (config && config->GetGpio()) {
+                                config->GetGpio()->CoinsHandler->Money += 1;
+                            }
+                            fflush(stdout);
+                            break;
+
+                        case SDLK_b:
+                            printf("Simulating banknote insertion\n");
+                            if (config && config->GetGpio()) {
+                                config->GetGpio()->BanknotesHandler->Money += 1;
+                            }
+                            fflush(stdout);
+                            break;
+                        #endif
+                        
                         default:
                             keypress = 1;
                             printf("Quitting by keypress...");

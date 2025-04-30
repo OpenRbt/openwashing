@@ -20,9 +20,12 @@
 
 #include <pthread.h>
 #include <map>
+#include <string>
+#include <memory>
 
 #include "dia_relayconfig.h"
 #include "dia_storage_interface.h"
+#include "dia_network.h"
 
 struct relay_stat {
     long relay_time[PIN_COUNT];
@@ -75,6 +78,63 @@ public:
       }
     }
   }
+};
+
+class PulseConfig {
+public:
+    static PulseConfig& getInstance() {
+        static PulseConfig instance;
+        return instance;
+    }
+
+    bool initFromNetwork(DiaNetwork* network) {
+        bool success = true;
+        
+        station_config_var_int_t coinMultResult;
+        if (network->GetStationConfigVar("coin_multiplicator", coinMultResult) == 0) {
+            coinMultiplier_ = coinMultResult.value;
+            printf("Loaded COIN_MULTIPLICATOR: %d\n", coinMultiplier_);
+        } else {
+            success = false;
+            printf("Failed to load COIN_MULTIPLICATOR, using default: %d\n", coinMultiplier_);
+        }
+        
+        station_config_var_int_t banknoteMultResult;
+        if (network->GetStationConfigVar("banknote_multiplicator", banknoteMultResult) == 0) {
+            banknoteMultiplier_ = banknoteMultResult.value;
+            printf("Loaded BANKNOTE_MULTIPLICATOR: %d\n", banknoteMultiplier_);
+        } else {
+            success = false;
+            printf("Failed to load BANKNOTE_MULTIPLICATOR, using default: %d\n", banknoteMultiplier_);
+        }
+        
+        allowPulse_ = coinMultiplier_ != 0 || banknoteMultiplier_ != 0;
+        
+        isInitialized_ = true;
+        return success;
+    }
+    
+    int getCoinMultiplier() const { return coinMultiplier_; }
+    int getBanknoteMultiplier() const { return banknoteMultiplier_; }
+    bool getAllowPulse() const { return allowPulse_; }
+    bool isInitialized() const { return isInitialized_; }
+
+private:
+    PulseConfig() 
+        : coinMultiplier_(1), 
+          banknoteMultiplier_(10), 
+          allowPulse_(true),
+          isInitialized_(false) {}
+    
+    PulseConfig(const PulseConfig&) = delete;
+    PulseConfig& operator=(const PulseConfig&) = delete;
+    PulseConfig(PulseConfig&&) = delete;
+    PulseConfig& operator=(PulseConfig&&) = delete;
+
+    int coinMultiplier_;
+    int banknoteMultiplier_;
+    bool allowPulse_;
+    bool isInitialized_;
 };
 
 class DiaGpio {

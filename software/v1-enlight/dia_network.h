@@ -81,6 +81,30 @@ typedef struct relay_report {
     RelayStat_t RelayStats[MAX_RELAY_NUM];
 } relay_report_t;
 
+typedef struct station_config_var_string {
+    std::string name;
+    std::string value;
+    int stationID;
+    std::string description;
+    std::string note;
+} station_config_var_string_t;
+
+typedef struct station_config_var_bool {
+    std::string name;
+    bool value;
+    int stationID;
+    std::string description;
+    std::string note;
+} station_config_var_bool_t;
+
+typedef struct station_config_var_int {
+    std::string name;
+    int value;
+    int stationID;
+    std::string description;
+    std::string note;
+} station_config_var_int_t;
+
 class DiaNetwork {
    private:
     // For receipts
@@ -1190,6 +1214,83 @@ class DiaNetwork {
         return result;
     }
 
+    template<typename T>
+    int GetStationConfigVar(const std::string& varName, T& result) {
+        std::string endpoint;
+        if constexpr (std::is_same_v<T, station_config_var_string_t>) {
+            endpoint = "/get-wash-config-var-string";
+        } else if constexpr (std::is_same_v<T, station_config_var_int_t>) {
+            endpoint = "/get-wash-config-var-int";
+        } else if constexpr (std::is_same_v<T, station_config_var_bool_t>) {
+            endpoint = "/get-wash-config-var-bool";
+        } else {
+            static_assert(always_false<T>::value, "Unsupported type");
+        }
+        
+        std::string url = _Host + _Port + endpoint;
+        std::string answer;
+        
+        std::string request = json_create_station_config_var_request(varName);
+        int res = SendRequest(&request, &answer, url, 10000);
+        
+        if (res > 0) {
+            printf("No connection to server - %s\n", endpoint.c_str());
+            return 1;
+        }
+        
+        json_error_t error;
+        json_t* json = json_loads(answer.c_str(), 0, &error);
+        
+        if (!json) {
+            printf("Error parsing JSON: %s\n", error.text);
+            return 1;
+        }
+        
+        if (!json_is_object(json)) {
+            json_decref(json);
+            return 1;
+        }
+        
+        json_t* name_json = json_object_get(json, "name");
+        json_t* station_id_json = json_object_get(json, "stationID");
+        json_t* description_json = json_object_get(json, "description");
+        json_t* note_json = json_object_get(json, "note");
+        json_t* value_json = json_object_get(json, "value");
+        
+        if (json_is_string(name_json)) {
+            result.name = json_string_value(name_json);
+        }
+        
+        if constexpr (std::is_same_v<T, station_config_var_string_t>) {
+            if (json_is_string(value_json)) {
+                result.value = json_string_value(value_json);
+            }
+        } else if constexpr (std::is_same_v<T, station_config_var_int_t>) {
+            if (json_is_integer(value_json)) {
+                result.value = json_integer_value(value_json);
+            }
+        } else if constexpr (std::is_same_v<T, station_config_var_bool_t>) {
+            if (json_is_boolean(value_json)) {
+                result.value = json_is_true(value_json);
+            }
+        }
+        
+        if (json_is_integer(station_id_json)) {
+            result.stationID = json_integer_value(station_id_json);
+        }
+        
+        if (json_is_string(description_json)) {
+            result.description = json_string_value(description_json);
+        }
+        
+        if (json_is_string(note_json)) {
+            result.note = json_string_value(note_json);
+        }
+        
+        json_decref(json);
+        return 0;
+    }
+
    private:
     int interrupted = 0;
     std::string _PublicKey;
@@ -1643,6 +1744,22 @@ class DiaNetwork {
         json_decref(object);
         return res;
     }
+
+    std::string json_create_station_config_var_request(const std::string& varName) {
+        json_t* object = json_object();
+        
+        json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
+        json_object_set_new(object, "name", json_string(varName.c_str()));
+        
+        char* str = json_dumps(object, 0);
+        std::string res = str;
+        
+        free(str);
+        str = nullptr;
+        json_decref(object);
+        return res;
+    }
+
     static size_t _Writefunc(void *ptr, size_t size, size_t nmemb, curl_answer_t *answer) {
         assert(answer);
         size_t new_len = answer->length + size * nmemb;
@@ -1664,6 +1781,10 @@ class DiaNetwork {
     void DestructCurlAnswer(curl_answer_t *raw_answer) {
         free(raw_answer->data);
     }
+
+    // Helper for template static_assert
+    template <typename>
+    struct always_false : std::false_type {};
 };
 
 #endif
