@@ -1,0 +1,23 @@
+{
+    "items": [
+      {
+        "id":"background",
+        "type":"image",
+        "position": "0;0",
+        "size":"1920;1080",
+        "src":"pic/wait_for_QR.png",
+        "visible":"true",
+        "click_id":"1"
+      },
+      {
+        "id":"delay_seconds",
+        "type": "digits",
+        "position": "1315;370",
+        "font": "round_number",
+        "symbol_size":"50;66",
+        "padding": "1",
+        "length": "2",
+        "visible":"true"
+      }
+    ]
+  }

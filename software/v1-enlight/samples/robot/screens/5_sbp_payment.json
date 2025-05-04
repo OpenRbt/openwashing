@@ -1,0 +1,21 @@
+{
+  "items": [
+    {
+      "id":"background",
+      "type":"image",
+      "position": "0;0",
+      "size":"1920;1080",
+      "src":"pic/background_sbp_payment.png",
+      "visible":"true"
+    },
+    {
+      "id":"qr_sbp",
+      "type":"qr",
+      "position": "740;400",
+      "size":"460;460",
+      "src":"pic/qr_sbp.png",
+      "url":"",
+      "visible":"true"
+    }
+  ]
+}
