@@ -261,6 +261,7 @@ int DiaConfiguration::LoadConfig() {
     json_t *programs_json = json_object_get(configuration_json, "programs");
     if(!json_is_array(programs_json)) {
         fprintf(stderr, "error: programs is not an array\n");
+        json_decref(programs_json);
         json_decref(configuration_json);
         return 1;
     }
@@ -268,6 +269,8 @@ int DiaConfiguration::LoadConfig() {
         json_t * program_json = json_array_get(programs_json, i);
         if(!json_is_object(program_json)) {
             fprintf(stderr, "error: program %d is not an object\n", i + 1);
+            json_decref(program_json);
+            json_decref(programs_json);
             json_decref(configuration_json);
             return 1;
         }
@@ -275,18 +278,34 @@ int DiaConfiguration::LoadConfig() {
         DiaProgram * program = new DiaProgram(program_json);
         if(!program->_InitializedOk) {
             printf("Something's wrong with the program");
+            delete program;
+            json_decref(program_json);
+            json_decref(programs_json);
             json_decref(configuration_json);
             return 1;
         }
-        tmpPrograms[program->ButtonID] = program;
+        int buttonID = program->ButtonID;
+        delete program;
+        tmpPrograms[buttonID] = new DiaProgram(program_json);
     }
     for (int i = 1;i <= GetProgramsNumber(); i++) {
         if (!tmpPrograms[i]) {
         fprintf(stderr, "error: LoadConfig, program # %d not found\n", i);
+        json_decref(programs_json);
         json_decref(configuration_json);
         return 1;
         }
     }
+
+    if(!this->_Programs.empty()) {
+        std::map<int, DiaProgram*>::iterator it;
+
+	    for (it = this->_Programs.begin(); it != this->_Programs.end(); it++) 
+	    { 
+            delete it->second;
+	    }
+    }
+
     this->_Programs = tmpPrograms;
 
     #ifdef USE_GPIO
@@ -377,10 +396,10 @@ int DiaConfiguration::LoadDiscounts() {
             }
         }
     }
-    station_discounts_json = NULL;
-    button_discount_json = NULL;
-    button_id_json = NULL;
-    button_discount_value_json = NULL;
+    json_decref(station_discounts_json);
+    json_decref(button_discount_json);
+    json_decref(button_id_json);
+    json_decref(button_discount_value_json);
     return 0;
 }
 
