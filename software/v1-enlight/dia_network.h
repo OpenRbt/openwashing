@@ -656,6 +656,7 @@ class DiaNetwork {
         std::string sbpOrderId = "";
         double sbpMoney = 0;
         bool sbpQrFailed = true;
+        int ttlSeconds = 0;
     };
 
     int SendPingRequest(int balance, int program, bool justTurnedOn, PingResponse &resp) {
@@ -769,6 +770,12 @@ class DiaNetwork {
                 resp.qrData = (std::string)json_string_value(obj_qr_data);
             }
 
+            json_t *obj_ttlSeconds;
+            obj_ttlSeconds = json_object_get(object, "ttlSeconds");
+            if (json_is_integer(obj_ttlSeconds)) {
+                resp.ttlSeconds = (int)json_integer_value(obj_ttlSeconds);
+            }
+
             json_decref(obj_service_amount);
             json_decref(obj_kaspi_amount);
             json_decref(obj_open_station);
@@ -785,6 +792,7 @@ class DiaNetwork {
             json_decref(obj_qr_url);
             json_decref(obj_qr_failed);
             json_decref(obj_qr_order_id);
+            json_decref(obj_ttlSeconds);
         } while (0);
         json_decref(object);
         return err;

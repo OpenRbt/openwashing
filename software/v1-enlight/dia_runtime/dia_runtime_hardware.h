@@ -570,6 +570,12 @@ class DiaRuntimeHardware {
         return has_card_reader;
     }
 
+    int block_state;
+
+    int GetBlockState() {
+        return block_state;
+    }
+
     DiaRuntimeHardware() {
         light_object = 0;
         turn_light_function = 0;
