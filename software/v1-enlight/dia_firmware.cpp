@@ -130,7 +130,75 @@ pthread_t get_volume_thread;
 pthread_t active_session_thread;
 pthread_t play_video_thread;
 
+enum BlockState {
+    NOT_BLOCKED = 0,
+    TTL_EXPIRED = 1,
+    NO_SERVER_CONNECTION = 2
+};
+
+struct timespec _lastMonotonicPingTime = {0};
+struct timespec _lastMonotonicTtlUpdate = {0};
+long long _remainingTtlSeconds = 0;           
+BlockState _blockState = NO_SERVER_CONNECTION; 
+bool _gracePeriodActive = false;          
+
+const int TTL_UPDATE_INTERVAL = 15 * 60;     
+const int FAILED_PING_TIMEOUT = 15 * 60;     
+
+void updateRemainingTtl() {
+    struct timespec currentMonotonicTime;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &currentMonotonicTime);
+    
+    long long secondsSinceLastUpdate = 0;
+    if (_lastMonotonicTtlUpdate.tv_sec > 0) {
+        secondsSinceLastUpdate = currentMonotonicTime.tv_sec - _lastMonotonicTtlUpdate.tv_sec;
+    }
+    
+    if (_lastMonotonicTtlUpdate.tv_sec == 0 || secondsSinceLastUpdate >= TTL_UPDATE_INTERVAL) {
+        if (_lastMonotonicTtlUpdate.tv_sec > 0 && secondsSinceLastUpdate > 0) {
+            _remainingTtlSeconds -= secondsSinceLastUpdate;
+            
+            if (_remainingTtlSeconds < 0) {
+                _remainingTtlSeconds = 0;
+            }
+            
+            printf("Updated remaining TTL: %lld seconds\n", _remainingTtlSeconds);
+        }
+        
+        _lastMonotonicTtlUpdate = currentMonotonicTime;
+    }
+}
+
+BlockState getBlockState() {
+    if (_gracePeriodActive) {
+        return NOT_BLOCKED;
+    }
+    
+    struct timespec currentMonotonicTime;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &currentMonotonicTime);
+    
+    long long secsSinceLastPing = 0;
+    if (_lastMonotonicPingTime.tv_sec > 0) {
+        secsSinceLastPing = currentMonotonicTime.tv_sec - _lastMonotonicPingTime.tv_sec;
+    }
+    
+    if (_lastMonotonicPingTime.tv_sec == 0 || secsSinceLastPing > FAILED_PING_TIMEOUT) {
+        return NO_SERVER_CONNECTION;
+    }
+    
+    if (_remainingTtlSeconds <= 0) {
+        return TTL_EXPIRED;
+    }
+    
+    return NOT_BLOCKED;
+}
+
 int GetKey(DiaGpio *_gpio) {
+    // If system is blocked and not in grace period, reject all key presses
+    if (_blockState != NOT_BLOCKED && !_gracePeriodActive) {
+        return 0;
+    }
+    
     int key = 0;
 
 #if defined(USE_GPIO) || defined(MOCK_GPIO)
@@ -753,6 +821,17 @@ bool RunProgramOnServer(int programID, bool isPreflight) {
 }
 
 int RunProgram() {
+    if (_CurrentProgram > 0) {
+        _gracePeriodActive = true;
+    } else if (_gracePeriodActive && _CurrentProgram == -1) {
+        _gracePeriodActive = false;
+        _blockState = getBlockState();
+    }
+    
+    if (_blockState != NOT_BLOCKED && !_gracePeriodActive) {
+        return 0;
+    }
+
     if (IsRemoteOrAllRelayBoardMode())
         _IntervalsCountProgram++;
 
@@ -851,9 +930,26 @@ int CentralServerDialog() {
         _IntervalsCount = 0;
     }
 
-    DiaNetwork::PingResponse resp;
-    network->SendPingRequest(_CurrentBalance, _CurrentProgramID, _JustTurnedOn, resp);
+    // Update the remaining TTL regardless of server connectivity
+    updateRemainingTtl();
 
+    DiaNetwork::PingResponse resp;
+    int result = network->SendPingRequest(_CurrentBalance, _CurrentProgramID, _JustTurnedOn, resp);
+    
+    if (result == 0) {
+        clock_gettime(CLOCK_MONOTONIC_RAW, &_lastMonotonicPingTime);
+        
+        if (resp.ttlSeconds <= 0) {
+            _remainingTtlSeconds = 0;
+            printf("Server set TTL to 0, immediate blocking\n");
+        } else {
+            _remainingTtlSeconds = resp.ttlSeconds;
+            printf("Received TTL: %lld seconds\n", _remainingTtlSeconds);
+        }
+        
+        clock_gettime(CLOCK_MONOTONIC_RAW, &_lastMonotonicTtlUpdate);
+    }
+    
     network->GetServerInfo(_ServerUrl);
     if (config) {
         if (resp.lastUpdate != config->GetLastUpdate() && config->GetLastUpdate() != -1) {
@@ -915,21 +1011,26 @@ int CentralServerDialog() {
     }
     if (resp.buttonID != 0) {
         printf("BUTTON PRESSED %d \n", resp.buttonID);
-    }
+        
+        if (_blockState == NOT_BLOCKED || _gracePeriodActive) {
 #if defined(USE_GPIO) || defined(MOCK_GPIO)
-    if (config) {
-        DiaGpio *gpio_b = config->GetGpio();
-        if (gpio_b != 0) {
-            gpio_b->LastPressedKey = resp.buttonID;
-        } else {
-            printf("ERROR: gpio_b used with no init. \n");
-        }
-    }
+            if (config) {
+                DiaGpio *gpio_b = config->GetGpio();
+                if (gpio_b != 0) {
+                    gpio_b->LastPressedKey = resp.buttonID;
+                } else {
+                    printf("ERROR: gpio_b used with no init. \n");
+                }
+            }
 #endif
 
 #ifdef USE_KEYBOARD
-    _DebugKey = resp.buttonID;
+            _DebugKey = resp.buttonID;
 #endif
+        } else {
+            printf("System is blocked, ignoring server button press\n");
+        }
+    }
 
     if (config) {
         // Every 30 min (1800 sec) we go inside this
@@ -1556,8 +1657,15 @@ int main(int argc, char **argv) {
 
     pthread_create(&play_video_thread, NULL, play_video_func, NULL);
 
+    // Initialize monotonic clock references
+    clock_gettime(CLOCK_MONOTONIC_RAW, &_lastMonotonicPingTime);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &_lastMonotonicTtlUpdate);
+
     while (!keypress) {
-        // Call Lua loop function
+        _blockState = getBlockState();
+        hardware->block_state = _blockState;
+        printf("Current block state: %d, remaining TTL: %lld\n", _blockState, _remainingTtlSeconds);
+
         config->GetRuntime()->Loop();
 
         int x = 0;
@@ -1572,12 +1680,14 @@ int main(int argc, char **argv) {
         DiaScreen *screen = config->GetScreen();
         std::string last = screen->LastDisplayed;
 
-        for (auto it = config->ScreenConfigs[last]->clickAreas.begin(); it != config->ScreenConfigs[last]->clickAreas.end(); ++it) {
-            if (x >= (*it).X && x <= (*it).X + (*it).Width && y >= (*it).Y && y <= (*it).Y + (*it).Height && mousepress == 1) {
-                printf("CLICK!!!\n");
-                mousepress = 0;
-                _DebugKey = std::stoi((*it).ID);
-                printf("DEBUG KEY = %d\n", _DebugKey);
+        if (_blockState == NOT_BLOCKED || _gracePeriodActive) {
+            for (auto it = config->ScreenConfigs[last]->clickAreas.begin(); it != config->ScreenConfigs[last]->clickAreas.end(); ++it) {
+                if (x >= (*it).X && x <= (*it).X + (*it).Width && y >= (*it).Y && y <= (*it).Y + (*it).Height && mousepress == 1) {
+                    printf("CLICK!!!\n");
+                    mousepress = 0;
+                    _DebugKey = std::stoi((*it).ID);
+                    printf("DEBUG KEY = %d\n", _DebugKey);
+                }
             }
         }
 
@@ -1588,88 +1698,69 @@ int main(int argc, char **argv) {
                     printf("Quitting by sdl_quit\n");
                     break;
                 case SDL_MOUSEBUTTONDOWN:
-                    mousepress = 1;
+                    // Only set mousepress if system is not blocked or in grace period
+                    if (_blockState == NOT_BLOCKED || _gracePeriodActive) {
+                        mousepress = 1;
+                    } else {
+                        printf("System is blocked, interaction disabled\n");
+                    }
                     break;
                 case SDL_KEYDOWN:
                     switch (_event.key.keysym.sym) {
-                        case SDLK_UP:
-                            // Debug service money addition
-                            _BalanceBanknotes += 10;
-
-                            printf("UP\n");
-                            fflush(stdout);
+                        case SDLK_ESCAPE:
+                            keypress = 1;
+                            printf("Quitting by ESC key...\n");
                             break;
-                        case SDLK_DOWN:
-                            // Debug service money addition
-                            _BalanceCoins += 1;
-
-                            printf("UP\n");
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_1:
-                            _DebugKey = 1;
-                            printf("1\n");
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_2:
-                            _DebugKey = 2;
-                            printf("2\n");
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_3:
-                            _DebugKey = 3;
-                            printf("3\n");
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_4:
-                            _DebugKey = 4;
-                            printf("4\n");
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_5:
-                            _DebugKey = 5;
-                            printf("5\n");
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_6:
-                            _DebugKey = 6;
-                            printf("6\n");
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_7:
-                            _DebugKey = 7;
-                            printf("7\n");
-                            fflush(stdout);
-                            break;
-
-                        #ifdef MOCK_GPIO
-                        case SDLK_c:
-                            printf("Simulating coin insertion\n");
-                            if (config && config->GetGpio()) {
-                                config->GetGpio()->CoinsHandler->Money += 1;
-                            }
-                            fflush(stdout);
-                            break;
-
-                        case SDLK_b:
-                            printf("Simulating banknote insertion\n");
-                            if (config && config->GetGpio()) {
-                                config->GetGpio()->BanknotesHandler->Money += 1;
-                            }
-                            fflush(stdout);
-                            break;
-                        #endif
                         
                         default:
-                            keypress = 1;
-                            printf("Quitting by keypress...");
+                            // Only process keys if system is not blocked or in grace period
+                            if (_blockState == NOT_BLOCKED || _gracePeriodActive) {
+                                switch (_event.key.keysym.sym) {
+                                    case SDLK_UP:
+                                        _BalanceBanknotes += 10;
+                                        printf("UP\n");
+                                        fflush(stdout);
+                                        break;
+                                    case SDLK_DOWN:
+                                        _BalanceCoins += 1;
+                                        printf("DOWN\n");
+                                        fflush(stdout);
+                                        break;
+                                    case SDLK_1:
+                                    case SDLK_2:
+                                    case SDLK_3:
+                                    case SDLK_4:
+                                    case SDLK_5:
+                                    case SDLK_6:
+                                    case SDLK_7:
+                                        _DebugKey = _event.key.keysym.sym - SDLK_0;
+                                        printf("%d\n", _DebugKey);
+                                        fflush(stdout);
+                                        break;
+                                    #ifdef MOCK_GPIO
+                                    case SDLK_c:
+                                        printf("Simulating coin insertion\n");
+                                        if (config && config->GetGpio()) {
+                                            config->GetGpio()->CoinsHandler->Money += 1;
+                                        }
+                                        fflush(stdout);
+                                        break;
+                                    case SDLK_b:
+                                        printf("Simulating banknote insertion\n");
+                                        if (config && config->GetGpio()) {
+                                            config->GetGpio()->BanknotesHandler->Money += 1;
+                                        }
+                                        fflush(stdout);
+                                        break;
+                                    #endif
+                                    default:
+                                        keypress = 1;
+                                        printf("Quitting by keypress...");
+                                        break;
+                                }
+                            } else {
+                                printf("System is blocked, key input disabled\n");
+                            }
                             break;
                     }
                     break;

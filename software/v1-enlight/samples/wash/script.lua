@@ -1,5 +1,11 @@
 -- Wash Firmware
 
+BlockState = {
+    NOT_BLOCKED = 0,
+    TTL_EXPIRED = 1,
+    NO_SERVER_CONNECTION = 2
+}
+
 -- setup is running at the start just once
 setup = function()
     -- global variables
@@ -86,6 +92,8 @@ setup = function()
     mode_confirm_end = 110
     mode_thanks = 120
     mode_connected_to_bonus_system = 130
+    mode_no_internet = 140
+    
     real_ms_per_loop = 100
     
     currentMode = mode_welcome
@@ -106,11 +114,24 @@ setup = function()
     visible_session = "";
     
     forget_pressed_key();
+
+    is_system_blocked = false
+    block_state = BlockState.NOT_BLOCKED
+
     return 0
 end
 
 -- loop is being executed
 loop = function()
+    block_state = hardware:GetBlockState()
+    is_system_blocked = block_state ~= BlockState.NOT_BLOCKED
+
+    if is_system_blocked then
+        if block_state == BlockState.TTL_EXPIRED or block_state == BlockState.NO_SERVER_CONNECTION then
+            currentMode = mode_no_internet
+        end
+    end
+
     update_post()
     if balance < 0.1 and money_wait_seconds > 0 then
         money_wait_seconds = money_wait_seconds - 1
@@ -166,6 +187,7 @@ run_mode = function(new_mode)
     if new_mode == mode_connected_to_bonus_system then return connected_to_bonus_system_mode() end
     
     if new_mode == mode_thanks then return thanks_mode() end
+    if new_mode == mode_no_internet then return no_internet_mode() end
 end
 
 welcome_mode = function()
@@ -894,4 +916,20 @@ get_sbp_qr = function()
     else
         sbp_payment:Set("qr_sbp.visible", "true")
     end
+end
+
+no_internet_mode = function()
+    show_no_internet()
+    run_stop()
+    turn_light(0, animation.idle)
+    
+    if hardware:GetBlockState() ~= BlockState.NO_SERVER_CONNECTION then
+        return mode_welcome
+    end
+    
+    return mode_no_internet
+end
+
+show_no_internet = function()
+    no_internet_connection:Display()
 end

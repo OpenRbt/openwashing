@@ -53,6 +53,10 @@
     {
     	"id": "sorry",
     	"src": "screens/17_sorry.json"
+    },
+    {
+    	"id": "no_internet_connection",
+    	"src": "screens/18_no_internet_connection.json"
     }
   ],
   "buttons": 6,

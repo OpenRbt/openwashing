@@ -136,6 +136,9 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("AbortTransaction", &DiaRuntimeHardware::AbortTransaction)
         .addFunction("SetCurrentState", &DiaRuntimeHardware::SetCurrentState)
         .addFunction("HasCardReader", &DiaRuntimeHardware::HasCardReader)
+
+        // Block system
+        .addFunction("GetBlockState", &DiaRuntimeHardware::GetBlockState)
         .endClass();
 
     getGlobalNamespace(Lua)
