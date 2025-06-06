@@ -1222,19 +1222,37 @@ class DiaNetwork {
         return result;
     }
 
+    static const char* getWashConfigVarEndpoint(station_config_var_string_t*) {
+        return "/get-wash-config-var-string";
+    }
+    static const char* getWashConfigVarEndpoint(station_config_var_int_t*) {
+        return "/get-wash-config-var-int";
+    }
+    static const char* getWashConfigVarEndpoint(station_config_var_bool_t*) {
+        return "/get-wash-config-var-bool";
+    }
+
+    void setConfigVarValueFromJson(station_config_var_string_t& result, json_t* value_json) {
+        if (json_is_string(value_json)) {
+            result.value = json_string_value(value_json);
+        }
+    }
+
+    void setConfigVarValueFromJson(station_config_var_int_t& result, json_t* value_json) {
+        if (json_is_integer(value_json)) {
+            result.value = json_integer_value(value_json);
+        }
+    }
+
+    void setConfigVarValueFromJson(station_config_var_bool_t& result, json_t* value_json) {
+        if (json_is_boolean(value_json)) {
+            result.value = json_boolean_value(value_json);
+        }
+    }
+
     template<typename T>
     int GetStationConfigVar(const std::string& varName, T& result) {
-        std::string endpoint;
-        if constexpr (std::is_same_v<T, station_config_var_string_t>) {
-            endpoint = "/get-wash-config-var-string";
-        } else if constexpr (std::is_same_v<T, station_config_var_int_t>) {
-            endpoint = "/get-wash-config-var-int";
-        } else if constexpr (std::is_same_v<T, station_config_var_bool_t>) {
-            endpoint = "/get-wash-config-var-bool";
-        } else {
-            static_assert(always_false<T>::value, "Unsupported type");
-        }
-        
+        const std::string endpoint = getWashConfigVarEndpoint(static_cast<T*>(nullptr));
         std::string url = _Host + _Port + endpoint;
         std::string answer;
         
@@ -1248,54 +1266,37 @@ class DiaNetwork {
         
         json_error_t error;
         json_t* json = json_loads(answer.c_str(), 0, &error);
-        
         if (!json) {
             printf("Error parsing JSON: %s\n", error.text);
             return 1;
         }
         
         if (!json_is_object(json)) {
-            json_decref(json);
             return 1;
         }
         
-        json_t* name_json = json_object_get(json, "name");
-        json_t* station_id_json = json_object_get(json, "stationID");
-        json_t* description_json = json_object_get(json, "description");
-        json_t* note_json = json_object_get(json, "note");
+        auto get_string = [](json_t* obj, const char* key) -> std::string {
+            json_t* val = json_object_get(obj, key);
+            return (val && json_is_string(val)) ? json_string_value(val) : "";
+        };
+        
+        auto get_int = [](json_t* obj, const char* key) -> int {
+            json_t* val = json_object_get(obj, key);
+            return (val && json_is_integer(val)) ? json_integer_value(val) : 0;
+        };
+        
+        result.name = get_string(json, "name");
+        result.stationID = get_int(json, "stationID");
+        result.description = get_string(json, "description");
+        result.note = get_string(json, "note");
+        
         json_t* value_json = json_object_get(json, "value");
-        
-        if (json_is_string(name_json)) {
-            result.name = json_string_value(name_json);
+        if (value_json) {
+            setConfigVarValueFromJson(result, value_json);
         }
-        
-        if constexpr (std::is_same_v<T, station_config_var_string_t>) {
-            if (json_is_string(value_json)) {
-                result.value = json_string_value(value_json);
-            }
-        } else if constexpr (std::is_same_v<T, station_config_var_int_t>) {
-            if (json_is_integer(value_json)) {
-                result.value = json_integer_value(value_json);
-            }
-        } else if constexpr (std::is_same_v<T, station_config_var_bool_t>) {
-            if (json_is_boolean(value_json)) {
-                result.value = json_is_true(value_json);
-            }
-        }
-        
-        if (json_is_integer(station_id_json)) {
-            result.stationID = json_integer_value(station_id_json);
-        }
-        
-        if (json_is_string(description_json)) {
-            result.description = json_string_value(description_json);
-        }
-        
-        if (json_is_string(note_json)) {
-            result.note = json_string_value(note_json);
-        }
-        
+
         json_decref(json);
+        
         return 0;
     }
 
@@ -1789,10 +1790,6 @@ class DiaNetwork {
     void DestructCurlAnswer(curl_answer_t *raw_answer) {
         free(raw_answer->data);
     }
-
-    // Helper for template static_assert
-    template <typename>
-    struct always_false : std::false_type {};
 };
 
 #endif
