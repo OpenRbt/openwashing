@@ -87,10 +87,11 @@ class DiaNetwork {
 
    public:
     DiaChannel<ReceiptToSend> *receipts_channel;
-
     DiaNetwork() {
         _Host = "";
         _Port = ":8020";
+        interrupted = 0;  // Initialize the flag
+
         curl_global_init(CURL_GLOBAL_ALL);
 
         _OnlineCashRegister = "";
@@ -103,9 +104,11 @@ class DiaNetwork {
 
     ~DiaNetwork() {
         printf("Destroying DiaNetwork\n");
-        delete receipts_channel;
-        curl_global_cleanup();
+
+        // First set the interrupted flag to signal threads to terminate
         StopTheWorld();
+
+        // Then wait for threads to finish
         int status = pthread_join(entry_processing_thread, NULL);
         if (status != 0) {
             printf("Main error: can't join reports thread, status = %d\n", status);
@@ -114,6 +117,11 @@ class DiaNetwork {
         if (status != 0) {
             printf("Main error: can't join receipts thread, status = %d\n", status);
         }
+
+        // Only after threads are done, delete resources they might be using
+        delete receipts_channel;
+
+        curl_global_cleanup();
     }
 
     // Base function for sending a GET request.
@@ -160,13 +168,20 @@ class DiaNetwork {
 
         CURL *curl;
         CURLcode res;
-        curl_answer_t raw_answer;
+        curl_answer_t raw_answer = {NULL, 0};  // Explicit initialization
 
-        InitCurlAnswer(&raw_answer);
+        // Allocate initial memory
+        raw_answer.data = (char *)malloc(1);
+        if (!raw_answer.data) {
+            printf("Initial malloc failed\n");
+            return 1;
+        }
+        raw_answer.data[0] = '\0';
+        raw_answer.length = 0;
 
         curl = curl_easy_init();
         if (curl == NULL) {
-            DestructCurlAnswer(&raw_answer);
+            free(raw_answer.data);  // Clean up
             printf("curl is NULL :( \n");
             return 1;
         }
@@ -188,20 +203,33 @@ class DiaNetwork {
         res = curl_easy_perform(curl);
         int http_code = 0;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-        if ((res != CURLE_OK) || ((http_code != 200) && (http_code != 201) && (http_code != 204))) {
-            printf("CURL code is wrong %d, http code %d\n", res, http_code);
-            DestructCurlAnswer(&raw_answer);
+
+        // Check if data is valid immediately after the request
+        if (raw_answer.data == NULL) {
+            printf("Error: data is NULL after curl_easy_perform\n");
             curl_easy_cleanup(curl);
             curl_slist_free_all(headers);
             return 1;
         }
-        *answer = raw_answer.data;
-        DestructCurlAnswer(&raw_answer);
+
+        if ((res != CURLE_OK) || ((http_code != 200) && (http_code != 201) && (http_code != 204))) {
+            printf("CURL code is wrong %d, http code %d\n", res, http_code);
+            free(raw_answer.data);  // Direct cleanup
+            curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
+            return 1;
+        }
+
+        // Make a copy of the data before any potential cleanup
+        *answer = std::string(raw_answer.data, raw_answer.length);
+
+        // Clean up
+        free(raw_answer.data);
+        raw_answer.data = NULL;
         curl_easy_cleanup(curl);
         curl_slist_free_all(headers);
         return 0;
     }
-
     // Central server searching, if it's IP address is unknown.
     // Gets local machine's IP and starts pinging every address in block.
     // Modifies IP address.
@@ -274,8 +302,8 @@ class DiaNetwork {
                 // We found it!
                 ip = reqIP + std::to_string(i);
                 return 0;
-            }         	
-        }   	
+            }
+        }
 
         return SERVER_UNAVAILABLE;
     }
@@ -284,10 +312,9 @@ class DiaNetwork {
     // Modfifes out parameter == MAC address without ":" symbols.
     std::string GetMacAddress(const int outSize) {
         int fd;
-
         struct ifreq ifr;
         const char *iface = "eth0";
-        char *mac = 0;
+        unsigned char *mac;  // Changed from char* to unsigned char*
 
         fd = socket(AF_INET, SOCK_DGRAM, 0);
         ifr.ifr_addr.sa_family = AF_INET;
@@ -295,12 +322,12 @@ class DiaNetwork {
         ioctl(fd, SIOCGIFHWADDR, &ifr);
         close(fd);
 
-        mac = (char *)ifr.ifr_hwaddr.sa_data;
+        mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
 
-        // Convert MAC bytes to hexagonal with fixed width
+        // Convert MAC bytes to hexagonal with fixed width - without using abs()
         std::stringstream ss;
-        for (int i = 0; i < outSize; ++i) {
-            ss << std::setw(2) << std::setfill('0') << std::hex << (int)abs(mac[i]); //Первое, на что ругается valgrind
+        for (int i = 0; i < outSize && i < 6; ++i) {  // Added bounds check
+            ss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(mac[i]);
         }
         return ss.str();
     }
@@ -329,9 +356,9 @@ class DiaNetwork {
         std::string serverIP = "";
         int res = -1;
 
-	    printf("Looking for Central Wash server ...\n");
+        printf("Looking for Central Wash server ...\n");
         res = this->SearchCentralServer(serverIP, stop);
-        
+
         if (res == 0) {
             printf("Server located on: %s\n", serverIP.c_str());
         } else {
@@ -446,7 +473,7 @@ class DiaNetwork {
         std::string json_run_program_request = json_create_run_program(programID, preflight);
         result = SendRequest(&json_run_program_request, &answer, url, 1000);
         if ((result) || (answer != "")) {
-            //fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
+            // fprintf(stderr, "RunProgramOnServer answer %s\n", answer.c_str());
             return 1;
         }
         return 0;
@@ -635,14 +662,12 @@ class DiaNetwork {
     };
 
     int SendPingRequest(int balance, int program, bool justTurnedOn, PingResponse &resp) {
-
         std::string answer;
         std::string url = _Host + _Port + "/ping";
 
         int result;
         std::string json_ping_request = json_create_ping_report(balance, program, justTurnedOn);
         result = SendRequest(&json_ping_request, &answer, url, 1000);
-        // printf("Server answer on PING:\n%s\n", answer.c_str());
 
         if (result == 2) {
             return 3;
@@ -655,115 +680,101 @@ class DiaNetwork {
         json_t *object;
         json_error_t error;
 
-        int err = 0;
         object = json_loads(answer.c_str(), 0, &error);
-        do {
-            if (!object) {
-                printf("Error in PING: %d: %s\n", error.line, error.text);
-                err = 1;
-                break;
-            }
+        if (!object) {
+            printf("Error in PING: %d: %s\n", error.line, error.text);
+            return 1;
+        }
 
-            if (!json_is_object(object)) {
-                printf("Not a JSON\n");
-                break;
-            }
+        if (!json_is_object(object)) {
+            printf("Not a JSON\n");
+            json_decref(object);
+            return 1;
+        }
 
-            json_t *obj_service_amount;
-            obj_service_amount = json_object_get(object, "serviceAmount");
+        // Get values from JSON object - using proper null checks
+        json_t *obj_service_amount = json_object_get(object, "serviceAmount");
+        if (obj_service_amount && json_is_integer(obj_service_amount)) {
             resp.serviceMoney = (int)json_integer_value(obj_service_amount);
+        }
 
-            json_t *obj_kaspi_amount;
-            obj_kaspi_amount = json_object_get(object, "kaspiAmount");
+        json_t *obj_kaspi_amount = json_object_get(object, "kaspiAmount");
+        if (obj_kaspi_amount && json_is_integer(obj_kaspi_amount)) {
             resp.kaspiAmount = (int)json_integer_value(obj_kaspi_amount);
+        }
 
-            json_t *obj_open_station;
-            obj_open_station = json_object_get(object, "openStation");
+        json_t *obj_open_station = json_object_get(object, "openStation");
+        if (obj_open_station && json_is_boolean(obj_open_station)) {
             resp.openStation = (bool)json_boolean_value(obj_open_station);
+        }
 
-            json_t *obj_button_id;
-            obj_button_id = json_object_get(object, "ButtonID");
+        json_t *obj_button_id = json_object_get(object, "ButtonID");
+        if (obj_button_id && json_is_integer(obj_button_id)) {
             resp.buttonID = (int)json_integer_value(obj_button_id);
+        }
 
-            json_t *obj_last_update;
-            obj_last_update = json_object_get(object, "lastUpdate");
+        json_t *obj_last_update = json_object_get(object, "lastUpdate");
+        if (obj_last_update && json_is_integer(obj_last_update)) {
             resp.lastUpdate = (int)json_integer_value(obj_last_update);
+        }
 
-            json_t *obj_last_discount_update;
-            obj_last_discount_update = json_object_get(object, "lastDiscountUpdate");
+        json_t *obj_last_discount_update = json_object_get(object, "lastDiscountUpdate");
+        if (obj_last_discount_update && json_is_integer(obj_last_discount_update)) {
             resp.discountLastUpdate = (int)json_integer_value(obj_last_discount_update);
+        }
 
-            json_t *obj_bonus_system;
-            obj_bonus_system = json_object_get(object, "bonusSystemActive");
+        json_t *obj_bonus_system = json_object_get(object, "bonusSystemActive");
+        if (obj_bonus_system && json_is_boolean(obj_bonus_system)) {
             resp.bonusSystemActive = (bool)json_boolean_value(obj_bonus_system);
+        }
 
-            json_t *obj_sbp_system;
-            obj_sbp_system = json_object_get(object, "sbpSystemActive");
+        json_t *obj_sbp_system = json_object_get(object, "sbpSystemActive");
+        if (obj_sbp_system && json_is_boolean(obj_sbp_system)) {
             resp.sbpSystemActive = (bool)json_boolean_value(obj_sbp_system);
+        }
 
-            json_t *obj_bonus_amount;
-            obj_bonus_amount = json_object_get(object, "bonusAmount");
+        json_t *obj_bonus_amount = json_object_get(object, "bonusAmount");
+        if (obj_bonus_amount && json_is_integer(obj_bonus_amount)) {
             resp.bonusAmount = (int)json_integer_value(obj_bonus_amount);
+        }
 
-            json_t *obj_qr_money;
-            obj_qr_money = json_object_get(object, "qrMoney");
+        json_t *obj_qr_money = json_object_get(object, "qrMoney");
+        if (obj_qr_money && json_is_number(obj_qr_money)) {
             resp.sbpMoney = (double)json_number_value(obj_qr_money);
+        }
 
-            json_t *obj_qr_url;
-            obj_qr_url = json_object_get(object, "qrUrl");
-            if (json_is_string(obj_qr_url)) {
-                resp.sbpUrl = (std::string)json_string_value(obj_qr_url);
-            }
+        json_t *obj_qr_url = json_object_get(object, "qrUrl");
+        if (obj_qr_url && json_is_string(obj_qr_url)) {
+            resp.sbpUrl = (std::string)json_string_value(obj_qr_url);
+        }
 
-            json_t *obj_qr_failed;
-            obj_qr_failed = json_object_get(object, "qrFailed");
+        json_t *obj_qr_failed = json_object_get(object, "qrFailed");
+        if (obj_qr_failed && json_is_boolean(obj_qr_failed)) {
             resp.sbpQrFailed = (bool)json_boolean_value(obj_qr_failed);
+        }
 
-            json_t *obj_qr_order_id;
-            obj_qr_order_id = json_object_get(object, "qrOrderId");
-            if (json_is_string(obj_qr_order_id)) {
-                resp.sbpOrderId = (std::string)json_string_value(obj_qr_order_id);
-            }
+        json_t *obj_qr_order_id = json_object_get(object, "qrOrderId");
+        if (obj_qr_order_id && json_is_string(obj_qr_order_id)) {
+            resp.sbpOrderId = (std::string)json_string_value(obj_qr_order_id);
+        }
 
-            json_t *obj_authorized_session_ID;
-            obj_authorized_session_ID = json_object_get(object, "AuthorizedSessionID");
-            
-            if (json_is_string(obj_authorized_session_ID)) {
-                resp.authorizedSessionID = (std::string)json_string_value(obj_authorized_session_ID);
-            }
+        json_t *obj_authorized_session_ID = json_object_get(object, "AuthorizedSessionID");
+        if (obj_authorized_session_ID && json_is_string(obj_authorized_session_ID)) {
+            resp.authorizedSessionID = (std::string)json_string_value(obj_authorized_session_ID);
+        }
 
-            json_t *obj_session_ID;
-            obj_session_ID = json_object_get(object, "sessionID");
-            
-            if (json_is_string(obj_session_ID)) {
-                resp.visibleSessionID = (std::string)json_string_value(obj_session_ID);
-            }
+        json_t *obj_session_ID = json_object_get(object, "sessionID");
+        if (obj_session_ID && json_is_string(obj_session_ID)) {
+            resp.visibleSessionID = (std::string)json_string_value(obj_session_ID);
+        }
 
-            json_t *obj_qr_data;
-            obj_qr_data = json_object_get(object, "qr_data");
-            if (json_is_string(obj_qr_data)) {
-                resp.qrData = (std::string)json_string_value(obj_qr_data);
-            }
+        json_t *obj_qr_data = json_object_get(object, "qr_data");
+        if (obj_qr_data && json_is_string(obj_qr_data)) {
+            resp.qrData = (std::string)json_string_value(obj_qr_data);
+        }
 
-            json_decref(obj_service_amount);
-            json_decref(obj_kaspi_amount);
-            json_decref(obj_open_station);
-            json_decref(obj_button_id);
-            json_decref(obj_last_update);
-            json_decref(obj_last_discount_update);
-            json_decref(obj_bonus_system);
-            json_decref(obj_sbp_system);
-            json_decref(obj_bonus_amount);
-            json_decref(obj_authorized_session_ID);
-            json_decref(obj_session_ID);
-            json_decref(obj_qr_data);
-            json_decref(obj_qr_money);
-            json_decref(obj_qr_url);
-            json_decref(obj_qr_failed);
-            json_decref(obj_qr_order_id);
-        } while (0);
-        json_decref(object);
-        return err;
+        json_decref(object);  // Only decref the parent object once
+        return 0;
     }
 
     int GetQr(std::string &qrData) {
@@ -915,7 +926,7 @@ class DiaNetwork {
 
         std::string url = _Host + _Port + "/add-log";
         int res = SendRequest(&json_add_log_request, &answer, url, 10000);
-        
+
         if (res > 0) {
             printf("\n!!!No connection to server - 1: %s, body: %s!!!\n\n", answer.c_str(), json_add_log_request.c_str());
             return 1;
@@ -1020,61 +1031,64 @@ class DiaNetwork {
         json_t *object;
         json_error_t error;
         object = json_loads(answer.c_str(), 0, &error);
-        int err = 0;
 
-        do {
-            if (!object) {
-                printf("Error in get_last_relay_report on line %d: %s\n", error.line, error.text);
-                err = 1;
-                break;
+        if (!object) {
+            printf("Error in get_last_relay_report on line %d: %s\n", error.line, error.text);
+            return 1;
+        }
+
+        if (!json_is_object(object)) {
+            printf("JSON is not an object\n");
+            json_decref(object);
+            return 1;
+        }
+
+        json_t *obj_array = json_object_get(object, "relayStats");
+        if (!obj_array || !json_is_array(obj_array)) {
+            json_decref(object);
+            return 1;
+        }
+
+        size_t index;
+        json_t *element;
+
+        // Initialize the relay stats to zeros
+        for (int i = 0; i < MAX_RELAY_NUM; i++) {
+            relay_report_data->RelayStats[i].switched_count = 0;
+            relay_report_data->RelayStats[i].total_time_on = 0;
+        }
+
+        json_array_foreach(obj_array, index, element) {
+            json_t *relay_id_json = json_object_get(element, "relayID");
+            if (!relay_id_json || !json_is_integer(relay_id_json)) {
+                printf("relayId problem\n");
+                continue;  // Skip this element but continue processing
             }
 
-            if (!json_is_object(object)) {
-                printf("JSON is not an object\n");
-                err = 1;
-                break;
+            int relay_id = (int)json_integer_value(relay_id_json);
+            if (relay_id <= 0 || relay_id > MAX_RELAY_NUM) {
+                printf("Invalid relay ID: %d\n", relay_id);
+                continue;  // Skip invalid relay IDs
             }
 
-            json_t *obj_array;
-            obj_array = json_object_get(object, "relayStats");
-            if (!json_is_array(obj_array)) {
-                err = 1;
-                break;
+            json_t *switched_count_json = json_object_get(element, "switchedCount");
+            int switched_count = 0;
+            if (switched_count_json && json_is_integer(switched_count_json)) {
+                switched_count = (int)json_integer_value(switched_count_json);
             }
 
-            json_t *element = new json_t();
-            json_t *obj_var = new json_t();
-            int i, relay_id, switched_count, total_time_on;
-
-            json_array_foreach(obj_array, i, element) {
-                obj_var = json_object_get(element, "relayID");
-                if (!json_is_integer(obj_var)) {
-                    printf("relayId problem\n");
-                    err = 1;
-                    break;
-                }
-                relay_id = (int)json_integer_value(obj_var);
-
-                obj_var = json_object_get(element, "switchedCount");
-                if (!json_is_integer(obj_var)) {
-                    switched_count = 0;
-                } else
-                    switched_count = (int)json_integer_value(obj_var);
-
-                obj_var = json_object_get(element, "totalTimeOn");
-                if (!json_is_integer(obj_var)) {
-                    total_time_on = 0;
-                } else
-                    total_time_on = (int)json_integer_value(obj_var);
-                relay_report_data->RelayStats[relay_id - 1].switched_count = switched_count;
-                relay_report_data->RelayStats[relay_id - 1].total_time_on = total_time_on;
+            json_t *total_time_on_json = json_object_get(element, "totalTimeOn");
+            int total_time_on = 0;
+            if (total_time_on_json && json_is_integer(total_time_on_json)) {
+                total_time_on = (int)json_integer_value(total_time_on_json);
             }
-            json_decref(element);
-            json_decref(obj_var);
-        } while (0);
+
+            relay_report_data->RelayStats[relay_id - 1].switched_count = switched_count;
+            relay_report_data->RelayStats[relay_id - 1].total_time_on = total_time_on;
+        }
 
         json_decref(object);
-        return err;
+        return 0;
     }
 
     // Sends SAVE IF NOT EXISTS request to Central Server and decodes JSON result to value string.
@@ -1322,7 +1336,7 @@ class DiaNetwork {
         return res;
     }
 
-    std::string json_create_sbp_payment(int amount){
+    std::string json_create_sbp_payment(int amount) {
         json_t *object = json_object();
 
         json_object_set_new(object, "hash", json_string(_PublicKey.c_str()));
@@ -1473,7 +1487,7 @@ class DiaNetwork {
         free(str);
         str = 0;
         json_decref(object);
-        std::cout<< "\nMoney Report Json: " << res << "\n";
+        std::cout << "\nMoney Report Json: " << res << "\n";
         return res;
     }
 
@@ -1644,25 +1658,40 @@ class DiaNetwork {
         return res;
     }
     static size_t _Writefunc(void *ptr, size_t size, size_t nmemb, curl_answer_t *answer) {
-        assert(answer);
-        size_t new_len = answer->length + size * nmemb;
-        answer->data = (char *)realloc(answer->data, new_len + 1);
-        assert(answer->data);
-        memcpy(answer->data + answer->length, ptr, size * nmemb);
+        if (!answer || !ptr) return 0;
+
+        size_t data_size = size * nmemb;
+        size_t new_len = answer->length + data_size;
+
+        // Reallocate memory
+        char *new_data = (char *)realloc(answer->data, new_len + 1);
+        if (!new_data) return 0;
+
+        answer->data = new_data;
+        memcpy(answer->data + answer->length, ptr, data_size);
         answer->data[new_len] = '\0';
         answer->length = new_len;
 
-        return size * nmemb;
+        return data_size;
     }
 
     void InitCurlAnswer(curl_answer_t *raw_answer) {
         raw_answer->data = (char *)malloc(1);
-        raw_answer->length = 0;
-        raw_answer->data[0] = 0;
+        if (raw_answer->data) {
+            raw_answer->length = 0;
+            raw_answer->data[0] = 0;
+        } else {
+            // Handle memory allocation failure
+            raw_answer->length = 0;
+        }
     }
 
     void DestructCurlAnswer(curl_answer_t *raw_answer) {
-        free(raw_answer->data);
+        if (raw_answer->data) {
+            free(raw_answer->data);
+            raw_answer->data = NULL;
+        }
+        raw_answer->length = 0;
     }
 };
 
