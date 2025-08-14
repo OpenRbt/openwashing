@@ -24,6 +24,17 @@
 #include <sstream>
 #include <string>
 
+#include <ifaddrs.h>
+
+
+// To get Mac address
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <dirent.h>
+#include <limits.h>
+
+
 #include "dia_channel.h"
 
 #define MAX_RELAY_NUM 6
@@ -308,29 +319,51 @@ class DiaNetwork {
         return SERVER_UNAVAILABLE;
     }
 
-    // Returns local machine's MAC address of eth0 interface.
-    // Modfifes out parameter == MAC address without ":" symbols.
-    std::string GetMacAddress(const int outSize) {
-        int fd;
-        struct ifreq ifr;
-        const char *iface = "eth0";
-        unsigned char *mac;  // Changed from char* to unsigned char*
+   
+    inline std::string GetMacAddress(int outSize) {
+        auto to_hex = [](const uint8_t* b, int n) {
+            static const char* hx = "0123456789abcdef";
+            std::string s; s.reserve(n * 2);
+            for (int i = 0; i < n; ++i) { s.push_back(hx[b[i] >> 4]); s.push_back(hx[b[i] & 0xF]); }
+            return s;
+        };
 
-        fd = socket(AF_INET, SOCK_DGRAM, 0);
-        ifr.ifr_addr.sa_family = AF_INET;
-        strncpy((char *)ifr.ifr_name, (const char *)iface, IFNAMSIZ - 1);
-        ioctl(fd, SIOCGIFHWADDR, &ifr);
-        close(fd);
+        int want = (outSize > 0 && outSize < 6) ? outSize : 6;
 
-        mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
+        DIR* dir = ::opendir("/sys/class/net");
+        if (!dir) return "";
+        struct dirent* de;
+        while ((de = ::readdir(dir))) {
+            const char* ifn = de->d_name;
+            if (!ifn || ifn[0] == '.' || std::strcmp(ifn, "lo") == 0) continue;
 
-        // Convert MAC bytes to hexagonal with fixed width - without using abs()
-        std::stringstream ss;
-        for (int i = 0; i < outSize && i < 6; ++i) {  // Added bounds check
-            ss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(mac[i]);
+            char path[PATH_MAX];
+            std::snprintf(path, sizeof(path), "/sys/class/net/%s/address", ifn);
+
+            FILE* f = std::fopen(path, "r");
+            if (!f) continue;
+
+            char buf[64] = {0};
+            if (!std::fgets(buf, sizeof(buf), f)) { std::fclose(f); continue; }
+            std::fclose(f);
+
+            unsigned int u[6];
+            if (std::sscanf(buf, "%02x:%02x:%02x:%02x:%02x:%02x", &u[0], &u[1], &u[2], &u[3], &u[4], &u[5]) != 6)
+                continue;
+
+            uint8_t mac[6];
+            for (int i = 0; i < 6; ++i) mac[i] = static_cast<uint8_t>(u[i]);
+
+            // skip locally-administered (randomized) MACs
+            if ((mac[0] & 0x02) == 0) {
+                ::closedir(dir);
+                return to_hex(mac, want);
+            }
         }
-        return ss.str();
+        ::closedir(dir);
+        return "";
     }
+
 
     // Just key setter.
     int SetPublicKey(std::string publicKey) {

@@ -1,4 +1,3 @@
-
 #include "dia_screen_item_qr.h"
 #include "dia_functions.h"
 
@@ -39,9 +38,17 @@ int DiaScreenItemQr::SetQr(std::string url) {
     SDL_Surface *qrSurface = dia_QRToSurface(qr);
 
     SDL_Surface * scaledSurface = dia_ScaleSurface(qrSurface, this->getSize().x, this->getSize().y);
-    SDL_Surface * scaledQR = SDL_DisplayFormat(scaledSurface);
+    
+    // SDL2: Convert surface to appropriate format
+    SDL_Surface *scaledQR = SDL_ConvertSurfaceFormat(scaledSurface, SDL_PIXELFORMAT_ARGB8888, 0);
+    if (!scaledQR) {
+        printf("error: SDL_ConvertSurfaceFormat: %s\n", SDL_GetError());
+        scaledQR = scaledSurface; // Fallback to original surface
+    } else {
+        SDL_FreeSurface(scaledSurface);
+    }
+    
     this->SetScaledPicture(scaledQR);
-    SDL_FreeSurface(scaledSurface);
 
     if (qrSurface!=0) {
         SDL_FreeSurface(qrSurface);
@@ -130,15 +137,18 @@ int dia_screen_item_qr_notify(DiaScreenItem * base_item, void * image_ptr, std::
             printf("%s error\n", full_name.c_str());
             return 1;
         }
-        SDL_Surface *newImg;
-        if (tmpImg->format->Amask==0) {
-            newImg = SDL_DisplayFormat(tmpImg);
+        
+        // SDL2: Convert surface to appropriate format
+        SDL_Surface *newImg = SDL_ConvertSurfaceFormat(tmpImg, SDL_PIXELFORMAT_ARGB8888, 0);
+        if (!newImg) {
+            printf("error: SDL_ConvertSurfaceFormat: %s\n", SDL_GetError());
+            newImg = tmpImg; // Fallback to original surface
         } else {
-            newImg = SDL_DisplayFormatAlpha(tmpImg);
+            SDL_FreeSurface(tmpImg);
         }
+        
         obj->SetPicture(newImg);
         obj->Rescale();
-        SDL_FreeSurface(tmpImg);
 	} else {
         printf("unknown key for qr object: '%s' \n", key.c_str());
         return 1;

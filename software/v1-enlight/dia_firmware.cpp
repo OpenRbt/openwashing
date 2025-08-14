@@ -974,7 +974,7 @@ void *get_volume_func(void *ptr) {
 
 void KeyPress(){
     while (SDL_PollEvent(&_event)){
-        if (_event.type == SDL_QUIT || _event.key.keysym.sym == SDLK_ESCAPE) {
+        if (_event.type == SDL_QUIT || (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_ESCAPE)) {
             printf("SDL_QUIT\n");
             _to_be_destroyed = 1;
         }
@@ -1151,16 +1151,10 @@ int addCardReader(DiaDeviceManager *manager) {
 }
 
 int main(int argc, char **argv) {
-    // Initialize SDL first
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "SDL initialization failed: %s\n", SDL_GetError());
-        return 1;
-    }
 
     config = 0;
     if (!onlyOneInstanceCheck()) {
         printf("sorry, just one instance of the application allowed\n");
-        SDL_Quit();
         return 0;
     }
 
@@ -1170,7 +1164,6 @@ int main(int argc, char **argv) {
 
     if (argc > 2) {
         fprintf(stderr, "Too many parameters. Please leave just folder with the firmware, like [firmware.exe .] \n");
-        SDL_Quit();
         return 1;
     }
 
@@ -1182,7 +1175,6 @@ int main(int argc, char **argv) {
 
     if (StartScreenInit(folder)) {
         fprintf(stderr, "SDL Initialization Failed\n");
-        SDL_Quit();
         return 1;
     }
     StartScreenUpdate();
@@ -1214,7 +1206,6 @@ int main(int argc, char **argv) {
 
         KeyPress();
         if (_to_be_destroyed) {
-            SDL_Quit();
             return 1;
         }
     }
@@ -1243,7 +1234,6 @@ int main(int argc, char **argv) {
 
         KeyPress();
         if (_to_be_destroyed) {
-            SDL_Quit();
             return 1;
         }
     }
@@ -1305,7 +1295,6 @@ int main(int argc, char **argv) {
         }
         KeyPress();
         if (_to_be_destroyed) {
-            SDL_Quit();
             return 1;
         }
     }
@@ -1322,7 +1311,6 @@ int main(int argc, char **argv) {
             sleep(1);
             KeyPress();
             if (_to_be_destroyed) {
-                SDL_Quit();
                 return 1;
             }
         }
@@ -1335,7 +1323,6 @@ int main(int argc, char **argv) {
             sleep(1);
             KeyPress();
             if (_to_be_destroyed) {
-                SDL_Quit();
                 return 1;
             }
         }
@@ -1348,7 +1335,6 @@ int main(int argc, char **argv) {
             sleep(1);
             KeyPress();
             if (_to_be_destroyed) {
-                SDL_Quit();
                 return 1;
             }
         }
@@ -1373,7 +1359,6 @@ int main(int argc, char **argv) {
 
         KeyPress();
         if (_to_be_destroyed) {
-            SDL_Quit();
             return 1;
         }
     }
@@ -1391,7 +1376,6 @@ int main(int argc, char **argv) {
         
         KeyPress();
         if (_to_be_destroyed) {
-            SDL_Quit();
             return 1;
         }
     }
@@ -1413,7 +1397,6 @@ int main(int argc, char **argv) {
 
             KeyPress();
             if (_to_be_destroyed) {
-                SDL_Quit();
                 return 1;
             }
         }
@@ -1574,7 +1557,7 @@ int main(int argc, char **argv) {
 
         int x = 0;
         int y = 0;
-        SDL_GetMouseState(&x, &y);
+        Uint32 mouseState = SDL_GetMouseState(&x, &y);
         if (config->NeedRotateTouch()) {
             x = config->GetResX() - x;
             y = config->GetResY() - y;
@@ -1615,7 +1598,7 @@ int main(int argc, char **argv) {
                             // Debug service money addition
                             _BalanceCoins += 1;
 
-                            printf("UP\n");
+                            printf("DOWN\n");
                             fflush(stdout);
                             break;
 
@@ -1661,9 +1644,14 @@ int main(int argc, char **argv) {
                             fflush(stdout);
                             break;
 
+                        case SDLK_ESCAPE:
+                            keypress = 1;
+                            printf("Quitting by escape key...\n");
+                            break;
+
                         default:
                             keypress = 1;
-                            printf("Quitting by keypress...");
+                            printf("Quitting by keypress...\n");
                             break;
                     }
                     break;
@@ -1673,9 +1661,6 @@ int main(int argc, char **argv) {
     _to_be_destroyed = 1;
 
     delay(2000);
-    
-    // Clean up SDL at the very end
-    SDL_Quit();
     return 0;
 }
 

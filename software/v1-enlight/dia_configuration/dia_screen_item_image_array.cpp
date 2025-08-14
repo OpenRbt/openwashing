@@ -169,13 +169,16 @@ int dia_screen_item_image_array_notify(DiaScreenItem * base_item, void * image_a
             printf("%s error\n", full_name.c_str());
             return 1;
         }
-        SDL_Surface *newImg;
-        if (tmpImg->format->Amask==0) {
-            newImg = SDL_DisplayFormat(tmpImg);
+        
+        // SDL2: Convert surface to appropriate format
+        SDL_Surface *newImg = SDL_ConvertSurfaceFormat(tmpImg, SDL_PIXELFORMAT_ARGB8888, 0);
+        if (!newImg) {
+            printf("error: SDL_ConvertSurfaceFormat: %s\n", SDL_GetError());
+            newImg = tmpImg; // Fallback to original surface
         } else {
-            newImg = SDL_DisplayFormatAlpha(tmpImg);
+            SDL_FreeSurface(tmpImg);
         }
-        SDL_FreeSurface(tmpImg);
+        
         obj->AppendPicture(newImg);
 	} else {
         printf("unknown key for image object: '%s' \n", key.c_str());

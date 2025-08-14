@@ -16,9 +16,17 @@ class DiaScreen
     int InitializedOk;
     int Number;
     std::string LastDisplayed;
-	SDL_Surface * Canvas;
-	void FillBackground(Uint8 r, Uint8 g, Uint8 b);
-	void FlipFrame();
+    
+    // SDL2 objects
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
+    
+    // Keep surface for compatibility with existing code
+    SDL_Surface* Canvas;
+    
+    void FillBackground(Uint8 r, Uint8 g, Uint8 b);
+    void FlipFrame();
 };
 
 #endif

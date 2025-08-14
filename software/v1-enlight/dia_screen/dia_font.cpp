@@ -26,13 +26,15 @@ int DiaFont::Init(std::string folder, std::string newValue) {
         printf("%s error\n", full_name.c_str());
         return 1;
 	}
-    if (tmpImg->format->Amask==0) {
-        FontImage = SDL_DisplayFormat(tmpImg);
+    
+    // SDL2: Convert surface to appropriate format
+    FontImage = SDL_ConvertSurfaceFormat(tmpImg, SDL_PIXELFORMAT_ARGB8888, 0);
+    if (!FontImage) {
+        printf("error: SDL_ConvertSurfaceFormat: %s\n", SDL_GetError());
+        FontImage = tmpImg; // Fallback to original surface
     } else {
-        FontImage = SDL_DisplayFormatAlpha(tmpImg);
+        SDL_FreeSurface(tmpImg);
     }
-
-    SDL_FreeSurface(tmpImg);
 
     name = newValue;
 

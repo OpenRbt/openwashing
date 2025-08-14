@@ -4,8 +4,8 @@
 #include <string>
 #include "dia_screen_item.h"
 #include "dia_all_items.h"
-#include <SDL.h>
-#include <SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define MAX_PICTURES 32
 
