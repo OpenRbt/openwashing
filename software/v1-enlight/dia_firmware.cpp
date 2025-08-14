@@ -1530,7 +1530,6 @@ int main(int argc, char **argv) {
 
     // Runtime start
     int keypress = 0;
-    int mousepress = 0;
 
     // Call Lua setup function
     config->GetRuntime()->Setup();
@@ -1567,12 +1566,15 @@ int main(int argc, char **argv) {
         DiaScreen *screen = config->GetScreen();
         std::string last = screen->LastDisplayed;
 
-        for (auto it = config->ScreenConfigs[last]->clickAreas.begin(); it != config->ScreenConfigs[last]->clickAreas.end(); ++it) {
-            if (x >= (*it).X && x <= (*it).X + (*it).Width && y >= (*it).Y && y <= (*it).Y + (*it).Height && mousepress == 1) {
+        for (auto it = config->ScreenConfigs[last]->clickAreas.begin(); 
+            it != config->ScreenConfigs[last]->clickAreas.end(); ++it) {
+            if (x >= (*it).X && x <= (*it).X + (*it).Width && 
+                y >= (*it).Y && y <= (*it).Y + (*it).Height && 
+                (mouseState & SDL_BUTTON_LMASK)) {  // Check if left button is pressed
                 printf("CLICK!!!\n");
-                mousepress = 0;
                 _DebugKey = std::stoi((*it).ID);
                 printf("DEBUG KEY = %d\n", _DebugKey);
+                break;  // Probably want to break after first hit
             }
         }
 
@@ -1581,9 +1583,6 @@ int main(int argc, char **argv) {
                 case SDL_QUIT:
                     keypress = 1;
                     printf("Quitting by sdl_quit\n");
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    mousepress = 1;
                     break;
                 case SDL_KEYDOWN:
                     switch (_event.key.keysym.sym) {

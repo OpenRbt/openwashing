@@ -9,16 +9,16 @@ struct SDL_Texture;
 typedef struct _TTF_Font TTF_Font;
 
 enum class STARTUP_MESSAGE {
-    MAC,
-    POST,
-    LOCAL_IP,
-    SERVER_IP,
-    CARD_READER,
-    VENDOTEK_INFO,
-    CONFIGURATION,
-    SETTINGS,
-    RELAY_CONTROL_BOARD,
-    DISPLAY_INFO
+    DISPLAY_INFO,     // Index 0 - appears at top
+    MAC,             // Index 1
+    LOCAL_IP,        // Index 2  
+    SERVER_IP,       // Index 3
+    POST,            // Index 4
+    CARD_READER,     // Index 5
+    VENDOTEK_INFO,   // Index 6
+    CONFIGURATION,   // Index 7
+    SETTINGS,        // Index 8
+    RELAY_CONTROL_BOARD  // Index 9
 };
 
 // Initializes the start screen module.

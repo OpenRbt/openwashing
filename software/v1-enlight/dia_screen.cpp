@@ -11,6 +11,7 @@
 #define SDL_INIT_ERROR 3
 #include "dia_screen.h"
 
+// In dia_screen.cpp - Updated constructor
 DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
     
     if (hideCursor) {
@@ -26,9 +27,23 @@ DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
     
     delay(100);
     
+    // Force fullscreen - modify this section
     Uint32 windowFlags = SDL_WINDOW_SHOWN;
-    if (fullScreen) {
-        windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    
+    // Always use fullscreen desktop mode (recommended for kiosk applications)
+    windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    
+    // Alternative: you could also use exclusive fullscreen mode
+    // windowFlags |= SDL_WINDOW_FULLSCREEN;
+    
+    // Get the display mode for proper resolution
+    SDL_DisplayMode displayMode;
+    if (SDL_GetDesktopDisplayMode(0, &displayMode) == 0) {
+        resX = displayMode.w;
+        resY = displayMode.h;
+        printf("Setting fullscreen resolution to: %dx%d\n", resX, resY);
+    } else {
+        printf("Could not get desktop display mode, using provided resolution: %dx%d\n", resX, resY);
     }
     
     // Create window
@@ -73,7 +88,7 @@ DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
         return;
     }
     
-    printf("SDL2 video mode is set properly \n"); 
+    printf("SDL2 video mode is set properly in FULLSCREEN mode\n"); 
     fflush(stdout);
     delay(100);
     InitializedOk = 1;
