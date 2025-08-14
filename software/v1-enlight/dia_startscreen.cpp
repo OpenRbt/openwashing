@@ -1,5 +1,3 @@
-#ifndef DIA_STARTUP_H
-#define DIA_STARTUP_H
 #include "dia_startscreen.h"
 #define DEPTH 32
 #include <SDL.h>
@@ -46,10 +44,8 @@ int StartScreenInit(std::string path) {
         vertical = true;
         fclose(flag);
     }
-    int sdl_err = SDL_Init(SDL_INIT_VIDEO);
-    if (sdl_err < 0) {
-        return sdl_err;
-    }
+    
+    // SDL is already initialized in main(), so we don't call SDL_Init() here
     const SDL_VideoInfo *info = SDL_GetVideoInfo();
     surface = SDL_SetVideoMode(info->current_w, info->current_h, DEPTH, SDL_NOFRAME | SDL_HWSURFACE);
     if (!surface) {
@@ -180,6 +176,7 @@ void StartScreenShutdown() {
     if (logo) {
         SDL_FreeSurface(logo);
     }
+    // Don't call SDL_Quit() here - let main() handle it
 }
 
 void StartScreenMessage(STARTUP_MESSAGE type, std::string msg) {
@@ -219,4 +216,3 @@ void StartScreenMessage(STARTUP_MESSAGE type, std::string msg) {
     }
     StartScreenUpdate();
 }
-#endif

@@ -1151,10 +1151,16 @@ int addCardReader(DiaDeviceManager *manager) {
 }
 
 int main(int argc, char **argv) {
+    // Initialize SDL first
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "SDL initialization failed: %s\n", SDL_GetError());
+        return 1;
+    }
 
     config = 0;
     if (!onlyOneInstanceCheck()) {
         printf("sorry, just one instance of the application allowed\n");
+        SDL_Quit();
         return 0;
     }
 
@@ -1164,6 +1170,7 @@ int main(int argc, char **argv) {
 
     if (argc > 2) {
         fprintf(stderr, "Too many parameters. Please leave just folder with the firmware, like [firmware.exe .] \n");
+        SDL_Quit();
         return 1;
     }
 
@@ -1175,6 +1182,7 @@ int main(int argc, char **argv) {
 
     if (StartScreenInit(folder)) {
         fprintf(stderr, "SDL Initialization Failed\n");
+        SDL_Quit();
         return 1;
     }
     StartScreenUpdate();
@@ -1206,6 +1214,7 @@ int main(int argc, char **argv) {
 
         KeyPress();
         if (_to_be_destroyed) {
+            SDL_Quit();
             return 1;
         }
     }
@@ -1234,6 +1243,7 @@ int main(int argc, char **argv) {
 
         KeyPress();
         if (_to_be_destroyed) {
+            SDL_Quit();
             return 1;
         }
     }
@@ -1295,6 +1305,7 @@ int main(int argc, char **argv) {
         }
         KeyPress();
         if (_to_be_destroyed) {
+            SDL_Quit();
             return 1;
         }
     }
@@ -1311,6 +1322,7 @@ int main(int argc, char **argv) {
             sleep(1);
             KeyPress();
             if (_to_be_destroyed) {
+                SDL_Quit();
                 return 1;
             }
         }
@@ -1323,6 +1335,7 @@ int main(int argc, char **argv) {
             sleep(1);
             KeyPress();
             if (_to_be_destroyed) {
+                SDL_Quit();
                 return 1;
             }
         }
@@ -1335,6 +1348,7 @@ int main(int argc, char **argv) {
             sleep(1);
             KeyPress();
             if (_to_be_destroyed) {
+                SDL_Quit();
                 return 1;
             }
         }
@@ -1359,6 +1373,7 @@ int main(int argc, char **argv) {
 
         KeyPress();
         if (_to_be_destroyed) {
+            SDL_Quit();
             return 1;
         }
     }
@@ -1376,6 +1391,7 @@ int main(int argc, char **argv) {
         
         KeyPress();
         if (_to_be_destroyed) {
+            SDL_Quit();
             return 1;
         }
     }
@@ -1397,6 +1413,7 @@ int main(int argc, char **argv) {
 
             KeyPress();
             if (_to_be_destroyed) {
+                SDL_Quit();
                 return 1;
             }
         }
@@ -1656,6 +1673,9 @@ int main(int argc, char **argv) {
     _to_be_destroyed = 1;
 
     delay(2000);
+    
+    // Clean up SDL at the very end
+    SDL_Quit();
     return 0;
 }
 
