@@ -10,7 +10,7 @@ SRC+=dia_configuration/dia_screen_item_qr.cpp
 SRC+=dia_configuration/dia_screen_item_image_array.cpp
 SRC+=dia_configuration/storage/dia_storage_interface.cpp dia_ccnet.cpp
 SRC+=dia_vendotek.cpp ./vendotek/vendotek.cpp
-SRC+=dia_startscreen.cpp ./3rd/SDL_gfx/SDL_rotozoom.c
+SRC+=dia_startscreen.cpp
 
 FLGS=-I. -I/usr/include/SDL2 -I./dia_screen -I./3rd/LuaBridge -I./3rd/lua53/include -I./dia_runtime -I./3rd -g
 FLGS+=-I./dia_configuration -I./dia_configuration/storage

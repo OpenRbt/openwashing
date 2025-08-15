@@ -7,7 +7,6 @@
 #include <array>
 #include <string>
 #include <iostream>
-#include <cmath>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -22,104 +21,99 @@ static SDL_Renderer* s_renderer = nullptr;
 static SDL_Texture*  s_logoTex  = nullptr;
 static TTF_Font*     s_font     = nullptr;
 
-static int  s_resX = 800;     // desktop (physical) width
-static int  s_resY = 480;     // desktop (physical) height
+static int  s_resX = 1920;
+static int  s_resY = 1080;
+static int  s_logoWidth = 0;
+static int  s_logoHeight = 0;
 static bool s_ownWindow   = false;
 static bool s_ownRenderer = false;
 static bool s_ownTTF      = false;
 static bool s_ownIMG      = false;
 static bool s_vertical    = false;
 
-// Keep old layout scaling regardless of real screen size
-static int LOGICAL_W = 800;
-static int LOGICAL_H = 480;
-
 static std::array<std::string, 10> s_messages{};
 
-// -------- Helpers --------
-static TTF_Font* OpenFontAtPixelHeight(const std::string& path, int pxTarget) {
-    float ddpi=96.f, hdpi=96.f, vdpi=96.f;
-    if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) != 0) {
-        hdpi = vdpi = 96.f; // fallback
-    }
-    const int pt = (int)std::lround(pxTarget * 72.0 / std::max(1.0f, vdpi));
-
-#if SDL_TTF_VERSION_ATLEAST(2,20,0)
-    return TTF_OpenFontDPI(path.c_str(), pt, (int)hdpi, (int)vdpi);
-#else
-    return TTF_OpenFont(path.c_str(), pt);
-#endif
-}
-
-static SDL_Texture* CreateTextTexture(const std::string& text, SDL_Color color, int* outW=nullptr, int* outH=nullptr) {
-    if (!s_font || !s_renderer || text.empty()) return nullptr;
-    SDL_Surface* surf = TTF_RenderUTF8_Blended(s_font, text.c_str(), color);
-    if (!surf) {
-        std::cerr << "TTF_RenderUTF8_Blended failed: " << TTF_GetError() << std::endl;
-        return nullptr;
-    }
+static void RenderTextLineHorizontal(const std::string& text, int x, int y) {
+    if (text.empty() || !s_font || !s_renderer) return;
+    
+    SDL_Surface* surf = TTF_RenderUTF8_Blended(s_font, text.c_str(), SDL_Color{250, 250, 250, 255});
+    if (!surf) return;
+    
     SDL_Texture* tex = SDL_CreateTextureFromSurface(s_renderer, surf);
-    if (!tex) {
-        std::cerr << "SDL_CreateTextureFromSurface failed: " << SDL_GetError() << std::endl;
-        SDL_FreeSurface(surf);
-        return nullptr;
+    if (tex) {
+        SDL_Rect dst = {x, y, surf->w, surf->h};
+        SDL_RenderCopy(s_renderer, tex, nullptr, &dst);
+        SDL_DestroyTexture(tex);
     }
-    if (outW) *outW = surf->w;
-    if (outH) *outH = surf->h;
     SDL_FreeSurface(surf);
-    return tex;
 }
 
-static void RenderTextLine(const std::string& text, int x, int y) {
-    if (text.empty()) return;
+static void RenderTextLineVertical(const std::string& text, int x, int y) {
+    if (text.empty() || !s_font || !s_renderer) return;
     
-    int w=0, h=0;
-    SDL_Texture* t = CreateTextTexture(text, SDL_Color{250,250,250,255}, &w, &h);
-    if (!t) return;
+    SDL_Surface* surf = TTF_RenderUTF8_Blended(s_font, text.c_str(), SDL_Color{250, 250, 250, 255});
+    if (!surf) return;
     
-    if (s_vertical) {
-        // For vertical mode, we need to rotate the text 90 degrees
-        // First create rotated destination rectangle
-        SDL_Rect dst;
-        dst.x = x;
-        dst.y = LOGICAL_H - h - 60; // Position from bottom with 60px margin
-        if (dst.y < 0) dst.y = 0;
-        dst.w = h; // swapped for 90-degree rotation
-        dst.h = w; // swapped for 90-degree rotation
-        
-        // Render with 90-degree rotation
-        SDL_RenderCopyEx(s_renderer, t, nullptr, &dst, 90.0, nullptr, SDL_FLIP_NONE);
-    } else {
-        SDL_Rect dst{ x, y, w, h };
-        SDL_RenderCopy(s_renderer, t, nullptr, &dst);
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(s_renderer, surf);
+
+    if (tex) {
+        SDL_Rect dst = {x, y, surf->w, surf->h};
+        SDL_Point center = {0, 0};
+        SDL_RenderCopyEx(s_renderer, tex, nullptr, &dst, -90.0, &center, SDL_FLIP_NONE);
+        SDL_DestroyTexture(tex);
     }
-    SDL_DestroyTexture(t);
+    SDL_FreeSurface(surf);
 }
 
-static void RenderLogo() {
-    if (!s_logoTex || !s_renderer) return;
+static void RenderLogoHorizontal() {
+    if (!s_logoTex || !s_renderer || s_logoWidth == 0 || s_logoHeight == 0) return;
     
-    int w=0, h=0;
-    SDL_QueryTexture(s_logoTex, nullptr, nullptr, &w, &h);
+    // Horizontal mode: logo at top-right
+    SDL_Rect dst = {s_resX - s_logoWidth - 60, 30, s_logoWidth, s_logoHeight};
+    SDL_RenderCopy(s_renderer, s_logoTex, nullptr, &dst);
+}
+
+static void RenderLogoVertical() {
+    if (!s_logoTex || !s_renderer || s_logoWidth == 0 || s_logoHeight == 0) return;
     
-    // Keep original logo proportions, don't force to 120x120
-    SDL_Rect dst;
-    if (s_vertical) {
-        // Top-left for vertical
-        dst = {0, 30, w, h};
-        // Render with 90-degree rotation for vertical
-        SDL_RenderCopyEx(s_renderer, s_logoTex, nullptr, &dst, 90.0, nullptr, SDL_FLIP_NONE);
-    } else {
-        // Top-right for horizontal
-        dst = {LOGICAL_W - w - 30, 30, w, h}; // Use actual logo width, not hardcoded 180
-        SDL_RenderCopy(s_renderer, s_logoTex, nullptr, &dst);
+    // Vertical mode: logo at what would be top-left in horizontal (now left side)
+    SDL_Rect dst = {30, 0, s_logoWidth, s_logoHeight};
+    
+    // Rotate logo 90 degrees counterclockwise for vertical mode
+    SDL_Point center = {s_logoWidth / 2, s_logoHeight / 2}; // Center of the actual logo
+    SDL_RenderCopyEx(s_renderer, s_logoTex, nullptr, &dst, -90.0, &center, SDL_FLIP_NONE);
+}
+
+static void StartScreenDrawMessagesHorizontal() {
+    if (!s_renderer || !s_font) return;
+
+    const int lineHeight = TTF_FontHeight(s_font);
+    
+    for (size_t i = 0; i < s_messages.size(); ++i) {
+        if (!s_messages[i].empty()) {
+            int y = 10 + (lineHeight * i);
+            RenderTextLineHorizontal(s_messages[i], 60, y);
+        }
     }
+}
+
+static void StartScreenDrawMessagesVertical() {
+   if (!s_renderer || !s_font) return;
+
+   const int lineHeight = TTF_FontHeight(s_font);
+   
+   for (size_t i = 0; i < s_messages.size(); ++i) {
+       if (!s_messages[i].empty()) {
+           int x = 10 + (lineHeight * i);
+           RenderTextLineVertical(s_messages[i], x, s_resY - 60);
+       }
+   }
 }
 
 // -------- Public API --------
 int StartScreenInit(std::string path) {
     // Check for vertical orientation flag
-    if (path.back() == '/') {
+    if (!path.empty() && path.back() == '/') {
         path = path.substr(0, path.size()-1);
     }
     std::string verticalFlag = path + "/_vertical";
@@ -129,7 +123,13 @@ int StartScreenInit(std::string path) {
         fclose(flag);
     }
 
-    // This module does NOT own global SDL lifecycle (no SDL_Quit here)
+    // Init SDL if needed
+    if (!SDL_WasInit(SDL_INIT_VIDEO)) {
+        if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+            std::cerr << "SDL_InitSubSystem failed: " << SDL_GetError() << std::endl;
+            return -1;
+        }
+    }
 
     // Init TTF if needed
     if (!TTF_WasInit()) {
@@ -142,25 +142,17 @@ int StartScreenInit(std::string path) {
 
     // Init IMG (PNG)
     int want = IMG_INIT_PNG;
-    if ((IMG_Init(0) & want) != want) {
-        int got = IMG_Init(want);
-        if ((got & want) != want) {
-            std::cerr << "IMG_Init PNG failed: " << IMG_GetError() << std::endl;
-        } else {
-            s_ownIMG = true;
-        }
-    }
-
-    // Get desktop display size
-    SDL_DisplayMode dm{};
-    if (SDL_GetDesktopDisplayMode(0, &dm) == 0 && dm.w > 0 && dm.h > 0) {
-        s_resX = dm.w;
-        s_resY = dm.h;
+    int got = IMG_Init(want);
+    if ((got & want) != want) {
+        std::cerr << "IMG_Init PNG failed: " << IMG_GetError() << std::endl;
+        // Continue anyway, might still work
+    } else {
+        s_ownIMG = true;
     }
 
     // Reuse existing window/renderer if app already made them
     if (!s_window) {
-        s_window = SDL_GL_GetCurrentWindow(); // may be null
+        s_window = SDL_GL_GetCurrentWindow();
     }
     if (!s_renderer && s_window) {
         s_renderer = SDL_GetRenderer(s_window);
@@ -168,7 +160,7 @@ int StartScreenInit(std::string path) {
 
     // Create fullscreen window if needed
     if (!s_window) {
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"); // linear scaling
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
         s_window = SDL_CreateWindow(
             "Start Screen",
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -182,12 +174,8 @@ int StartScreenInit(std::string path) {
         s_ownWindow = true;
     }
 
-    // Now get the actual window size after creation
+    // Get actual window size after creation
     SDL_GetWindowSize(s_window, &s_resX, &s_resY);
-    
-    // Use actual screen size, no logical scaling
-    LOGICAL_W = s_resX;
-    LOGICAL_H = s_resY;
 
     if (!s_renderer) {
         s_renderer = SDL_CreateRenderer(s_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -199,44 +187,39 @@ int StartScreenInit(std::string path) {
         s_ownRenderer = true;
     }
 
-    // Don't set logical size - use native resolution for fullscreen
-    // SDL_RenderSetLogicalSize(s_renderer, LOGICAL_W, LOGICAL_H);
+    // Calculate font size: use original formula but cap it reasonably
+    int fontPx = s_resY / 20; // Original formula from SDL1.2
+    if (fontPx < 24) fontPx = 24; // Minimum readable size
+    if (fontPx > 60) fontPx = 60; // Maximum for very large screens
 
-    // Calculate font size to match original SDL1.2 appearance
-    // Original: line_size = info->current_h / (MAX_MESSAGES * 2) = height / 20
-    int fontPx = s_resY / 20; // Keep original calculation for proper size
-    if (fontPx < 24) fontPx = 24; // Ensure minimum readable size
-    if (fontPx > 72) fontPx = 72; // Cap for very large screens
-
+    // Try to load font
     const std::string p1 = path + "/Roboto-Regular.ttf";
     const std::string p2 = path + "/fonts/Roboto-Regular.ttf";
     const std::string p3 = path + "/font.ttf";
 
-    s_font = OpenFontAtPixelHeight(p1, fontPx);
-    if (!s_font) s_font = OpenFontAtPixelHeight(p2, fontPx);
-    if (!s_font) s_font = OpenFontAtPixelHeight(p3, fontPx);
+    s_font = TTF_OpenFont(p1.c_str(), fontPx);
+    if (!s_font) s_font = TTF_OpenFont(p2.c_str(), fontPx);
+    if (!s_font) s_font = TTF_OpenFont(p3.c_str(), fontPx);
     if (!s_font) {
-        std::cerr << "No usable .ttf found in: " << path
-                  << " (tried Roboto-Regular.ttf, fonts/Roboto-Regular.ttf, font.ttf)"
-                  << std::endl;
+        std::cerr << "No usable .ttf found in: " << path << std::endl;
         return -5;
     }
 
-    // Optional: load a logo
+    // Try to load logo
     const std::string logoPath = path + "/logo.png";
     if (SDL_RWops* rw = SDL_RWFromFile(logoPath.c_str(), "rb")) {
         SDL_Surface* logoSurf = IMG_LoadPNG_RW(rw);
         SDL_RWclose(rw);
         if (logoSurf) {
+            // Store the actual logo dimensions
+            s_logoWidth = logoSurf->w;
+            s_logoHeight = logoSurf->h;
             s_logoTex = SDL_CreateTextureFromSurface(s_renderer, logoSurf);
-            if (!s_logoTex) {
-                std::cerr << "SDL_CreateTextureFromSurface(logo) failed: " << SDL_GetError() << std::endl;
-            }
             SDL_FreeSurface(logoSurf);
         }
     }
 
-    // Set initial display info message to match original behavior
+    // Set initial display info message
     std::string orientStr = s_vertical ? "VERTICAL" : "HORIZONTAL";
     StartScreenMessage(STARTUP_MESSAGE::DISPLAY_INFO, 
         "Display: " + std::to_string(s_resX) + "x" + std::to_string(s_resY) + " | " + orientStr);
@@ -250,43 +233,37 @@ void StartScreenDrawBase() {
     if (!s_renderer) return;
     SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
     SDL_RenderClear(s_renderer);
-    RenderLogo();
+    
+    // Use appropriate logo rendering function
+    if (s_vertical) {
+        RenderLogoVertical();
+    } else {
+        RenderLogoHorizontal();
+    }
 }
 
 void StartScreenDrawMessages() {
-    if (!s_renderer || !s_font) return;
-
-    const int lineHeight = TTF_FontHeight(s_font);
-    
     if (s_vertical) {
-        // Vertical mode: each message has fixed column position
-        for (size_t i = 0; i < s_messages.size(); ++i) {
-            if (!s_messages[i].empty()) {
-                int x = lineHeight + (lineHeight * i); // Original formula
-                RenderTextLine(s_messages[i], x, 0); // y will be adjusted in RenderTextLine
-            }
-        }
+        StartScreenDrawMessagesVertical();
     } else {
-        // Horizontal mode: start from very top
-        for (size_t i = 0; i < s_messages.size(); ++i) {
-            if (!s_messages[i].empty()) {
-                int y = 10 + (lineHeight * i); // Start at 10px from very top
-                RenderTextLine(s_messages[i], 60, y);
-            }
-        }
+        StartScreenDrawMessagesHorizontal();
     }
 }
 
-void StartScreenDrawVertical()  { StartScreenDrawBase(); StartScreenDrawMessages(); }
-void StartScreenDrawHorizontal(){ StartScreenDrawBase(); StartScreenDrawMessages(); }
+void StartScreenDrawVertical() { 
+    StartScreenDrawBase(); 
+    StartScreenDrawMessagesVertical(); 
+}
+
+void StartScreenDrawHorizontal() { 
+    StartScreenDrawBase(); 
+    StartScreenDrawMessagesHorizontal(); 
+}
 
 void StartScreenUpdate() {
     if (!s_renderer) return;
-    if (s_vertical) {
-        StartScreenDrawVertical();
-    } else {
-        StartScreenDrawHorizontal();
-    }
+    StartScreenDrawBase();
+    StartScreenDrawMessages();
     SDL_RenderPresent(s_renderer);
 }
 
@@ -339,7 +316,6 @@ void StartScreenMessage(STARTUP_MESSAGE type, std::string msg) {
 }
 
 void StartScreenShutdown() {
-    // Close font BEFORE TTF_Quit() to avoid use-after-free
     if (s_font) {
         TTF_CloseFont(s_font);
         s_font = nullptr;
@@ -347,9 +323,10 @@ void StartScreenShutdown() {
     if (s_logoTex) {
         SDL_DestroyTexture(s_logoTex);
         s_logoTex = nullptr;
+        s_logoWidth = 0;
+        s_logoHeight = 0;
     }
 
-    // Only destroy what we created
     if (s_ownRenderer && s_renderer) {
         SDL_DestroyRenderer(s_renderer);
         s_renderer = nullptr;
@@ -369,6 +346,4 @@ void StartScreenShutdown() {
         IMG_Quit();
         s_ownIMG = false;
     }
-
-    // No SDL_Quit() here – app owns global SDL lifecycle.
 }
