@@ -33,6 +33,7 @@
 #include <cstring>
 #include <dirent.h>
 #include <limits.h>
+#include <netpacket/packet.h>  // sockaddr_ll
 
 
 #include "dia_channel.h"
@@ -320,50 +321,71 @@ class DiaNetwork {
     }
 
    
+    /////////////////////////////////////////////
     inline std::string GetMacAddress(int outSize) {
-        auto to_hex = [](const uint8_t* b, int n) {
-            static const char* hx = "0123456789abcdef";
-            std::string s; s.reserve(n * 2);
-            for (int i = 0; i < n; ++i) { s.push_back(hx[b[i] >> 4]); s.push_back(hx[b[i] & 0xF]); }
-            return s;
-        };
+    auto to_hex = [](const uint8_t* b, int n) {
+        static const char* hx = "0123456789abcdef";
+        std::string s; s.reserve(n * 2);
+        for (int i = 0; i < n; ++i) { s.push_back(hx[b[i] >> 4]); s.push_back(hx[b[i] & 0xF]); }
+        return s;
+    };
+    auto nonzero = [](const uint8_t* b, int n) {
+        for (int i = 0; i < n; ++i) if (b[i] != 0) return true;
+        return false;
+    };
 
-        int want = (outSize > 0 && outSize < 6) ? outSize : 6;
+    const int want = (outSize > 0 && outSize < 6) ? outSize : 6;
 
-        DIR* dir = ::opendir("/sys/class/net");
-        if (!dir) return "";
-        struct dirent* de;
-        while ((de = ::readdir(dir))) {
-            const char* ifn = de->d_name;
-            if (!ifn || ifn[0] == '.' || std::strcmp(ifn, "lo") == 0) continue;
+    struct ifaddrs* ifs = nullptr;
+    if (getifaddrs(&ifs) != 0 || !ifs) return "";
 
-            char path[PATH_MAX];
-            std::snprintf(path, sizeof(path), "/sys/class/net/%s/address", ifn);
+    uint8_t fallback[6] = {0};
+    bool have_fallback = false;
 
-            FILE* f = std::fopen(path, "r");
-            if (!f) continue;
+    for (int pass = 0; pass < 2; ++pass) {
+        // pass 0: prefer globally administered (not locally administered)
+        // pass 1: accept anything valid
+        for (struct ifaddrs* it = ifs; it; it = it->ifa_next) {
+            if (!it->ifa_name || !it->ifa_addr) continue;
+            if (it->ifa_flags & IFF_LOOPBACK) continue;         // skip lo
+            if (!(it->ifa_flags & IFF_UP)) continue;            // prefer up
 
-            char buf[64] = {0};
-            if (!std::fgets(buf, sizeof(buf), f)) { std::fclose(f); continue; }
-            std::fclose(f);
+            if (it->ifa_addr->sa_family == AF_PACKET) {
+                auto* sll = reinterpret_cast<sockaddr_ll*>(it->ifa_addr);
+                if (sll->sll_halen < 6) continue;
 
-            unsigned int u[6];
-            if (std::sscanf(buf, "%02x:%02x:%02x:%02x:%02x:%02x", &u[0], &u[1], &u[2], &u[3], &u[4], &u[5]) != 6)
-                continue;
+                const uint8_t* mac = reinterpret_cast<const uint8_t*>(sll->sll_addr);
+                if (!nonzero(mac, 6)) continue;
 
-            uint8_t mac[6];
-            for (int i = 0; i < 6; ++i) mac[i] = static_cast<uint8_t>(u[i]);
+                const bool locally_administered = (mac[0] & 0x02) != 0;
 
-            // skip locally-administered (randomized) MACs
-            if ((mac[0] & 0x02) == 0) {
-                ::closedir(dir);
-                return to_hex(mac, want);
+                if (pass == 0) {
+                    if (!locally_administered) {  // globally administered
+                        std::string out = to_hex(mac, want);
+                        freeifaddrs(ifs);
+                        return out;
+                    } else {
+                        // keep as fallback if we don't find a global one
+                        if (!have_fallback) {
+                            std::memcpy(fallback, mac, 6);
+                            have_fallback = true;
+                        }
+                    }
+                } else {
+                    // pass 1: return first valid MAC (global or local)
+                    std::string out = to_hex(mac, want);
+                    freeifaddrs(ifs);
+                    return out;
+                }
             }
         }
-        ::closedir(dir);
-        return "";
     }
 
+    freeifaddrs(ifs);
+    if (have_fallback) return to_hex(fallback, want);
+    return "";
+}
+    /////////////////////////////////////////////
 
     // Just key setter.
     int SetPublicKey(std::string publicKey) {
