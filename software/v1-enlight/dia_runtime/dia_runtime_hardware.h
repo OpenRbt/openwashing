@@ -151,6 +151,19 @@ class DiaRuntimeHardware {
         return 0;
     }
 
+    std::string (*get_station_config_string_var_function)(std::string key);
+    std::string GetStationConfigStringVar(std::string key) {
+        if(get_station_config_string_var_function){
+            std::string sessionID = get_station_config_string_var_function(key);
+            return sessionID;
+        }
+        else{
+            printf("error: NIL object or function get_station_config_string_var_function\n");
+        }
+        return "";
+    }
+    
+
     std::string (*getVisibleSession_function)();
     std::string GetVisibleSession() {
         if(getVisibleSession_function){

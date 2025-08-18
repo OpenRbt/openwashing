@@ -159,6 +159,15 @@ int set_current_state(int balance) {
     return 0;
 }
 
+std::string getStationConfigStringVar(std::string key) {
+    station_config_var_string_t stringValueResult;
+    if (network->GetStationConfigVar(key, stringValueResult) == 0) {
+        return stringValueResult.value;
+    } else {
+        return "";
+    }
+}
+
 void setCanPlayVideo(bool canPlayVideo) {
     _CanPlayVideo = canPlayVideo;
 }
@@ -1437,6 +1446,8 @@ int main(int argc, char **argv) {
     hardware->CreateSession_function = CreateSession;
     hardware->EndSession_function = EndSession;
     hardware->CloseVisibleSession_function = CloseVisibleSession;
+    
+    hardware->get_station_config_string_var_function = getStationConfigStringVar;
 
     hardware->getVisibleSession_function = getVisibleSession;
     hardware->getQR_function = getQR;
