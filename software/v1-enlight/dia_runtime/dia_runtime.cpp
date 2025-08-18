@@ -112,6 +112,7 @@ int DiaRuntime::InitStr(std::string folder, std::string src_str, std::string inc
         .addFunction("GetSbpQR", &DiaRuntimeHardware::GetSbpQR)
         .addFunction("SendPause", &DiaRuntimeHardware::SendPause)
         .addFunction("CreateSbpPayment", &DiaRuntimeHardware::CreateSbpPayment)
+        .addFunction("GetStationConfigStringVar", &DiaRuntimeHardware::GetStationConfigStringVar)
         .addFunction("GetVisibleSession", &DiaRuntimeHardware::GetVisibleSession)
         .addFunction("GetActiveSession", &DiaRuntimeHardware::GetActiveSession)
         .addFunction("SendReceipt", &DiaRuntimeHardware::SendReceipt)
