@@ -44,10 +44,10 @@ int DiaConfiguration::Init() {
     }
     _Gpio =0;
     if (!err) {
-        int hideMouse = 0;
+        int hideMouse = 1;
         int fullScreen = 0;
         #ifdef USE_GPIO
-        hideMouse = 1;
+
         fullScreen = 1;
         #endif
         #ifdef DEBUG

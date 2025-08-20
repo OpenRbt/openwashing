@@ -11,49 +11,131 @@
 #define SDL_INIT_ERROR 3
 #include "dia_screen.h"
 
+// In dia_screen.cpp - Updated constructor
 DiaScreen::DiaScreen(int resX, int resY, int hideCursor, int fullScreen) {
     
     if (hideCursor) {
-        SDL_Cursor* cursor;
-        int32_t cursorData[2] = {0,0};
-        cursor = SDL_CreateCursor((uint8_t *)cursorData, (uint8_t *)cursorData, 8, 8, 4, 4);
-        SDL_SetCursor(cursor);
+        SDL_ShowCursor(SDL_DISABLE);
     }
-	delay(100);
-    int additionalOption = 0;
-    if (fullScreen) {
-        additionalOption = SDL_FULLSCREEN;
-    }    
-	if (!(Canvas = SDL_SetVideoMode(resX, resY, DEPTH, additionalOption|SDL_NOFRAME|SDL_HWSURFACE))) {
-        printf("Cant set your videomode, attempt #2, without fullscreen\n");
-    	if (!(Canvas = SDL_SetVideoMode(resX, resY, DEPTH, SDL_NOFRAME|SDL_HWSURFACE))) {
-            SDL_Quit();
+    
+    // Initialize SDL2 video subsystem
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+        InitializedOk = SDL_INIT_ERROR;
+        return;
+    }
+    
+    delay(100);
+    
+    // Force fullscreen - modify this section
+    Uint32 windowFlags = SDL_WINDOW_SHOWN;
+    
+    // Always use fullscreen desktop mode (recommended for kiosk applications)
+    windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    
+    // Alternative: you could also use exclusive fullscreen mode
+    // windowFlags |= SDL_WINDOW_FULLSCREEN;
+    
+    // Get the display mode for proper resolution
+    SDL_DisplayMode displayMode;
+    if (SDL_GetDesktopDisplayMode(0, &displayMode) == 0) {
+        resX = displayMode.w;
+        resY = displayMode.h;
+        printf("Setting fullscreen resolution to: %dx%d\n", resX, resY);
+    } else {
+        printf("Could not get desktop display mode, using provided resolution: %dx%d\n", resX, resY);
+    }
+    
+    // Create window
+    window = SDL_CreateWindow("DIA Screen",
+                             SDL_WINDOWPOS_UNDEFINED,
+                             SDL_WINDOWPOS_UNDEFINED,
+                             resX, resY,
+                             windowFlags);
+    
+    if (window == NULL) {
+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        InitializedOk = SDL_INIT_ERROR;
+        return;
+    }
+    
+    // Create renderer
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (renderer == NULL) {
+        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+        // Try with software renderer as fallback
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+        if (renderer == NULL) {
+            printf("Software renderer could not be created! SDL_Error: %s\n", SDL_GetError());
             InitializedOk = SDL_INIT_ERROR;
             return;
         }
     }
-    printf("video mode is set properly \n"); fflush(stdout);
-	delay(100);
-	InitializedOk = 1;
+    
+    // Create surface for compatibility with existing code
+    Canvas = SDL_CreateRGBSurface(0, resX, resY, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+    if (Canvas == NULL) {
+        printf("Surface could not be created! SDL_Error: %s\n", SDL_GetError());
+        InitializedOk = SDL_INIT_ERROR;
+        return;
+    }
+    
+    // Create texture for rendering
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, resX, resY);
+    if (texture == NULL) {
+        printf("Texture could not be created! SDL_Error: %s\n", SDL_GetError());
+        InitializedOk = SDL_INIT_ERROR;
+        return;
+    }
+    
+    printf("SDL2 video mode is set properly in FULLSCREEN mode\n"); 
+    fflush(stdout);
+    delay(100);
+    InitializedOk = 1;
 }
 
 void DiaScreen_DrawPage1(DiaScreen * screen, int num) {
     printf("src1_s\n");
     printf("src2_b2\n");
-    SDL_Flip(screen->Canvas);
+    screen->FlipFrame();
     printf("src2_b3\n");
 }
 
 void DiaScreen::FlipFrame() {
     printf("frame ... ");
-    SDL_Flip(Canvas);
+    
+    // Update texture with surface data
+    SDL_UpdateTexture(texture, NULL, Canvas->pixels, Canvas->pitch);
+    
+    // Clear renderer
+    SDL_RenderClear(renderer);
+    
+    // Copy texture to renderer
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    
+    // Present renderer
+    SDL_RenderPresent(renderer);
+    
     printf(" ... flipped \n");
 }
+
 void DiaScreen::FillBackground(Uint8 r, Uint8 g, Uint8 b) {
-	SDL_FillRect(Canvas, NULL, SDL_MapRGB(Canvas->format, r, g, b));
+    SDL_FillRect(Canvas, NULL, SDL_MapRGB(Canvas->format, r, g, b));
 }
 
 DiaScreen::~DiaScreen() {
+    if (texture) {
+        SDL_DestroyTexture(texture);
+    }
+    if (Canvas) {
+        SDL_FreeSurface(Canvas);
+    }
+    if (renderer) {
+        SDL_DestroyRenderer(renderer);
+    }
+    if (window) {
+        SDL_DestroyWindow(window);
+    }
     SDL_Quit();
 }
 

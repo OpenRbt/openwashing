@@ -24,6 +24,18 @@
 #include <sstream>
 #include <string>
 
+#include <ifaddrs.h>
+
+
+// To get Mac address
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <dirent.h>
+#include <limits.h>
+#include <netpacket/packet.h>  // sockaddr_ll
+
+
 #include "dia_channel.h"
 
 #define MAX_RELAY_NUM 6
@@ -333,29 +345,72 @@ class DiaNetwork {
         return SERVER_UNAVAILABLE;
     }
 
-    // Returns local machine's MAC address of eth0 interface.
-    // Modfifes out parameter == MAC address without ":" symbols.
-    std::string GetMacAddress(const int outSize) {
-        int fd;
-        struct ifreq ifr;
-        const char *iface = "eth0";
-        unsigned char *mac;  // Changed from char* to unsigned char*
+   
+    /////////////////////////////////////////////
+    inline std::string GetMacAddress(int outSize) {
+    auto to_hex = [](const uint8_t* b, int n) {
+        static const char* hx = "0123456789abcdef";
+        std::string s; s.reserve(n * 2);
+        for (int i = 0; i < n; ++i) { s.push_back(hx[b[i] >> 4]); s.push_back(hx[b[i] & 0xF]); }
+        return s;
+    };
+    auto nonzero = [](const uint8_t* b, int n) {
+        for (int i = 0; i < n; ++i) if (b[i] != 0) return true;
+        return false;
+    };
 
-        fd = socket(AF_INET, SOCK_DGRAM, 0);
-        ifr.ifr_addr.sa_family = AF_INET;
-        strncpy((char *)ifr.ifr_name, (const char *)iface, IFNAMSIZ - 1);
-        ioctl(fd, SIOCGIFHWADDR, &ifr);
-        close(fd);
+    const int want = (outSize > 0 && outSize < 6) ? outSize : 6;
 
-        mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
+    struct ifaddrs* ifs = nullptr;
+    if (getifaddrs(&ifs) != 0 || !ifs) return "";
 
-        // Convert MAC bytes to hexagonal with fixed width - without using abs()
-        std::stringstream ss;
-        for (int i = 0; i < outSize && i < 6; ++i) {  // Added bounds check
-            ss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(mac[i]);
+    uint8_t fallback[6] = {0};
+    bool have_fallback = false;
+
+    for (int pass = 0; pass < 2; ++pass) {
+        // pass 0: prefer globally administered (not locally administered)
+        // pass 1: accept anything valid
+        for (struct ifaddrs* it = ifs; it; it = it->ifa_next) {
+            if (!it->ifa_name || !it->ifa_addr) continue;
+            if (it->ifa_flags & IFF_LOOPBACK) continue;         // skip lo
+            if (!(it->ifa_flags & IFF_UP)) continue;            // prefer up
+
+            if (it->ifa_addr->sa_family == AF_PACKET) {
+                auto* sll = reinterpret_cast<sockaddr_ll*>(it->ifa_addr);
+                if (sll->sll_halen < 6) continue;
+
+                const uint8_t* mac = reinterpret_cast<const uint8_t*>(sll->sll_addr);
+                if (!nonzero(mac, 6)) continue;
+
+                const bool locally_administered = (mac[0] & 0x02) != 0;
+
+                if (pass == 0) {
+                    if (!locally_administered) {  // globally administered
+                        std::string out = to_hex(mac, want);
+                        freeifaddrs(ifs);
+                        return out;
+                    } else {
+                        // keep as fallback if we don't find a global one
+                        if (!have_fallback) {
+                            std::memcpy(fallback, mac, 6);
+                            have_fallback = true;
+                        }
+                    }
+                } else {
+                    // pass 1: return first valid MAC (global or local)
+                    std::string out = to_hex(mac, want);
+                    freeifaddrs(ifs);
+                    return out;
+                }
+            }
         }
-        return ss.str();
     }
+
+    freeifaddrs(ifs);
+    if (have_fallback) return to_hex(fallback, want);
+    return "";
+}
+    /////////////////////////////////////////////
 
     // Just key setter.
     int SetPublicKey(std::string publicKey) {

@@ -20,9 +20,11 @@
 
 #include <pthread.h>
 #include <map>
+#include <wiringPi.h>
 
 #include "dia_relayconfig.h"
 #include "dia_storage_interface.h"
+
 
 struct relay_stat {
     long relay_time[PIN_COUNT];

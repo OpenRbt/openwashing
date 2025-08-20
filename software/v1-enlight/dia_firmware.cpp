@@ -983,7 +983,7 @@ void *get_volume_func(void *ptr) {
 
 void KeyPress(){
     while (SDL_PollEvent(&_event)){
-        if (_event.type == SDL_QUIT || _event.key.keysym.sym == SDLK_ESCAPE) {
+        if (_event.type == SDL_QUIT || (_event.type == SDL_KEYDOWN && _event.key.keysym.sym == SDLK_ESCAPE)) {
             printf("SDL_QUIT\n");
             _to_be_destroyed = 1;
         }
@@ -1541,7 +1541,6 @@ int main(int argc, char **argv) {
 
     // Runtime start
     int keypress = 0;
-    int mousepress = 0;
 
     // Call Lua setup function
     config->GetRuntime()->Setup();
@@ -1568,7 +1567,7 @@ int main(int argc, char **argv) {
 
         int x = 0;
         int y = 0;
-        SDL_GetMouseState(&x, &y);
+        Uint32 mouseState = SDL_GetMouseState(&x, &y);
         if (config->NeedRotateTouch()) {
             x = config->GetResX() - x;
             y = config->GetResY() - y;
@@ -1578,12 +1577,15 @@ int main(int argc, char **argv) {
         DiaScreen *screen = config->GetScreen();
         std::string last = screen->LastDisplayed;
 
-        for (auto it = config->ScreenConfigs[last]->clickAreas.begin(); it != config->ScreenConfigs[last]->clickAreas.end(); ++it) {
-            if (x >= (*it).X && x <= (*it).X + (*it).Width && y >= (*it).Y && y <= (*it).Y + (*it).Height && mousepress == 1) {
+        for (auto it = config->ScreenConfigs[last]->clickAreas.begin(); 
+            it != config->ScreenConfigs[last]->clickAreas.end(); ++it) {
+            if (x >= (*it).X && x <= (*it).X + (*it).Width && 
+                y >= (*it).Y && y <= (*it).Y + (*it).Height && 
+                (mouseState & SDL_BUTTON_LMASK)) {  // Check if left button is pressed
                 printf("CLICK!!!\n");
-                mousepress = 0;
                 _DebugKey = std::stoi((*it).ID);
                 printf("DEBUG KEY = %d\n", _DebugKey);
+                break;  // Probably want to break after first hit
             }
         }
 
@@ -1592,9 +1594,6 @@ int main(int argc, char **argv) {
                 case SDL_QUIT:
                     keypress = 1;
                     printf("Quitting by sdl_quit\n");
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    mousepress = 1;
                     break;
                 case SDL_KEYDOWN:
                     switch (_event.key.keysym.sym) {
@@ -1609,7 +1608,7 @@ int main(int argc, char **argv) {
                             // Debug service money addition
                             _BalanceCoins += 1;
 
-                            printf("UP\n");
+                            printf("DOWN\n");
                             fflush(stdout);
                             break;
 
@@ -1655,9 +1654,14 @@ int main(int argc, char **argv) {
                             fflush(stdout);
                             break;
 
+                        case SDLK_ESCAPE:
+                            keypress = 1;
+                            printf("Quitting by escape key...\n");
+                            break;
+
                         default:
                             keypress = 1;
-                            printf("Quitting by keypress...");
+                            printf("Quitting by keypress...\n");
                             break;
                     }
                     break;

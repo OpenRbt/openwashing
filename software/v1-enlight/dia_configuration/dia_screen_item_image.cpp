@@ -72,9 +72,9 @@ DiaScreenItemImage::~DiaScreenItemImage() {
         Picture = 0;
     }
     if (ScaledPicture!=0) {
-        printf("\nSDL_FreeSurface(Picture);\n");
-        SDL_FreeSurface(Picture);
-        Picture = 0;
+        printf("\nSDL_FreeSurface(ScaledPicture);\n");
+        SDL_FreeSurface(ScaledPicture);
+        ScaledPicture = 0;
     }
     if(OutputRectangle!=0) {
         printf("\nfree(OutputRectangle);\n");
@@ -154,15 +154,18 @@ int dia_screen_item_image_notify(DiaScreenItem * base_item, void * image_ptr, st
             printf("%s error\n", full_name.c_str());
             return 1;
         }
-        SDL_Surface *newImg;
-        if (tmpImg->format->Amask==0) {
-            newImg = SDL_DisplayFormat(tmpImg);
+        
+        // SDL2: Convert surface to appropriate format
+        SDL_Surface *newImg = SDL_ConvertSurfaceFormat(tmpImg, SDL_PIXELFORMAT_ARGB8888, 0);
+        if (!newImg) {
+            printf("error: SDL_ConvertSurfaceFormat: %s\n", SDL_GetError());
+            newImg = tmpImg; // Fallback to original surface
         } else {
-            newImg = SDL_DisplayFormatAlpha(tmpImg);
+            SDL_FreeSurface(tmpImg);
         }
+        
         obj->SetPicture(newImg);
         obj->Rescale();
-        SDL_FreeSurface(tmpImg);
 	} else {
         printf("unknown key for image object: '%s' \n", key.c_str());
         return 1;
