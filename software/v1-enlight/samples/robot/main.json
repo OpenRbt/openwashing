@@ -1,0 +1,44 @@
+{
+  "name": "default configuration",
+  "resolution": "1920x1080",
+  "screens": [
+    {
+      "id": "choose_program",
+      "src": "screens/1_choose_program.json"
+    },
+    {
+      "id": "choose_payment",
+      "src": "screens/2_choose_payment.json"
+    },
+    {
+      "id": "wait_for_cash",
+      "src": "screens/3_wait_for_cash.json"
+    },
+    {
+      "id": "wait_for_card",
+      "src": "screens/4_wait_for_card.json"
+    },
+    {
+      "id": "sbp_payment",
+      "src": "screens/5_sbp_payment.json"
+    },
+    {
+      "id": "go_to_box",
+      "src": "screens/7_go_to_box.json"
+    },
+    {
+      "id": "wait_for_QR",
+      "src": "screens/8_wait_for_QR.json"
+    },
+    {
+    	"id": "sorry",
+    	"src": "screens/9_sorry.json"
+    }
+  ],
+  "buttons": 4,
+  "last_button_pulse": true,
+  "relays": 4,
+  "endpoint": "http://app.diae.ru/v0/gql/",
+  "programs": 4,
+  "script": "script.lua"
+}
