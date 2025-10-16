@@ -131,6 +131,8 @@ pthread_t get_volume_thread;
 pthread_t active_session_thread;
 pthread_t play_video_thread;
 
+Logger* _Logger;
+
 int GetKey(DiaGpio *_gpio) {
     int key = 0;
 
@@ -313,9 +315,15 @@ void *play_video_func(void *ptr) {
 int CreateSession() {
     std::string QR;
     std::string sessionID;
+    std::string oldVisibleSessionID = _VisibleSessionID;
     int answer = network->CreateSession(sessionID, QR);
     _VisibleSessionID = sessionID;
     _Qr = QR;
+
+    if (oldVisibleSessionID != _VisibleSessionID) {
+        _Logger->AddLog("Change visible session ID from " + oldVisibleSessionID + " to " + _VisibleSessionID, "");
+    }
+    
     return answer;
 }
 
@@ -910,7 +918,7 @@ int CentralServerDialog() {
         _SbpSystemActive = resp.sbpSystemActive;
         printf("SBP system activated: %d\n", resp.sbpSystemActive);
     }
-    if(_BonusSystemIsActive){
+    if(_BonusSystemIsActive){        
         if (_VisibleSessionID == resp.authorizedSessionID) {
             _IsConnectedToBonusSystem = !resp.authorizedSessionID.empty();
             CreateSession();
@@ -919,6 +927,14 @@ int CentralServerDialog() {
         if (_AuthorizedSessionID != resp.authorizedSessionID) {
             EndSession();
         }
+
+        if (_VisibleSessionID == "" && resp.authorizedSessionID != "") {
+            _Logger->AddLog("Change visible session ID from " + _VisibleSessionID + " to " + resp.authorizedSessionID, "");
+        }
+        if (_AuthorizedSessionID != resp.authorizedSessionID) {
+            _Logger->AddLog("Change authorized session ID from " + _AuthorizedSessionID + " to " + resp.authorizedSessionID, "");
+        }
+
         _VisibleSessionID = resp.visibleSessionID;
         _AuthorizedSessionID = resp.authorizedSessionID;
         _Qr = _VisibleSessionID.empty() ? "" : _ServerUrl + "/#/?sessionID=" + _VisibleSessionID;
@@ -1220,6 +1236,8 @@ int main(int argc, char **argv) {
     }
 
     network->SetHostAddress(serverIP);
+    Logger* logger = new Logger(network);
+    _Logger = logger;
 
     // Let's run a thread to ping server
     pthread_create(&pinging_thread, NULL, pinging_func, NULL);
@@ -1251,7 +1269,6 @@ int main(int argc, char **argv) {
     printf("Card reader initialization...\n");
     StartScreenMessage(STARTUP_MESSAGE::CARD_READER, "Card Reader initialization...");
     // Runtime and firmware initialization
-    Logger* logger = new Logger(network);
     DiaDeviceManager *manager = new DiaDeviceManager(logger);
     bool findCardReader = true;
     while (findCardReader) {
